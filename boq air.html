@@ -2639,6 +2639,29 @@ function renderAirStepDiagram() {
   container.innerHTML = svg;
 }
 
+// ── INITIALIZE FROM URL PARAMETERS IF PROVIDED ──
+window.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const bldgLen = urlParams.get('l');
+  const baySpan = urlParams.get('bay');
+  const qty = urlParams.get('qty');
+
+  if (bldgLen && document.getElementById('param-bldg-len')) {
+    document.getElementById('param-bldg-len').value = bldgLen;
+  }
+  if (baySpan && document.getElementById('param-bay-span')) {
+    document.getElementById('param-bay-span').value = baySpan;
+  }
+  if (qty && document.getElementById('param-airinlet-qty')) {
+    document.getElementById('param-airinlet-qty').value = qty;
+  }
+
+  // Trigger calculation
+  if (typeof calculateAirBOQ === 'function') {
+    calculateAirBOQ();
+  }
+});
+
 </script>
 </body>
 </html>

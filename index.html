@@ -221,12 +221,11 @@ select {
   box-shadow: 0 0 8px rgba(63,185,80,0.3);
 }
 .chip-group input[type="radio"][name="ac-fan-model"]:checked + label {
-  box-shadow: 0 0 8px rgba(88,166,255,0.3);
-}
   background: rgba(0,56,141,0.3);
   border-color: var(--ksp-blue);
   color: #fff;
   font-weight: 600;
+  box-shadow: 0 0 8px rgba(88,166,255,0.3);
 }
 .chip-group label:hover {
   border-color: var(--border-bright);
@@ -578,6 +577,12 @@ select {
   gap: 28px;
   animation: flowRight 1.5s linear infinite;
 }
+.arrow-anim.flow-left {
+  animation: flowLeft 1.5s linear infinite;
+}
+.arrow-anim.flow-right {
+  animation: flowRight 1.5s linear infinite;
+}
 .arrow-anim span {
   color: rgba(88,166,255,0.5);
   font-size: 18px;
@@ -585,6 +590,10 @@ select {
 @keyframes flowRight {
   from { transform: translateX(-120px); }
   to { transform: translateX(120px); }
+}
+@keyframes flowLeft {
+  from { transform: translateX(120px); }
+  to { transform: translateX(-120px); }
 }
 
 .velocity-label {
@@ -1382,10 +1391,10 @@ input.invalid { border-color: var(--accent-red) !important; }
 </style>
 </head>
 <body>
-<!-- PASSCODE LOCK SCREEN OVERLAY -->
-<div id="passcode-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;
+<!-- PASSCODE LOCK SCREEN OVERLAY (Temporarily Disabled) -->
+<div id="passcode-overlay" style="display:none !important;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999;
     background:rgba(11,15,25,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-    display:flex;align-items:center;justify-content:center;padding:20px;">
+    align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:16px;padding:32px;
               max-width:400px;width:100%;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);
               font-family:'IBM Plex Sans Thai',sans-serif;">
@@ -1599,7 +1608,7 @@ input.invalid { border-color: var(--accent-red) !important; }
         <span class="section-badge">03</span>
         <h2 data-translate="buildingWidthLabel">ขนาดอาคาร</h2>
       </div>
-      <div class="grid-3">
+      <div class="grid-2" style="margin-bottom:8px">
         <div class="form-group">
           <label class="field-label"><span data-translate="buildingWidthLabel">กว้าง</span> <span class="dim-units unit-dist">m</span></label>
           <input type="number" id="building-width" value="15" step="0.1">
@@ -1608,9 +1617,26 @@ input.invalid { border-color: var(--accent-red) !important; }
           <label class="field-label"><span data-translate="buildingHeightLabel">สูง</span> <span class="dim-units unit-dist">m</span></label>
           <input type="number" id="building-height" value="3" step="0.1">
         </div>
+      </div>
+      <div class="grid-2">
         <div class="form-group">
           <label class="field-label"><span data-translate="buildingLengthLabel">ยาว</span> <span class="dim-units unit-dist">m</span></label>
-          <input type="number" id="building-length" value="150" step="1">
+          <input type="number" id="building-length" value="120" step="1">
+        </div>
+        <div class="form-group">
+          <label class="field-label" title="ระยะช่วงเสาโรงเรือน ค่ามาตรฐาน 4.0m">
+            <span>ระยะเสา (Bay) <span class="dim-units unit-dist">m</span></span>
+          </label>
+          <input type="number" id="column-bay-span" value="4.0" step="0.5" min="2.0" max="10.0">
+        </div>
+      </div>
+      <div style="margin-top:12px; margin-bottom: 8px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">ระบบระบายอากาศ (Layout System):</div>
+        <div class="chip-group">
+          <input type="radio" name="layout-mode" id="layout-standard" value="standard" checked>
+          <label for="layout-standard">⚡ Standard Tunnel (พัดลมท้าย)</label>
+          <input type="radio" name="layout-mode" id="layout-split" value="split">
+          <label for="layout-split">↔ Split-Tunnel (พัดลมกลาง)</label>
         </div>
       </div>
       <div id="dimension-validation-note" class="note-pill error"></div>
@@ -1803,14 +1829,29 @@ input.invalid { border-color: var(--accent-red) !important; }
         <span class="section-badge">07</span>
         <h2>บานเกล็ดลม / Air Inlet &amp; BOQ</h2>
       </div>
-      
+
+
       <!-- Inlet Model Selection -->
       <div class="form-group">
-        <label class="field-label">ประเภท &amp; รุ่น Air Inlet</label>
+        <label class="field-label">ประเภท &amp; รุ่น Air Inlet (WUSEN Catalog)</label>
         <select id="inlet-model-select">
-          <option value="KSP-INLET-3000" selected>KSP Wall Flap 3000 (3,000 m³/h @ 20Pa)</option>
-          <option value="KSP-INLET-4500">KSP Wall High-Flow 4500 (4,500 m³/h @ 20Pa)</option>
-          <option value="KSP-CEILING-2500">KSP Ceiling Inlet 2500 (2,500 m³/h @ 20Pa)</option>
+          <optgroup label="── Poultry Air Inlet (ABS / ฉนวนกันความร้อน) ──">
+            <option value="WUSEN-908" selected>Wusen 908 (908×454mm | เปิด 870×400mm | 3,000 m³/h @20Pa) [มาตรฐาน]</option>
+            <option value="WUSEN-880">Wusen 880 (880×325mm | เปิด 840×272mm | 3,000 m³/h @20Pa)</option>
+            <option value="WUSEN-600">Wusen 600 (600×330mm | เปิด 560×275mm | 1,800 m³/h @20Pa)</option>
+          </optgroup>
+          <optgroup label="── Side Wall Air Inlet (PVC Plastic) ──">
+            <option value="WUSEN-400-PVC">Wusen 400 PVC (850×500mm | เปิด 760×410mm | 3,780 m³/h @20Pa)</option>
+            <option value="WUSEN-340-PVC">Wusen 340 PVC (800×365mm | เปิด 760×345mm | 2,200 m³/h @20Pa)</option>
+            <option value="WUSEN-270-PVC">Wusen 270 PVC (720×360mm | เปิด 640×280mm | 1,200 m³/h @20Pa)</option>
+          </optgroup>
+          <optgroup label="── Polyurethane / Gravity Air Inlet (PU) ──">
+            <option value="WUSEN-800-PU">Wusen 800 PU (880×480mm | เปิด 810×410mm | 3,536 m³/h @20Pa)</option>
+            <option value="WUSEN-1200-PU">Wusen 1200 PU (1280×480mm | เปิด 1210×410mm | 5,381 m³/h @20Pa)</option>
+            <option value="WUSEN-1500-PU">Wusen 1500 PU (1580×480mm | เปิด 1510×410mm | 7,860 m³/h @20Pa)</option>
+            <option value="WUSEN-650-PU">Wusen 650 PU (730×350mm | เปิด 660×280mm | 2,050 m³/h @20Pa)</option>
+            <option value="WUSEN-752-GRAVITY">Wusen 752 Gravity (752×615mm | เปิด 700×500mm | 3,350 m³/h @20Pa)</option>
+          </optgroup>
           <option value="CUSTOM">กำหนดค่าสเปกเอง (Custom Spec)</option>
         </select>
       </div>
@@ -1831,34 +1872,48 @@ input.invalid { border-color: var(--accent-red) !important; }
 
       <!-- Airflow Mode / Design Criteria -->
       <div class="form-group">
-        <label class="field-label">เกณฑ์ออกแบบปริมาณลมผ่าน Inlet</label>
+      <!-- Airflow Mode / Design Criteria -->
+      <div class="form-group">
+        <label class="field-label">เกณฑ์ออกแบบปริมาณลมผ่าน Inlet (Design Criteria)</label>
         <select id="inlet-calc-mode">
-          <option value="percent" selected>คิดเป็น % ของพัดลมอุโมงค์ (Transitional 30-50%)</option>
-          <option value="minvent">คำนวณตาม Minimum Vent (CFM/ตัว หรือ ACH)</option>
-          <option value="custom_flow">ระบุปริมาณลมเป้าหมายตรง (Target Flow)</option>
+          <option value="percent" selected>★ มาตรฐานสากล &amp; Cobb: 40% พัดลมอุโมงค์ (Transitional Stage)</option>
+          <option value="minvent">⚠ สำหรับเขตหนาว/ลูกไก่เล็ก: 20% พัดลม (Minimum Vent Only)</option>
+          <option value="custom_flow">กำหนดปริมาณลมเป้าหมายเอง (Custom Target CFM / m³/h)</option>
         </select>
       </div>
 
-      <!-- Parameter row dependent on mode -->
-      <div class="grid-2">
-        <div class="form-group" id="inlet-percent-wrap">
-          <label class="field-label">สัดส่วนพัดลม (%)</label>
+      <!-- Dynamic Warning / Recommendation Note -->
+      <div id="inlet-mode-note" style="margin-bottom:10px;padding:8px 10px;border-radius:6px;font-size:11px;line-height:1.45;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:var(--text)">
+        <div style="color:var(--accent-green);font-weight:700;margin-bottom:3px">★ เกณฑ์มาตรฐานสากล &amp; Cobb (แนะนำสำหรับ BOQ):</div>
+        <div>• <strong>ลมออกแบบ:</strong> 40% พัดลมรวม (Transitional)</div>
+        <div>• <strong>เปิดบานมาตรฐาน:</strong> 50% (1.74 ft² / บาน) เพื่อสร้าง Jet Velocity 7.5 m/s</div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:3px"><em>* มอเตอร์จะหรี่บานเหลือ 20% ตอนลูกไก่เล็ก และเปิด 50% ตอนไก่รุ่นก่อนตัดเข้าสู่ Tunnel Mode</em></div>
+      </div>
+      <div class="grid-2" style="gap:8px;margin-bottom:6px">
+        <div class="form-group" id="inlet-percent-wrap" style="margin-bottom:0">
+          <label class="field-label" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="สัดส่วนพัดลม (%)">สัดส่วนพัดลม (%)</label>
           <input type="number" id="inlet-percent-input" value="40" min="5" max="100" step="5">
         </div>
-        <div class="form-group">
-          <label class="field-label" style="display:flex;justify-content:space-between">
-            <span>SP ออกแบบช่อง Inlet (<span class="dim-units unit-press">Pa</span>)</span>
-            <span id="inlet-cobb-rec-badge" style="font-size:9px;color:var(--accent-blue);font-weight:600">Cobb: 25 Pa</span>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="field-label" style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="white-space:nowrap">เปิดบาน Inlet (%)</span>
+            <span style="font-size:8.5px;color:var(--accent-cyan);font-weight:600;white-space:nowrap">เกณฑ์ 50%</span>
           </label>
-          <input type="number" id="inlet-design-sp" value="25" min="10" max="60" step="1">
+          <input type="number" id="inlet-opening-percent" value="50" min="10" max="100" step="5">
         </div>
       </div>
-
-      <!-- Actuator and Winch Drive System -->
+      <div class="form-group" style="margin-top:6px">
+        <label class="field-label" style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+          <span style="white-space:nowrap">SP ออกแบบเป้าหมาย (<span class="dim-units unit-press">Pa</span>)</span>
+          <span id="inlet-cobb-rec-badge" style="font-size:8.5px;color:var(--accent-blue);font-weight:600;white-space:nowrap">Cobb: 30 Pa</span>
+        </label>
+        <input type="number" id="inlet-design-sp" value="30" min="10" max="60" step="1">
+      </div>
       <div class="form-group" style="margin-top:6px">
         <label class="field-label">ระบบมอเตอร์กว้าน / Actuator</label>
         <select id="inlet-actuator-type">
-          <option value="winch_auto" selected>Winch Motor อัตโนมัติ (0.37 - 0.55 kW) พร้อมสลิงเมน</option>
+          <option value="linear_24vdc" selected>DC 24V Linear Actuator (610mm | 3,500N | 10kΩ Pot)</option>
+          <option value="winch_auto">Winch Motor อัตโนมัติ (0.37 - 0.55 kW) พร้อมสลิงเมน</option>
           <option value="manual_winch">Winch กว้านมือหมุน (Manual)</option>
         </select>
       </div>
@@ -1927,16 +1982,16 @@ input.invalid { border-color: var(--accent-red) !important; }
         </div>
         <div class="panel-body">
           <div class="schematic">
-            <!-- PAD -->
-            <div class="schematic-pad">
+            <!-- LEFT PAD (Always visible) -->
+            <div class="schematic-pad left-pad">
               <div class="schematic-pad-icon">
                 <div class="water-drop-anim"></div>
                 <div class="water-drop-anim"></div>
                 <div class="water-drop-anim"></div>
               </div>
               <div class="schematic-label" data-translate="padVelocityInfographic">ความเร็วลมที่แพด</div>
-              <div class="schematic-val" id="schematic-pad-velocity">—</div>
-              <div id="schematic-pad-badge" class="schematic-badge badge-green">⭐ Sweet Spot</div>
+              <div class="schematic-val" id="schematic-pad-velocity-left">—</div>
+              <div id="schematic-pad-badge-left" class="schematic-badge badge-green">⭐ Sweet Spot</div>
               
               <!-- DYNAMIC COOLING PAD DIMENSIONS & ARRANGEMENT BREAKDOWN -->
               <div id="schematic-pad-layout-box" style="margin-top:8px;width:100%;font-size:10px;line-height:1.35;
@@ -1946,31 +2001,75 @@ input.invalid { border-color: var(--accent-red) !important; }
                 <div id="schematic-pad-layout-details" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text)">—</div>
               </div>
             </div>
-            <!-- TUNNEL -->
-            <div class="schematic-tunnel">
+
+            <!-- LEFT TUNNEL WING (Always visible, standard tunnel or left split wing) -->
+            <div class="schematic-tunnel left-wing">
               <!-- Building Length Ruler -->
               <div class="building-length-ruler">
-                <span class="ruler-start">📍 แพด (0m)</span>
+                <span class="ruler-start" id="schematic-ruler-start-left">📍 แพด (0m)</span>
                 <span class="ruler-end" id="schematic-building-length-tag">📏 อาคาร — m</span>
               </div>
 
-              <div class="velocity-label" data-translate="houseVelocityInfographic" style="margin-top:12px">ความเร็วในโรงเรือน (ค่าเฉลี่ย)</div>
-              <div class="velocity-value" id="schematic-house-velocity">—</div>
-              <div id="schematic-house-badge" class="schematic-badge badge-green">🟢 ผ่านเกณฑ์</div>
-              <div id="schematic-air-time" class="schematic-time-info">⏱️ ลมใช้เวลาเดินทาง: — | ACH: —</div>
+              <div class="velocity-label" id="schematic-vel-label-left" style="margin-top:12px">ความเร็วในโรงเรือน (ค่าเฉลี่ย)</div>
+              <div class="velocity-value" id="schematic-house-velocity-left">—</div>
+              <div id="schematic-house-badge-left" class="schematic-badge badge-green">🟢 ผ่านเกณฑ์</div>
+              <div id="schematic-air-time-left" class="schematic-time-info">⏱️ ลมใช้เวลาเดินทาง: — | ACH: —</div>
               
               <!-- 20m Velocity Stations Strip (Faded Gray Text) -->
-              <div id="schematic-velocity-stations" class="velocity-stations-strip">
+              <div id="schematic-velocity-stations-left" class="velocity-stations-strip">
                 <!-- Dynamically populated via calculate() -->
               </div>
 
-              <div class="arrow-anim">
+              <div class="arrow-anim left-arrow-anim">
                 <span>›</span><span>›</span><span>›</span><span>›</span><span>›</span><span>›</span><span>›</span><span>›</span>
               </div>
             </div>
-            <!-- FAN -->
+
+            <!-- FANS (Always visible, right end in standard, center in split) -->
             <div class="schematic-fans" id="schematic-fans-container">
               <!-- Dynamically populated via updateSchematicFansSection() -->
+            </div>
+
+            <!-- RIGHT TUNNEL WING (Visible only in split mode) -->
+            <div class="schematic-tunnel right-wing" style="display:none">
+              <!-- Building Length Ruler -->
+              <div class="building-length-ruler">
+                <span class="ruler-start" id="schematic-ruler-start-right">กึ่งกลาง (~50m)</span>
+                <span class="ruler-end" id="schematic-ruler-end-right">แพดขวา (100m) 📍</span>
+              </div>
+
+              <div class="velocity-label" id="schematic-vel-label-right" style="margin-top:12px">ความเร็วปีกขวา</div>
+              <div class="velocity-value" id="schematic-house-velocity-right">—</div>
+              <div id="schematic-house-badge-right" class="schematic-badge badge-green">🟢 ผ่านเกณฑ์</div>
+              <div id="schematic-air-time-right" class="schematic-time-info">⏱️ ลมใช้เวลาเดินทาง: — | ACH: —</div>
+              
+              <div id="schematic-velocity-stations-right" class="velocity-stations-strip">
+                <!-- Dynamically populated via calculate() -->
+              </div>
+
+              <div class="arrow-anim flow-left right-arrow-anim">
+                <span>‹</span><span>‹</span><span>‹</span><span>‹</span><span>‹</span><span>‹</span><span>‹</span><span>‹</span>
+              </div>
+            </div>
+
+            <!-- RIGHT PAD (Visible only in split mode) -->
+            <div class="schematic-pad right-pad" style="display:none">
+              <div class="schematic-pad-icon">
+                <div class="water-drop-anim"></div>
+                <div class="water-drop-anim"></div>
+                <div class="water-drop-anim"></div>
+              </div>
+              <div class="schematic-label" data-translate="padVelocityInfographic">ความเร็วลมที่แพด</div>
+              <div class="schematic-val" id="schematic-pad-velocity-right">—</div>
+              <div id="schematic-pad-badge-right" class="schematic-badge badge-green">⭐ Sweet Spot</div>
+              
+              <!-- DYNAMIC COOLING PAD DIMENSIONS & ARRANGEMENT BREAKDOWN (RIGHT) -->
+              <div id="schematic-pad-layout-box-right" style="margin-top:8px;width:100%;font-size:10px;line-height:1.35;
+                   background:rgba(88,166,255,0.06);border:1px solid rgba(88,166,255,0.2);
+                   border-radius:6px;padding:6px 8px;text-align:center;color:var(--text-muted)">
+                <div style="color:var(--accent-blue);font-weight:600;margin-bottom:3px;font-size:10.5px" id="schematic-pad-layout-title-right">📐 การจัดวางแพด 3 ด้าน (Doghouse)</div>
+                <div id="schematic-pad-layout-details-right" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text)">—</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2438,7 +2537,7 @@ input.invalid { border-color: var(--accent-red) !important; }
         <div class="panel-body">
           
           <!-- KPI Summary Strip for Air Inlet -->
-          <div class="inlet-kpi-grid">
+          <div class="inlet-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
             <div class="inlet-kpi-card highlight">
               <div class="inlet-kpi-title">จำนวนบาน Air Inlet รวม</div>
               <div class="inlet-kpi-val" id="inlet-total-count" style="color:var(--accent-blue)">—</div>
@@ -2450,18 +2549,17 @@ input.invalid { border-color: var(--accent-red) !important; }
               <div class="inlet-kpi-sub" id="inlet-flow-sub">@ — Pa SP</div>
             </div>
             <div class="inlet-kpi-card yellow-hl">
-              <div class="inlet-kpi-title">ระยะห่างติดตั้ง (Spacing)</div>
-              <div class="inlet-kpi-val" id="inlet-spacing-val" style="color:var(--accent-yellow)">—</div>
-              <div class="inlet-kpi-sub" id="inlet-spacing-sub">ระยะระหว่างบาน</div>
+              <div class="inlet-kpi-title">ระยะเปิดบาน (Inlet Opening)</div>
+              <div class="inlet-kpi-val" id="inlet-opening-kpi-val" style="color:var(--accent-yellow)">50%</div>
+              <div class="inlet-kpi-sub" id="inlet-opening-kpi-sub">ช่องเปิด 1.74 ft² / บาน</div>
             </div>
             <div class="inlet-kpi-card">
               <div class="inlet-kpi-title">Jet Velocity (ความเร็วลมพุ่ง)</div>
               <div class="inlet-kpi-val" id="inlet-jet-velocity" style="color:var(--accent-cyan)">—</div>
               <div class="jet-velocity-bar"><div class="jet-velocity-fill" id="inlet-jet-fill" style="width:70%;background:var(--accent-green)"></div></div>
-              <div class="inlet-kpi-sub" id="inlet-jet-eval" style="margin-top:2px">เหมาะสำหรับ Coanda Effect</div>
+              <div class="inlet-kpi-sub" id="inlet-jet-eval" style="margin-top:2px">เกณฑ์ Cobb (Coanda Effect)</div>
             </div>
           </div>
-
           <!-- Engineering Layout & Spacing Information -->
           <div class="inlet-layout-box">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2471,57 +2569,127 @@ input.invalid { border-color: var(--accent-red) !important; }
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11.5px;color:var(--text-muted)">
               <div>
                 <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                  <span>ตำแหน่งการติดตั้ง:</span>
-                  <strong id="inlet-mount-type-val" style="color:var(--text)">ผนัง 2 ฝั่ง (Side Walls)</strong>
+                  <span>ตำแหน่งติดตั้ง:</span>
+                  <strong id="inlet-mount-type-val" style="color:var(--text)">ผนัง 2 ฝั่ง</strong>
                 </div>
                 <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                  <span>ระยะบานแรกจากหัวโรงเรือน:</span>
+                  <span>ระยะบานแรกจากหัวเรือน:</span>
                   <strong id="inlet-first-dist-val" style="color:var(--text)">≈ 2.50 m</strong>
                 </div>
-                <div style="display:flex;justify-content:space-between;padding:3px 0">
-                  <span>ความยาวช่วงติดตั้ง (Active Run):</span>
+                <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                  <span>ช่วงติดตั้ง (Active Run):</span>
                   <strong id="inlet-active-run-val" style="color:var(--text)">—</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:3px 0">
+                  <span>จำนวนช่วงเสา (Total Bays):</span>
+                  <strong id="inlet-bay-count-val" style="color:var(--accent-blue)">—</strong>
                 </div>
               </div>
               <div>
                 <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                  <span>แรงดึงรวมสลิง (Total Pull Force):</span>
+                  <span>การจัดวาง (Inlet / Bay):</span>
+                  <strong id="inlet-per-bay-val" style="color:var(--accent-green)">—</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                  <span>แรงดึงสลิง (Total Pull):</span>
                   <strong id="inlet-pull-force-val" style="color:var(--accent-yellow)">— kgf</strong>
                 </div>
                 <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                  <span>ระยะชักเปิดบาน (Stroke Length):</span>
+                  <span>ระยะชักบาน (Stroke):</span>
                   <strong id="inlet-stroke-val" style="color:var(--text)">180 - 220 mm</strong>
                 </div>
                 <div style="display:flex;justify-content:space-between;padding:3px 0">
-                  <span>ระยะพุ่งของอากาศสด (Throw Distance):</span>
+                  <span>ระยะลมพุ่ง (Throw Dist):</span>
                   <strong id="inlet-throw-dist-val" style="color:var(--accent-cyan)">— (ถึงกึ่งกลางหลังคา)</strong>
                 </div>
               </div>
             </div>
+            <!-- Bay installation visual recommendation banner -->
+            <div id="inlet-bay-recommend-banner" style="margin-top:10px;padding:8px 12px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:6px;font-size:11px;color:var(--text);display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <span style="color:var(--accent-cyan);font-weight:700">💡 ข้อแนะนำวิศวกรรมการจัดวางในช่อง Bay:</span>
+                <span id="inlet-bay-recommend-text" style="margin-left:6px;color:var(--text-muted)">—</span>
+              </div>
+              <span id="inlet-model-size-badge" style="background:var(--bg2);padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent-blue);border:1px solid var(--border)">WUSEN 908 (908×454mm)</span>
+            </div>
           </div>
 
-          <!-- Real-Time BOQ Table -->
-          <div class="eit-hdr" style="display:flex;justify-content:space-between;align-items:center">
-            <span>📋 ตารางสรุปรายการวัสดุและอุปกรณ์ (Bill of Quantities - BOQ)</span>
-            <span style="font-size:10px;color:var(--text-dim);font-weight:400">คำนวณแบบ Real-time ตามขนาดอาคาร</span>
+          <!-- ── AutoCAD-Style Air Inlet Engineering Schematic ── -->
+          <div style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div style="width:3px;height:14px;background:#22d3ee;border-radius:2px"></div>
+                <span style="font-size:10.5px;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;letter-spacing:0.6px">PLAN VIEW — AIR INLET INSTALLATION LAYOUT (TOP VIEW)</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;font-size:9.5px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">
+                <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:16px;height:2px;background:#22d3ee"></span>Inlet</span>
+                <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:rgba(34,211,238,0.12);border:1px dashed rgba(34,211,238,0.5)"></span>Bay</span>
+                <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:rgba(248,81,73,0.12);border:1px dashed rgba(248,81,73,0.5)"></span>No Inlet</span>
+              </div>
+            </div>
+            <div style="background:#050a14;border:1px solid rgba(34,211,238,0.25);border-radius:7px;overflow:hidden">
+              <svg id="inlet-schematic-svg" width="100%" style="display:block" viewBox="0 0 960 255" preserveAspectRatio="xMidYMid meet">
+                <!-- dynamically rendered by renderInletSchematic() -->
+                <text x="480" y="110" fill="rgba(255,255,255,0.15)" text-anchor="middle" font-size="13" font-family="IBM Plex Mono,monospace">กำลังคำนวณ...</text>
+              </svg>
+            </div>
           </div>
 
-          <div class="boq-table-wrap">
-            <table class="boq-table" id="inlet-boq-table">
-              <thead>
-                <tr>
-                  <th style="width:40px;text-align:center">ลำดับ</th>
-                  <th>รายการอุปกรณ์ (Description)</th>
-                  <th>รหัส / สเปกวิศวกรรม (Specification)</th>
-                  <th style="text-align:right">จำนวน (Qty)</th>
-                  <th style="text-align:center">หน่วย</th>
-                  <th>หมายเหตุ / ฟังก์ชันการใช้งาน</th>
-                </tr>
-              </thead>
-              <tbody id="inlet-boq-tbody">
-                <!-- Dynamically filled by calculateAirInletsAndBOQ() -->
-              </tbody>
-            </table>
+
+          <!-- Dynamic Live Calculation Breakdown Box for Air Inlet -->
+          <div class="eit-calc-body" style="margin-top:12px;background:rgba(15,23,42,0.6);border:1px solid rgba(56,189,248,0.2);border-radius:8px;padding:12px 14px">
+            <div class="eit-hdr" style="margin-top:0;color:var(--accent-cyan);display:flex;align-items:center;justify-content:space-between">
+              <span>📋 รายการคำนวณและที่มาของตัวเลข (Step-by-Step Calculation)</span>
+              <span id="inlet-calc-mode-badge" style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(56,189,248,0.15);color:var(--accent-cyan);font-family:'IBM Plex Mono',monospace">โหมด: % พัดลมอุโมงค์ลม</span>
+            </div>
+            
+            <div class="eit-blk" style="margin-top:8px">
+              <div class="eit-blk-hdr">1. ปริมาณลมออกแบบสำหรับ Air Inlet (Design Airflow Requirement)</div>
+              <div class="eit-line">
+                <span>ปริมาณลมรวมโรงเรือน (Full Tunnel Airflow)</span>
+                <span id="inlet-calc-qtotal" class="eit-mono">—</span>
+              </div>
+              <div class="eit-line">
+                <span>เกณฑ์ออกแบบปริมาณลมผ่าน Inlet (Inlet Capacity Factor)</span>
+                <span id="inlet-calc-pct-label" class="eit-mono">—</span>
+              </div>
+              <div class="eit-line">
+                <span>ปริมาณลมที่ Air Inlet ต้องรองรับ (Q_inlet_target)</span>
+                <span id="inlet-calc-qtarget" class="eit-mono" style="color:var(--accent-green);font-weight:700">—</span>
+              </div>
+            </div>
+
+            <div class="eit-blk">
+              <div class="eit-blk-hdr">2. อัตราลมต่อบานและการปรับแก้แรงดันสถิต (Capacity per Inlet @ Design SP)</div>
+              <div class="eit-line">
+                <span>รุ่น Air Inlet และสเปกพิกัดที่จุดอ้างอิง</span>
+                <span id="inlet-calc-spec-ref" class="eit-mono">—</span>
+              </div>
+              <div class="eit-line">
+                <span>แรงดันสถิตใช้งานเป้าหมาย (Design Static Pressure, ΔP)</span>
+                <span id="inlet-calc-sp-val" class="eit-mono">—</span>
+              </div>
+              <div class="eit-line">
+                <span>อัตราลมผ่านต่อบานจริง (Q_inlet = Q_nom × √(ΔP ÷ ΔP_base))</span>
+                <span id="inlet-calc-flow-per-inlet" class="eit-mono" style="color:var(--accent-blue);font-weight:700">—</span>
+              </div>
+            </div>
+
+            <div class="eit-blk">
+              <div class="eit-blk-hdr">3. สรุปจำนวนบานและการกระจายตัว (Number of Inlets & Symmetrical Layout)</div>
+              <div class="eit-line">
+                <span>จำนวนบานตามทฤษฎี (N_calc = Q_inlet_target ÷ Q_inlet)</span>
+                <span id="inlet-calc-n-raw" class="eit-mono">—</span>
+              </div>
+              <div class="eit-line">
+                <span>จำนวนบานที่ต้องติดตั้งจริง (ปัดเป็นเลขคู่สมมาตร 2 ฝั่ง)</span>
+                <span id="inlet-calc-n-final" class="eit-mono" style="color:var(--accent-yellow);font-weight:700">—</span>
+              </div>
+              <div class="eit-line">
+                <span>ความเร็วลมพุ่งปากบาน (Slot Jet Velocity, V_jet = C_d × √(2ΔP/ρ))</span>
+                <span id="inlet-calc-vjet-val" class="eit-mono" style="color:var(--accent-cyan);font-weight:700">—</span>
+              </div>
+            </div>
           </div>
 
           <!-- Engineering Detail Formula / Notes -->
@@ -2859,48 +3027,195 @@ const pumpData = [
   {model:'STP150(T)',qmax:430},{model:'STP200(T)',qmax:520},{model:'STP250(T)',qmax:600},{model:'STP300(T)',qmax:635}
 ];
 
-// ── AIR INLET CATALOG & CONSTANTS ────────────────
+// ── AIR INLET CATALOG & CONSTANTS (WUSEN AIR INLET CATALOG) ──
 const AIR_INLET_CATALOG = {
-  'KSP-INLET-3000': {
-    name: 'KSP Wall Flap 3000 (บานสวิงติดผนัง)',
+  'WUSEN-908': {
+    name: 'Wusen 908 Poultry Air Inlet',
+    modelCode: 'WUSEN-908',
     type: 'wall',
     flowNominalM3H: 3000,
     baseSPPa: 20,
-    widthM: 0.80,
-    heightM: 0.35,
+    widthM: 0.908,
+    heightM: 0.454,
+    dimOuter: '908×454×150 mm',
+    flangeSize: '857×388 mm',
+    openingSize: '870×400 mm',
+    slotOpeningMm: 190, // Max effective air slot height at 50% flap position (CAD 189mm)
+    strokeMm: 190,      // Operational pull stroke (0-190mm)
+    pullForceKg: 2.0,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-880': {
+    name: 'Wusen 880 Poultry Air Inlet (Curved Flap)',
+    modelCode: 'WUSEN-880',
+    type: 'wall',
+    flowNominalM3H: 3000,
+    baseSPPa: 20,
+    widthM: 0.880,
+    heightM: 0.325,
+    dimOuter: '880×325×150 mm',
+    flangeSize: '830×262 mm',
+    openingSize: '840×272 mm',
+    strokeMm: 200,
+    pullForceKg: 1.8,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-600': {
+    name: 'Wusen 600 Poultry Air Inlet',
+    modelCode: 'WUSEN-600',
+    type: 'wall',
+    flowNominalM3H: 1800,
+    baseSPPa: 20,
+    widthM: 0.600,
+    heightM: 0.330,
+    dimOuter: '600×330×150 mm',
+    flangeSize: '550×265 mm',
+    openingSize: '560×275 mm',
+    strokeMm: 180,
+    pullForceKg: 1.5,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-400-PVC': {
+    name: 'Wusen 400 Side Wall Air Inlet (PVC)',
+    modelCode: 'WUSEN-400',
+    type: 'wall',
+    flowNominalM3H: 3780,
+    baseSPPa: 20,
+    widthM: 0.850,
+    heightM: 0.500,
+    dimOuter: '850×500×125 mm',
+    flangeSize: '750×400 mm',
+    openingSize: '760×410 mm',
+    strokeMm: 220,
+    pullForceKg: 2.2,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-340-PVC': {
+    name: 'Wusen 340 Side Wall Air Inlet (PVC)',
+    modelCode: 'WUSEN-340',
+    type: 'wall',
+    flowNominalM3H: 2200,
+    baseSPPa: 20,
+    widthM: 0.800,
+    heightM: 0.365,
+    dimOuter: '800×365×110 mm',
+    flangeSize: '750×335 mm',
+    openingSize: '760×345 mm',
+    strokeMm: 180,
+    pullForceKg: 1.6,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-270-PVC': {
+    name: 'Wusen 270 Side Wall Air Inlet (PVC)',
+    modelCode: 'WUSEN-270',
+    type: 'wall',
+    flowNominalM3H: 1200,
+    baseSPPa: 20,
+    widthM: 0.720,
+    heightM: 0.360,
+    dimOuter: '720×360×130 mm',
+    flangeSize: '630×270 mm',
+    openingSize: '640×280 mm',
+    strokeMm: 160,
+    pullForceKg: 1.2,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-752-GRAVITY': {
+    name: 'Wusen 752 Gravity Self-Hanging Air Inlet',
+    modelCode: 'WUSEN-752',
+    type: 'wall',
+    flowNominalM3H: 3350,
+    baseSPPa: 20,
+    widthM: 0.752,
+    heightM: 0.615,
+    dimOuter: '752×615×300 mm',
+    flangeSize: '690×490 mm',
+    openingSize: '700×500 mm',
+    strokeMm: 240,
+    pullForceKg: 2.0,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-800-PU': {
+    name: 'Wusen 800 Polyurethane Side Wall Air Inlet (PU)',
+    modelCode: 'WUSEN-PU-800',
+    type: 'wall',
+    flowNominalM3H: 3536,
+    baseSPPa: 20,
+    widthM: 0.880,
+    heightM: 0.480,
+    dimOuter: '880×480×145 mm',
+    flangeSize: '800×400 mm',
+    openingSize: '810×410 mm',
     strokeMm: 200,
     pullForceKg: 2.0,
     mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
   },
-  'KSP-INLET-4500': {
-    name: 'KSP Wall High-Flow 4500 (บานลูเวอร์ความจุสูง)',
+  'WUSEN-1200-PU': {
+    name: 'Wusen 1200 Polyurethane Side Wall Air Inlet (PU)',
+    modelCode: 'WUSEN-PU-1200',
     type: 'wall',
-    flowNominalM3H: 4500,
+    flowNominalM3H: 5381,
     baseSPPa: 20,
-    widthM: 1.05,
-    heightM: 0.40,
+    widthM: 1.280,
+    heightM: 0.480,
+    dimOuter: '1280×480×145 mm',
+    flangeSize: '1200×400 mm',
+    openingSize: '1210×410 mm',
     strokeMm: 220,
-    pullForceKg: 2.5,
+    pullForceKg: 2.8,
     mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
   },
-  'KSP-CEILING-2500': {
-    name: 'KSP Ceiling Inlet 2500 (ช่องเปิดฝ้าเพดาน)',
-    type: 'ceiling',
-    flowNominalM3H: 2500,
+  'WUSEN-1500-PU': {
+    name: 'Wusen 1500 Polyurethane Side Wall Air Inlet (PU)',
+    modelCode: 'WUSEN-PU-1500',
+    type: 'wall',
+    flowNominalM3H: 7860,
     baseSPPa: 20,
-    widthM: 0.65,
-    heightM: 0.65,
+    widthM: 1.580,
+    heightM: 0.480,
+    dimOuter: '1580×480×145 mm',
+    flangeSize: '1500×400 mm',
+    openingSize: '1510×410 mm',
+    strokeMm: 220,
+    pullForceKg: 3.5,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
+  },
+  'WUSEN-650-PU': {
+    name: 'Wusen 650 Polyurethane Side Wall Air Inlet (PU)',
+    modelCode: 'WUSEN-PU-650',
+    type: 'wall',
+    flowNominalM3H: 2050,
+    baseSPPa: 20,
+    widthM: 0.730,
+    heightM: 0.350,
+    dimOuter: '730×350×120 mm',
+    flangeSize: '650×270 mm',
+    openingSize: '660×280 mm',
     strokeMm: 180,
-    pullForceKg: 2.2,
-    mounting: 'แนวกึ่งกลางฝ้าเพดาน (Ceiling Centerline)'
+    pullForceKg: 1.5,
+    mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
   }
 };
 
 function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, buildingH, totalFansRequired) {
-  const modelKey = $('inlet-model-select')?.value || 'KSP-INLET-3000';
+  const modelKey = $('inlet-model-select')?.value || 'WUSEN-908';
   const calcMode = $('inlet-calc-mode')?.value || 'percent';
-  const percentVal = parseFloat($('inlet-percent-input')?.value || 40) / 100;
-  const designSP = parseFloat($('inlet-design-sp')?.value || 20);
+  const layoutMode = document.querySelector('input[name="layout-mode"]:checked')?.value || 'standard';
+  const percentVal = parseFloat($('inlet-percent-input')?.value || 40) / 100; // คิดที่ 40% ลมรวม (Transitional)
+  const openingPercent = parseFloat($('inlet-opening-percent')?.value || 50); // เปิดบาน 50%
+  const openingRatio = Math.max(0.1, Math.min(1.0, openingPercent / 100)); // 0.50
+  
+  // ── Cobb Ventilation Standards Model based on House Width ──
+  // Target throw distance: half building width to roof ridge/apex (L_throw = W / 2)
+  const throwDistTargetM = buildingW / 2;
+  
+  // Cobb Standard Negative Pressure Formula:
+  // Base 20 Pa @ 10m width (5m throw) -> +2.5 Pa per 0.61m (2 ft) additional throw
+  // For 15m width -> 7.5m throw -> cobbReqPa ≈ 30 - 35 Pa
+  const cobbReqPa = Math.max(20, Math.round(20 + Math.max(0, (throwDistTargetM - 5.0) / 0.61) * 2.5));
+  
+  // Design SP: User input or fallback to cobbReqPa
+  const designSP = parseFloat($('inlet-design-sp')?.value || cobbReqPa);
   const actuatorType = $('inlet-actuator-type')?.value || 'winch_auto';
 
   let inletSpec = AIR_INLET_CATALOG[modelKey];
@@ -2914,29 +3229,53 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
       baseSPPa: 20,
       widthM: cWidth,
       heightM: 0.35,
+      openingSize: '870×400 mm',
       strokeMm: 200,
       pullForceKg: 2.0,
       mounting: 'ผนัง 2 ฝั่ง (Symmetrical Side Walls)'
     };
   }
 
-  // 1. Airflow requirement
+  // 1. Airflow requirement: 40% of Total Tunnel Airflow
   let targetInletFlowM3H = 0;
   if (calcMode === 'percent') {
     targetInletFlowM3H = totalHouseAirflowM3H * percentVal;
   } else if (calcMode === 'minvent') {
-    // Minimum ventilation standard: ~0.8 to 1.2 m3/h per kg or 15-20% total flow
     targetInletFlowM3H = totalHouseAirflowM3H * 0.20;
   } else {
     targetInletFlowM3H = parseFloat($('inlet-custom-flow')?.value || 3000) * 10;
   }
+  const targetInletFlowCFM = targetInletFlowM3H * CONVERSIONS.M3H_TO_CFM;
 
-  // 2. Capacity adjusted by Static Pressure (Bernoulli: Q ~ sqrt(dP))
-  const spFactor = Math.sqrt(Math.max(5, designSP) / inletSpec.baseSPPa);
-  const actualFlowPerInletM3H = inletSpec.flowNominalM3H * spFactor;
+  // 2. Cobb Standard Jet Velocity (Direct Velocity Standard: 7.2 - 7.6 m/s ≈ 1,450 - 1,500 fpm @ 30-35 Pa)
+  const rho = 1.204; // kg/m3
+  // Torricelli / Bernoulli Jet Velocity: V = sqrt(2 * ΔP / rho)
+  const jetVelocityMS = Math.sqrt((2 * Math.max(1, designSP)) / rho);
+  const jetVelocityFPM = jetVelocityMS / CONVERSIONS.FTMIN_TO_MS; // ~1,450 - 1,500 fpm
+  
+  // 3. Orifice Effective Opening Area (Cobb Standard: 50% Opening = 1.74 ft² ≈ 0.162 m²)
+  let openingW = inletSpec.widthM * 0.94;
+  let openingH = inletSpec.heightM * 0.88;
+  if (inletSpec.openingSize) {
+    const parts = inletSpec.openingSize.replace('mm','').split('×').map(x => parseFloat(x.trim()) / 1000);
+    if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      openingW = parts[0];
+      openingH = parts[1];
+    }
+  }
+  const areaFullM2 = openingW * openingH;
+  const areaFullFt2 = areaFullM2 * CONVERSIONS.M2_TO_FT2; // ~3.75 ft²
+  // Effective opening area at specified ratio (50% = 1.74 ft²)
+  const areaAtOpeningFt2 = areaFullFt2 * openingRatio; 
+  const areaAtOpeningM2 = areaAtOpeningFt2 / CONVERSIONS.M2_TO_FT2;
+  
+  // 4. Cobb Direct Airflow Method per Inlet: Q_inlet = Area × Velocity (CFM)
+  // Q = 1.74 ft² × 1,500 fpm = 2,610 CFM (~4,434 m³/h)
+  const actualFlowPerInletCFM = areaAtOpeningFt2 * jetVelocityFPM;
+  const actualFlowPerInletM3H = actualFlowPerInletCFM / CONVERSIONS.M3H_TO_CFM;
 
-  // 3. Number of inlets
-  let numInletsTotal = Math.ceil(targetInletFlowM3H / actualFlowPerInletM3H);
+  // 5. Number of Inlets calculation (ตรงตามเกณฑ์ Cobb มาตรฐาน 140 บาน)
+  let numInletsTotal = Math.ceil(targetInletFlowCFM / actualFlowPerInletCFM);
   if (numInletsTotal < 2) numInletsTotal = 2;
   // Ensure even number for symmetrical distribution on 2 side walls
   if (inletSpec.type === 'wall' && numInletsTotal % 2 !== 0) {
@@ -2944,41 +3283,116 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   }
   const numPerSide = inletSpec.type === 'wall' ? (numInletsTotal / 2) : numInletsTotal;
 
-  // 4. Spacing and active run
-  const firstInletDistM = 2.5; // distance from front wall
-  const activeLengthM = Math.max(10, buildingL - 10);
-  const spacingM = numPerSide > 1 ? (activeLengthM / (numPerSide - 1)) : activeLengthM;
+  // 6. Coanda Surface Throw Distance Model (Cobb Standard):
+  const throwAchievedM = Math.max(0, 5.0 + ((designSP - 20) / 2.5) * 0.61);
+  const throwRatio = throwAchievedM / Math.max(1, throwDistTargetM);
 
-  // 5. Jet Velocity & Coanda Throw (Cobb Standard: V = sqrt(2 * dP / rho), rho=1.204)
-  // Required SP from Cobb table: ~2.5 Pa per 0.61 m (2 ft) of throw distance
-  const rho = 1.204;
-  const jetVelocityMS = Math.sqrt((2 * Math.max(1, designSP)) / rho);
-  const throwDistTargetM = buildingW / 2; // Distance air needs to travel to center
-  const cobbReqPa = Math.max(15, Math.round((throwDistTargetM / 0.61) * 2.5)); // Cobb guideline
+  // 7. Bay Span & Spacing Calculation (Split-Tunnel: 105m, Bay 3m)
+  let baySpanM = parseFloat($('column-bay-span')?.value || 3.0);
+  if (isNaN(baySpanM) || baySpanM <= 0) baySpanM = 3.0;
+  if (!isMetric) baySpanM /= CONVERSIONS.M_TO_FT;
 
-  // 6. Actuator and Mechanics
-  const totalPullKg = numInletsTotal * inletSpec.pullForceKg;
-  let actuatorModelDesc = '';
-  let winchQty = 1;
-  if (actuatorType === 'winch_auto') {
-    if (totalPullKg > 180 || buildingL > 140) {
-      winchQty = 2;
-      actuatorModelDesc = 'มอเตอร์กว้าน Winch 0.55 kW (380V/220V) 1:60 [แยก 2 ฝั่งซ้าย-ขวา]';
+  const totalBays = Math.max(1, Math.round(buildingL / baySpanM));
+  const firstInletDistM = 2.5;
+  
+  let activeLengthM = 0;
+  let activeBays = 0;
+  let spacingM = 0;
+  let inletsPerBayFloor = 0;
+  let inletsPerBayCeil = 0;
+  let baysWithCeil = 0;
+  let baysWithFloor = 0;
+  let bayAdviceText = '';
+  let bayLayoutSummary = '';
+
+  if (layoutMode === 'split') {
+    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    const padBaysEach = Math.max(1, Math.round((totalBays * 0.10) / 2));
+    const padBaysTotal = padBaysEach * 2;
+    
+    activeBays = Math.max(2, totalBays - fanBays - padBaysTotal);
+    if (activeBays % 2 !== 0 && activeBays > 2) {
+      activeBays -= 1;
+    }
+    
+    const activeBaysPerSideWing = activeBays / 2;
+    const inletsPerWing = numPerSide / 2;
+    activeLengthM = activeBays * baySpanM;
+    spacingM = activeLengthM / Math.max(1, numPerSide);
+
+    inletsPerBayFloor = Math.floor(inletsPerWing / activeBaysPerSideWing);
+    inletsPerBayCeil = Math.ceil(inletsPerWing / activeBaysPerSideWing);
+    baysWithCeil = inletsPerWing % activeBaysPerSideWing;
+    baysWithFloor = activeBaysPerSideWing - baysWithCeil;
+
+    if (inletsPerBayFloor === inletsPerBayCeil) {
+      bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
+      bayAdviceText = `<strong>โหมด Split-Tunnel:</strong> ฝั่งละ ${numPerSide} บาน (ปีกละ ${inletsPerWing} บาน ใน ${activeBaysPerSideWing} ช่องเสา ติดตั้งช่องละ ${inletsPerBayFloor} บานเท่ากันทุกช่อง)`;
     } else {
-      winchQty = 1;
-      actuatorModelDesc = 'มอเตอร์กว้าน Winch 0.37 kW (380V/220V) 1:60 (รองรับแรงดึง 350 kgf)';
+      bayLayoutSummary = `สลับ ${inletsPerBayCeil} / ${inletsPerBayFloor} บาน/ช่วงเสา`;
+      bayAdviceText = `<strong>โหมด Split-Tunnel:</strong> ปีกละ ${inletsPerWing} บาน กระจาย ${activeBaysPerSideWing} ช่องเสา (ติดตั้งช่องละ ${inletsPerBayCeil} บาน จำนวน ${baysWithCeil} ช่อง และช่องละ ${inletsPerBayFloor} บาน จำนวน ${baysWithFloor} ช่อง)`;
     }
   } else {
-    winchQty = 2;
-    actuatorModelDesc = 'ชุดกว้านมือหมุน Manual Winch 1,200 lbs พร้อมตัวล็อคอัตโนมัติ';
+    const deadBaysAtPad = Math.max(1, Math.round(totalBays * 0.08));
+    const deadBaysAtFan = Math.max(1, Math.round(totalBays * 0.05));
+    activeBays = Math.max(1, totalBays - deadBaysAtPad - deadBaysAtFan);
+    activeLengthM = activeBays * baySpanM;
+    spacingM = activeLengthM / Math.max(1, numPerSide);
+
+    inletsPerBayFloor = Math.floor(numPerSide / activeBays);
+    inletsPerBayCeil = Math.ceil(numPerSide / activeBays);
+    baysWithCeil = numPerSide % activeBays;
+    baysWithFloor = activeBays - baysWithCeil;
+
+    if (inletsPerBayFloor === inletsPerBayCeil) {
+      bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
+      bayAdviceText = `แนะนำติดตั้ง <strong>${inletsPerBayFloor} บานต่อช่วงเสา</strong> ต่อเนื่องกัน ${activeBays} ช่อง`;
+    } else {
+      bayLayoutSummary = `สลับ ${inletsPerBayCeil} / ${inletsPerBayFloor} บาน/ช่วงเสา`;
+      bayAdviceText = `แนะนำติดตั้งสลับ <strong>${inletsPerBayCeil} บาน (${baysWithCeil} ช่อง)</strong> และ <strong>${inletsPerBayFloor} บาน (${baysWithFloor} ช่อง)</strong>`;
+    }
   }
 
-  // 7. Wire Rope & Hardware Quantities
-  const mainWireRopeMeter = Math.ceil((buildingL + 15) * (inletSpec.type === 'wall' ? 2 : 1) * 1.15);
-  const dropWireMeter = Math.ceil(numInletsTotal * 3.5);
-  const pulleysQty = Math.ceil(numInletsTotal * 1.5 + 8);
-  const returnSpringsQty = numInletsTotal;
-  const wireClampsQty = Math.ceil(numInletsTotal * 4 + 16);
+  // 8. Actuator and Mechanics
+  // Pull Force = (n_inlets_per_wall × weight_per_blade) + aerodynamic_load (SP × area_per_blade × n_inlets)
+  const weightPerInletKg = inletSpec.pullForceKg || 2.5; // kgf ต่อบาน (น้ำหนักบาน + แรงเสียดทาน)
+  const aeroLoadPerInletKg = (designSP * areaAtOpeningM2) / 9.81; // F = P × A / g (แรงลมอัดต้านบาน)
+  const totalPullKg = numPerSide * (weightPerInletKg + aeroLoadPerInletKg); // คิดต่อแถว (ฝั่งเดียว = maxload)
+  let actuatorModelDesc = '';
+  let winchQty = 1;
+  const actuatorMaxPullKg = 350;
+
+  if (actuatorType === 'linear_24vdc') {
+    if (layoutMode === 'split') {
+      const pullPerWingKg = (numInletsTotal / 2) * inletSpec.pullForceKg;
+      winchQty = pullPerWingKg > actuatorMaxPullKg ? 4 : 2;
+      actuatorModelDesc = `กระบอกขับเชิงเส้น Linear Actuator DC 24V (610mm / 3,500N) × ${winchQty} ตัว [แยกปีกซ้าย-ขวา + 10kΩ Pot Feedback]`;
+    } else {
+      winchQty = totalPullKg > actuatorMaxPullKg ? Math.ceil(totalPullKg / actuatorMaxPullKg) : 1;
+      actuatorModelDesc = `กระบอกขับเชิงเส้น Linear Actuator DC 24V (610mm / 3,500N / 84W) × ${winchQty} ตัว [IP65/67 + 10kΩ Pot Feedback]`;
+    }
+  } else if (layoutMode === 'split') {
+    if (actuatorType === 'winch_auto') {
+      winchQty = 2;
+      actuatorModelDesc = 'มอเตอร์กว้าน Winch 0.37 kW × 2 ตัว [แยกดึงปีกซ้าย - ปีกขวา อิสระ]';
+    } else {
+      winchQty = 4;
+      actuatorModelDesc = 'ชุดกว้านมือหมุน Manual Winch 1,200 lbs × 4 ชุด [แยกควบคุม 4 โซน]';
+    }
+  } else {
+    if (actuatorType === 'winch_auto') {
+      if (totalPullKg > 180 || buildingL > 140) {
+        winchQty = 2;
+        actuatorModelDesc = 'มอเตอร์กว้าน Winch 0.55 kW (380V/220V) 1:60 [แยก 2 ฝั่งซ้าย-ขวา]';
+      } else {
+        winchQty = 1;
+        actuatorModelDesc = 'มอเตอร์กว้าน Winch 0.37 kW (380V/220V) 1:60 (รองรับแรงดึง 350 kgf)';
+      }
+    } else {
+      winchQty = 2;
+      actuatorModelDesc = 'ชุดกว้านมือหมุน Manual Winch 1,200 lbs พร้อมตัวล็อคอัตโนมัติ';
+    }
+  }
 
   // ── UI UPDATES ──
   const flowUnitStr = isMetric ? 'm³/h' : 'CFM';
@@ -2991,6 +3405,8 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   }
 
   if ($('inlet-total-count')) $('inlet-total-count').textContent = `${numInletsTotal} บาน`;
+  if ($('inlet-opening-kpi-val')) $('inlet-opening-kpi-val').textContent = `${(openingRatio * 100).toFixed(0)}%`;
+  if ($('inlet-opening-kpi-sub')) $('inlet-opening-kpi-sub').textContent = `ช่องเปิด ${areaAtOpeningFt2.toFixed(2)} ft² (${(openingRatio*inletSpec.heightM*1000).toFixed(0)} mm)`;
   if ($('inlet-side-count')) {
     $('inlet-side-count').textContent = inletSpec.type === 'wall' 
       ? `ฝั่งซ้าย: ${numPerSide} | ฝั่งขวา: ${numPerSide} บาน`
@@ -3002,13 +3418,13 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   if ($('inlet-flow-sub')) {
     const pUnitStr = isMetric ? 'Pa' : 'in.wg';
     const pConv = isMetric ? 1 : (1 / CONVERSIONS.PA_TO_INWC);
-    $('inlet-flow-sub').textContent = `@ ${fmt(designSP * pConv, 1)} ${pUnitStr} (ความจุ ${fmtNum(actualFlowPerInletM3H * flowConv)}/บาน)`;
+    $('inlet-flow-sub').textContent = `@ ${fmt(designSP * pConv, 1)} ${pUnitStr} (ความจุเปิด ${(openingRatio*100).toFixed(0)}%: ${fmtNum(actualFlowPerInletM3H * flowConv)}/บาน)`;
   }
   if ($('inlet-spacing-val')) {
     $('inlet-spacing-val').textContent = `${fmt(spacingM * distConv, 2)} ${distUnitStr}`;
   }
   if ($('inlet-spacing-sub')) {
-    $('inlet-spacing-sub').textContent = `เว้นห่างสม่ำเสมอ ${numPerSide} จุด/ฝั่ง`;
+    $('inlet-spacing-sub').textContent = `เฉลี่ย ${fmt(spacingM * distConv, 2)} ${distUnitStr} (${numPerSide} บาน/ฝั่ง)`;
   }
   if ($('inlet-jet-velocity')) {
     const vUnitStr = isMetric ? 'm/s' : 'fpm';
@@ -3016,117 +3432,544 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     $('inlet-jet-velocity').textContent = `${fmt(jetVelocityMS * vConv, 1)} ${vUnitStr}`;
   }
   if ($('inlet-jet-fill')) {
-    const fillPercent = Math.min(100, Math.max(15, (jetVelocityMS / 10.0) * 100));
+    // ── Color-code by Jet Velocity (Cobb Standard Thresholds) ──
+    // Green  ≥ 7.2 m/s  — เกณฑ์ Cobb ผ่าน (ลมพุ่งถึงสันหลังคาสมบูรณ์)
+    // Yellow 6.0–7.2    — ยังพอรับได้ แต่ควรเพิ่ม SP
+    // Red    < 6.0      — ต่ำเกินไป ลมพุ่งไม่ถึง ต้องแก้ไข
+    const COBB_GREEN  = 7.2; // m/s lower bound for PASS
+    const COBB_YELLOW = 6.0; // m/s lower bound for WARNING
+    const JET_MAX     = 10.0; // m/s (reference max for bar scale)
+    const fillPercent = Math.min(100, Math.max(8, Math.round((jetVelocityMS / JET_MAX) * 100)));
     $('inlet-jet-fill').style.width = `${fillPercent}%`;
-    if (designSP < (cobbReqPa - 6)) {
-      $('inlet-jet-fill').style.backgroundColor = 'var(--accent-yellow)';
-      if ($('inlet-jet-eval')) $('inlet-jet-eval').textContent = `⚠ แรงดันต่ำไป (แนะนำ ≥ ${cobbReqPa} Pa สำหรับกว้าง ${buildingW}m ตามมาตรฐาน Cobb)`;
-    } else if (designSP > (cobbReqPa + 15)) {
-      $('inlet-jet-fill').style.backgroundColor = 'var(--accent-red)';
-      if ($('inlet-jet-eval')) $('inlet-jet-eval').textContent = `⚠ แรงดันสูงเกินเกณฑ์ (${cobbReqPa} Pa) อาจสูญเสียพลังงานพัดลม`;
+
+    let jetColor, jetIcon, jetMsg;
+    if (jetVelocityMS >= COBB_GREEN) {
+      jetColor = 'var(--accent-green)';
+      jetIcon  = '✓';
+      jetMsg   = `ผ่านเกณฑ์ Cobb — Jet Velocity ${jetVelocityMS.toFixed(1)} m/s ≥ 7.2 m/s | ลมพุ่งถึงสันหลังคา ${throwAchievedM.toFixed(1)} m @ ${designSP} Pa`;
+    } else if (jetVelocityMS >= COBB_YELLOW) {
+      jetColor = 'var(--accent-yellow)';
+      jetIcon  = '⚠';
+      jetMsg   = `ใกล้เกณฑ์ — Jet Velocity ${jetVelocityMS.toFixed(1)} m/s (ต้องการ ≥ 7.2 m/s) ลมพุ่งได้ ${throwAchievedM.toFixed(1)} m แนะนำเพิ่ม SP เป็น ${cobbReqPa} Pa`;
     } else {
-      $('inlet-jet-fill').style.backgroundColor = 'var(--accent-green)';
-      if ($('inlet-jet-eval')) $('inlet-jet-eval').textContent = `✓ เหมาะสมตาม Cobb Standard (${jetVelocityMS.toFixed(1)} m/s พุ่งถึงสันหลังคา ${throwDistTargetM.toFixed(1)}m)`;
+      jetColor = 'var(--accent-red)';
+      jetIcon  = '✗';
+      jetMsg   = `ต่ำเกินไป — Jet Velocity ${jetVelocityMS.toFixed(1)} m/s < 6.0 m/s ลมพุ่งไม่ถึงสันหลังคา ต้องเพิ่ม SP หรือลดจำนวนบาน`;
     }
+    $('inlet-jet-fill').style.backgroundColor = jetColor;
+    if ($('inlet-jet-velocity')) $('inlet-jet-velocity').style.color = jetColor;
+    if ($('inlet-jet-eval')) $('inlet-jet-eval').innerHTML = `${jetIcon} ${jetMsg}`;
   }
 
   if ($('inlet-actuator-spec-badge')) $('inlet-actuator-spec-badge').textContent = actuatorModelDesc;
   if ($('inlet-mount-type-val')) $('inlet-mount-type-val').textContent = inletSpec.mounting;
   if ($('inlet-first-dist-val')) $('inlet-first-dist-val').textContent = `≈ ${fmt(firstInletDistM * distConv, 2)} ${distUnitStr}`;
   if ($('inlet-active-run-val')) $('inlet-active-run-val').textContent = `≈ ${fmt(activeLengthM * distConv, 1)} ${distUnitStr} (ยาวรวม ${fmt(buildingL * distConv, 1)} ${distUnitStr})`;
+  if ($('inlet-bay-count-val')) $('inlet-bay-count-val').textContent = `${totalBays} ช่อง (ช่วงติด Inlet: ${activeBays} ช่อง @ ${baySpanM.toFixed(1)}m)`;
+  if ($('inlet-per-bay-val')) $('inlet-per-bay-val').textContent = `${bayLayoutSummary} (ฝั่งละ ${numPerSide} บาน)`;
+  if ($('inlet-bay-recommend-text')) $('inlet-bay-recommend-text').innerHTML = bayAdviceText;
+  
+  const dimTag = inletSpec.dimOuter ? `นอก ${inletSpec.dimOuter}` : `${inletSpec.widthM*1000}×${inletSpec.heightM*1000}mm`;
+  const openTag = inletSpec.openingSize ? ` | เปิด ${inletSpec.openingSize}` : '';
+  if ($('inlet-model-size-badge')) $('inlet-model-size-badge').textContent = `${inletSpec.name} [${dimTag}${openTag}]`;
   if ($('inlet-pull-force-val')) $('inlet-pull-force-val').textContent = `≈ ${fmt(totalPullKg, 1)} kgf`;
   if ($('inlet-stroke-val')) $('inlet-stroke-val').textContent = `${inletSpec.strokeMm} mm`;
-  if ($('inlet-throw-dist-val')) $('inlet-throw-dist-val').textContent = `เป้าหมาย ${fmt(throwDistTargetM * distConv, 1)} ${distUnitStr} (ถึงกึ่งกลางหลังคา)`;
-
-  // ── GENERATE BOQ TABLE ──
-  const boqTbody = $('inlet-boq-tbody');
-  if (boqTbody) {
-    const boqItems = [
-      {
-        no: 1,
-        desc: `ชุดบานระบายอากาศ Air Inlet (${inletSpec.name})`,
-        spec: `ขนาดช่องเปิด ${inletSpec.widthM.toFixed(2)}x${inletSpec.heightM.toFixed(2)} m, วัสดุพลาสติกวิศวกรรม UV Resistance ป้องกันแสงสะท้อน`,
-        qty: numInletsTotal,
-        unit: 'ชุด',
-        note: 'ติดตั้งสมมาตร 2 ฝั่งผนังโรงเรือน พร้อมตาข่ายกันนกสแตนเลส',
-        tag: 'boq-tag-main'
-      },
-      {
-        no: 2,
-        desc: 'ชุดมอเตอร์กว้านขับเคลื่อนอัตโนมัติ (Winch Motor Actuator)',
-        spec: actuatorModelDesc,
-        qty: winchQty,
-        unit: 'ชุด',
-        note: 'ควบคุมมุมเปิด-ปิดตามแรงดัน Static Pressure อัตโนมัติ',
-        tag: 'boq-tag-actuator'
-      },
-      {
-        no: 3,
-        desc: 'สายสลิงหลักสแตนเลส (Main Stainless Wire Rope)',
-        spec: 'สแตนเลสเกรด 304 ขนาด Ø 4.0 - 5.0 mm (7x19 Construction)',
-        qty: mainWireRopeMeter,
-        unit: 'เมตร',
-        note: `เดินตามแนวยาวโรงเรือน ${inletSpec.type === 'wall' ? '2 แนว (ซ้าย/ขวา)' : '1 แนว'}`,
-        tag: 'boq-tag-hardware'
-      },
-      {
-        no: 4,
-        desc: 'สายสลิงย่อยดึงบาน (Drop Wire Rope)',
-        spec: 'สแตนเลสเกรด 304 ขนาด Ø 1.5 - 2.0 mm',
-        qty: dropWireMeter,
-        unit: 'เมตร',
-        note: 'เชื่อมระหว่างสลิงหลักเข้ากับแขนเปิดของบาน Inlet แต่ละตัว',
-        tag: 'boq-tag-hardware'
-      },
-      {
-        no: 5,
-        desc: 'รอกนำสายสลิงและรอกเลี้ยว (Heavy Duty Pulleys)',
-        spec: 'รอกลูกปืนหล่อลื่นสแตนเลส/ไนลอนเกรดวิศวกรรม ขนาด 1.5" - 3.5"',
-        qty: pulleysQty,
-        unit: 'ตัว',
-        note: 'ติดตั้งหัว-ท้ายโรงเรือน และจุดแยกดึงบานทุกจุด',
-        tag: 'boq-tag-hardware'
-      },
-      {
-        no: 6,
-        desc: 'สปริงดึงกลับสำหรับบาน Inlet (Heavy Duty Return Springs)',
-        spec: 'สปริงกัลวาไนซ์/สแตนเลส แรงต้าน 2.0 - 3.0 kgf',
-        qty: returnSpringsQty,
-        unit: 'ตัว',
-        note: 'ช่วยดึงบานปิดสนิทเมื่อหย่อนสลิง ป้องกันลมรั่ว',
-        tag: 'boq-tag-hardware'
-      },
-      {
-        no: 7,
-        desc: 'กิ๊ปรัดสลิง, สเก็น, เกลียวเร่ง (Hardware & Rigging Kit)',
-        spec: 'กิ๊ปรัดสลิงสแตนเลส SUS304 พร้อมเกลียวเร่ง M8/M10',
-        qty: wireClampsQty,
-        unit: 'ชุด',
-        note: 'สำหรับตั้งความตึงสลิงและยึดจุดต่อทั้งหมด',
-        tag: 'boq-tag-hardware'
-      }
-    ];
-
-    let boqHtml = '';
-    boqItems.forEach(item => {
-      boqHtml += `
-        <tr>
-          <td style="text-align:center;color:var(--text-dim)">${item.no}</td>
-          <td>
-            <strong>${item.desc}</strong>
-            <div style="margin-top:2px"><span class="boq-tag ${item.tag}">${item.unit === 'ชุด' ? 'MAIN EQUIPMENT' : 'HARDWARE & RIGGING'}</span></div>
-          </td>
-          <td style="color:var(--text-muted);font-size:11px">${item.spec}</td>
-          <td class="boq-qty">${item.qty}</td>
-          <td class="boq-unit">${item.unit}</td>
-          <td style="color:var(--text-dim);font-size:10.5px">${item.note}</td>
-        </tr>`;
-    });
-    boqTbody.innerHTML = boqHtml;
+  if ($('inlet-throw-dist-val')) {
+    $('inlet-throw-dist-val').textContent = `พุ่งได้ ≈ ${fmt(throwAchievedM * distConv, 1)} ${distUnitStr} (เป้าหมายกึ่งกลางหลังคา ${fmt(throwDistTargetM * distConv, 1)} ${distUnitStr})`;
   }
+
+  // ── POPULATE LIVE STEP-BY-STEP CALCULATION BREAKDOWN ──
+  const pUnitStr = isMetric ? 'Pa' : 'in.wg';
+  const pConv = isMetric ? 1 : (1 / CONVERSIONS.PA_TO_INWC);
+  const vUnitStr = isMetric ? 'm/s' : 'fpm';
+  const vConv = isMetric ? 1 : (1 / CONVERSIONS.FTMIN_TO_MS);
+  
+  if ($('inlet-calc-mode-badge')) {
+    if (calcMode === 'percent') {
+      $('inlet-calc-mode-badge').textContent = `โหมด: % พัดลมอุโมงค์ลม (${(percentVal * 100).toFixed(0)}% Transitional)`;
+    } else if (calcMode === 'minvent') {
+      $('inlet-calc-mode-badge').textContent = 'โหมด: Minimum Ventilation (20% พัดลม)';
+    } else {
+      $('inlet-calc-mode-badge').textContent = 'โหมด: กำหนดปริมาณลมเอง (Custom Flow)';
+    }
+  }
+  if ($('inlet-calc-qtotal')) {
+    $('inlet-calc-qtotal').textContent = `${fmtNum(totalHouseAirflowM3H * flowConv)} ${flowUnitStr} (พัดลมรวม ${totalFansRequired || '—'} ตัว)`;
+  }
+  if ($('inlet-calc-pct-label')) {
+    if (calcMode === 'percent') {
+      $('inlet-calc-pct-label').textContent = `${(percentVal * 100).toFixed(0)}% ของลมรวม (Transitional Stage Ventilation)`;
+    } else if (calcMode === 'minvent') {
+      $('inlet-calc-pct-label').textContent = '20% ของลมรวม (Minimum Ventilation Standard)';
+    } else {
+      $('inlet-calc-pct-label').textContent = 'กำหนดค่าเองโดยตรง (Manual Flow Override)';
+    }
+  }
+  if ($('inlet-calc-qtarget')) {
+    $('inlet-calc-qtarget').textContent = `${fmtNum(targetInletFlowM3H * flowConv)} ${flowUnitStr} (${((targetInletFlowM3H / (totalHouseAirflowM3H || 1)) * 100).toFixed(0)}% ของลมรวม)`;
+  }
+  if ($('inlet-calc-spec-ref')) {
+    $('inlet-calc-spec-ref').textContent = `${inletSpec.name} (เปิดเต็มบาน ${areaFullFt2.toFixed(2)} ft²)`;
+  }
+  if ($('inlet-calc-sp-val')) {
+    $('inlet-calc-sp-val').textContent = `ΔP = ${fmt(designSP * pConv, 1)} ${pUnitStr} (เกณฑ์ Cobb แนะนำ: ${cobbReqPa} Pa สำหรับโรงเรือนกว้าง ${fmt(buildingW * distConv, 1)} ${distUnitStr})`;
+  }
+  if ($('inlet-calc-opening-val')) {
+    $('inlet-calc-opening-val').textContent = `${(openingRatio * 100).toFixed(0)}% (พื้นที่เปิดประสิทธิผล = ${areaAtOpeningFt2.toFixed(2)} ft² หรือ ${areaAtOpeningM2.toFixed(3)} m²/บาน)`;
+  }
+  if ($('inlet-calc-flow-per-inlet')) {
+    $('inlet-calc-flow-per-inlet').textContent = `${fmtNum(actualFlowPerInletM3H * flowConv)} ${flowUnitStr}/บาน (ที่ความเร็วลมพุ่ง ${jetVelocityMS.toFixed(1)} m/s | 1,500 fpm @ ${fmt(designSP * pConv, 1)} ${pUnitStr})`;
+  }
+  if ($('inlet-calc-n-raw')) {
+    const rawN = (targetInletFlowCFM / (actualFlowPerInletCFM || 1)).toFixed(1);
+    $('inlet-calc-n-raw').textContent = `${fmtNum(targetInletFlowCFM)} CFM ÷ ${fmtNum(actualFlowPerInletCFM)} CFM/บาน = ${rawN} บาน`;
+  }
+  if ($('inlet-calc-n-final')) {
+    $('inlet-calc-n-final').textContent = `${numInletsTotal} บาน (แบ่งติดตั้งผนัง 2 ฝั่ง ฝั่งละ ${numPerSide} บาน)`;
+  }
+  if ($('inlet-calc-vjet-val')) {
+    $('inlet-calc-vjet-val').textContent = `${fmt(jetVelocityMS * vConv, 2)} ${vUnitStr} (เกณฑ์ Cobb: 7.2 - 7.5 m/s | ระยะพุ่ง ≈ ${fmt(throwAchievedM * distConv, 1)} ${distUnitStr})`;
+  }
+
+  // (BOQ table is rendered inside dedicated external tool: boq air.html)
+
+  // ── RENDER AutoCAD-STYLE SCHEMATIC ──
+  renderInletSchematic({
+    buildingL, buildingW, baySpanM, totalBays, activeBays,
+    numPerSide, numInletsTotal, inletsPerBayCeil, inletsPerBayFloor,
+    baysWithCeil: numPerSide > activeBays ? numPerSide % activeBays : 0,
+    inletWidthM: inletSpec.widthM, inletHeightM: inletSpec.heightM,
+    modelName: inletSpec.name, openingSize: inletSpec.openingSize,
+    firstInletDistM, activeLengthM, isMetric, layoutMode, jetVelocityMS
+  });
 }
 
-// ── STATE ──────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  renderInletSchematic()  — Engineering Infographic (v2)
+//  Clear top-view plan: fixed pixel heights, prominent badges
+// ══════════════════════════════════════════════════════════════
+function renderInletSchematic(p) {
+  const svg = $('inlet-schematic-svg');
+  if (!svg) return;
+
+  const {
+    buildingL, buildingW, baySpanM, totalBays, activeBays,
+    numPerSide, inletsPerBayCeil, inletsPerBayFloor,
+    baysWithCeil, modelName, openingSize, activeLengthM, isMetric, layoutMode, jetVelocityMS
+  } = p;
+  const currentJetV = (typeof jetVelocityMS === "number" && !isNaN(jetVelocityMS)) ? jetVelocityMS : 7.5;
+
+  // ── SVG Canvas ──
+  const W = 960, H = 255;
+  const PAD_L = 44, PAD_R = 76;
+  const drawW = W - PAD_L - PAD_R; // = 840px horizontal for building
+
+  // ── Fixed pixel zone heights (expanded vertically for AutoCAD details) ──
+  const ABOVE_H  = 22;   // space above building (for bay span dim label)
+  const TOP_Y    = ABOVE_H; // = 22 — top of building box
+  const WALL_H   = 3;    // wall pixel thickness
+  const BODY_H   = 98;   // building interior height
+  const BOT_Y    = TOP_Y + WALL_H + BODY_H;  // bottom wall top
+  const BLD_BTM  = BOT_Y + WALL_H;           // building bottom edge
+  const DIM1_Y   = BLD_BTM + 13;  // total length dim Y
+  const DIM2_Y   = DIM1_Y + 20;   // active length dim Y
+  const INFO_Y   = DIM2_Y + 20;   // summary bar top Y
+
+  const bldX = PAD_L;
+  const bldW = drawW;
+  const bayW = bldW / Math.max(totalBays, 1);
+
+  // ── Per-bay inlet count array ──
+  const bayInlets = Array(totalBays).fill(0);
+  const deadBays  = Math.max(0, totalBays - activeBays);
+  const deadStart = Math.floor(deadBays / 2); // dead bays at Pad side
+
+  if (layoutMode === 'split') {
+    // ── SPLIT-TUNNEL: Central Fans (8% of bays), Pads at both ends ──
+    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
+    const remainingDeadBays = Math.max(0, deadBays - fanBays);
+    const padLeftBays = Math.max(1, Math.floor(remainingDeadBays / 2));
+    const padRightBays = Math.max(1, Math.ceil(remainingDeadBays / 2));
+
+    const leftWingBays = [];
+    for (let i = padLeftBays; i < fanStartBay; i++) leftWingBays.push(i);
+
+    const rightWingBays = [];
+    for (let i = fanStartBay + fanBays; i < totalBays - padRightBays; i++) rightWingBays.push(i);
+
+    const nLeftBays = leftWingBays.length;
+    const nRightBays = rightWingBays.length;
+
+    // Distribute total inlets per wall (numPerSide) equally between Left Wing & Right Wing
+    const leftWingInlets = Math.floor(numPerSide / 2);
+    const rightWingInlets = numPerSide - leftWingInlets; // handles any odd number symmetrically
+
+    // Helper: distribute count across bays with mirror capability
+    const distributeWing = (inletCount, baysList, fromPadToFan) => {
+      const nBays = baysList.length;
+      if (nBays <= 0) return;
+      const baseFloor = Math.floor(inletCount / nBays);
+      const baseCeil = Math.ceil(inletCount / nBays);
+      let ceilCount = inletCount % nBays;
+
+      for (let k = 0; k < nBays; k++) {
+        // fromPadToFan = true: higher density closer to cooling pad zone (or vice versa)
+        const targetBayIdx = fromPadToFan ? baysList[k] : baysList[nBays - 1 - k];
+        bayInlets[targetBayIdx] = ceilCount-- > 0 ? baseCeil : baseFloor;
+      }
+    };
+
+    // Left Wing: index 0 (Pad Left) -> index N-1 (Mid Fans)
+    distributeWing(leftWingInlets, leftWingBays, true);
+
+    // Right Wing: index N-1 (Pad Right) -> index 0 (Mid Fans) - Mirrored so highest density is near Pad Right!
+    distributeWing(rightWingInlets, rightWingBays, false);
+  } else {
+    // ── STANDARD: Pad left, Fan right ──
+    if (numPerSide <= activeBays) {
+      for (let i = 0; i < numPerSide; i++) {
+        if (deadStart + i < totalBays) bayInlets[deadStart + i] = 1;
+      }
+    } else {
+      let ceilR = baysWithCeil;
+      for (let i = deadStart; i < deadStart + activeBays; i++) {
+        bayInlets[i] = ceilR-- > 0 ? inletsPerBayCeil : inletsPerBayFloor;
+      }
+    }
+  }
+
+  // ── Color palette ──
+  const C = {
+    bg:       '#060d1a',
+    wall:     '#e2e8f0',
+    wallSt:   '#94a3b8',
+    bldFill:  '#0b1525',
+    bayFill:  'rgba(34,211,238,0.10)',
+    bayBdr:   'rgba(34,211,238,0.38)',
+    bayEFill: 'rgba(71,85,105,0.05)',
+    bayEBdr:  'rgba(71,85,105,0.15)',
+    cyan:     '#22d3ee',
+    cyanGl:   'rgba(34,211,238,0.50)',
+    blue:     '#38bdf8',
+    dimLn:    '#475569',
+    dimTx:    '#94a3b8',
+    white:    '#cbd5e1',
+    padFill:  'rgba(34,197,94,0.14)',
+    padBdr:   'rgba(34,197,94,0.65)',
+    fanFill:  'rgba(239,68,68,0.11)',
+    fanBdr:   'rgba(239,68,68,0.60)',
+    bdgFill:  'rgba(34,211,238,0.20)',
+    bdgBdr:   'rgba(34,211,238,0.55)',
+    bdgTx:    '#67e8f9',
+    amber:    '#fbbf24',
+    mutedSt:  'rgba(100,116,139,0.40)',
+    infoBg:   '#090f1d',
+    grid:     'rgba(255,255,255,0.025)',
+  };
+
+  let s = '';
+
+  // ── DEFS ──
+  s += `<defs>
+    <marker id="aw"  viewBox="0 0 6 6" markerWidth="5" markerHeight="5" refX="5" refY="3" orient="auto"><polygon points="0,0 0,6 6,3" fill="${C.dimLn}"/></marker>
+    <marker id="awr" viewBox="0 0 6 6" markerWidth="5" markerHeight="5" refX="1" refY="3" orient="auto"><polygon points="6,0 6,6 0,3" fill="${C.dimLn}"/></marker>
+    <marker id="awc" viewBox="0 0 6 6" markerWidth="5" markerHeight="5" refX="5" refY="3" orient="auto"><polygon points="0,0 0,6 6,3" fill="${C.cyanGl}"/></marker>
+    <marker id="awcr" viewBox="0 0 6 6" markerWidth="5" markerHeight="5" refX="1" refY="3" orient="auto"><polygon points="6,0 6,6 0,3" fill="${C.cyanGl}"/></marker>
+    <marker id="awh-r" viewBox="0 0 6 6" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0,1.5 0,4.5 4.5,3" fill="rgba(34,211,238,0.3)"/></marker>
+    <marker id="awh-l" viewBox="0 0 6 6" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto"><polygon points="6,1.5 6,4.5 1.5,3" fill="rgba(34,211,238,0.3)"/></marker>
+    <filter id="gcn" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+  // ── Background ──
+  s += `<rect width="${W}" height="${H}" fill="${C.bg}"/>`;
+
+  // Subtle grid (only in building vertical band)
+  for (let gx = bldX; gx <= bldX + bldW; gx += 60) {
+    s += `<line x1="${gx}" y1="${TOP_Y}" x2="${gx}" y2="${BLD_BTM}" stroke="${C.grid}" stroke-width="1"/>`;
+  }
+
+  // ── Building interior ──
+  s += `<rect x="${bldX}" y="${TOP_Y}" width="${bldW}" height="${WALL_H + BODY_H + WALL_H}" fill="${C.bldFill}"/>`;
+
+  // ── Helper: Render Vertical Text (Rotated text centered in zone) ──
+  const makeVerticalText = (text, x, y, maxW, fontSize, fill) => {
+    // Check if vertical rotated single-string fits or stack characters
+    const targetFs = Math.min(fontSize, Math.max(7, maxW * 0.45));
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${fill}" font-size="${targetFs}" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" letter-spacing="1.5px" transform="rotate(-90,${x.toFixed(1)},${y.toFixed(1)})">${text}</text>`;
+  };
+
+  // ── Bay fills ──
+  for (let i = 0; i < totalBays; i++) {
+    const bx = bldX + i * bayW;
+    const has = bayInlets[i] > 0;
+    s += `<rect x="${bx.toFixed(1)}" y="${TOP_Y + WALL_H}" width="${bayW.toFixed(1)}" height="${BODY_H}" fill="${has ? C.bayFill : C.bayEFill}" stroke="${has ? C.bayBdr : C.bayEBdr}" stroke-width="0.5"/>`;
+  }
+
+  // ── PAD & FAN zone overlays with Vertical Labels to prevent overlap ──
+  if (layoutMode === 'split') {
+    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
+    const remainingDeadBays = Math.max(0, deadBays - fanBays);
+    const padLeftBays = Math.max(1, Math.floor(remainingDeadBays / 2));
+    const padRightBays = Math.max(1, Math.ceil(remainingDeadBays / 2));
+
+    // Left PAD
+    const pLW = padLeftBays * bayW;
+    s += `<rect x="${bldX}" y="${TOP_Y}" width="${pLW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
+    s += `<line x1="${(bldX+pLW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pLW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+    if (pLW > 8) {
+      const tagX = bldX + pLW / 2;
+      const tagY = TOP_Y + WALL_H + BODY_H / 2;
+      s += makeVerticalText("PAD LEFT", tagX, tagY, pLW, 9.0, "#22c55e");
+    }
+
+    // Right PAD
+    const pRW = padRightBays * bayW;
+    const pRX = bldX + bldW - pRW;
+    s += `<rect x="${pRX.toFixed(1)}" y="${TOP_Y}" width="${pRW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
+    s += `<line x1="${pRX.toFixed(1)}" y1="${TOP_Y}" x2="${pRX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+    if (pRW > 8) {
+      const tagX = pRX + pRW / 2;
+      const tagY = TOP_Y + WALL_H + BODY_H / 2;
+      s += makeVerticalText("PAD RIGHT", tagX, tagY, pRW, 9.0, "#22c55e");
+    }
+
+    // Center FANS (Split-Tunnel layout)
+    const fX = bldX + fanStartBay * bayW;
+    const fW = fanBays * bayW;
+    s += `<rect x="${fX.toFixed(1)}" y="${TOP_Y}" width="${fW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.fanFill}"/>`;
+    s += `<line x1="${fX.toFixed(1)}" y1="${TOP_Y}" x2="${fX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+    s += `<line x1="${(fX+fW).toFixed(1)}" y1="${TOP_Y}" x2="${(fX+fW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+    if (fW > 8) {
+      const tagX = fX + fW / 2;
+      const tagY = TOP_Y + WALL_H + BODY_H / 2;
+      s += makeVerticalText("MID FANS", tagX, tagY, fW, 9.0, "#ef4444");
+    }
+
+    // ── Internal Airflow Directions (Split-Tunnel: Left wing → MID FANS ← Right wing) ──
+    const leftStart = bldX + pLW;
+    const leftEnd = fX;
+    const leftWidth = leftEnd - leftStart;
+    if (leftWidth > 20) {
+      for (let step = 1; step <= 3; step++) {
+        const ax = leftStart + (leftWidth * step) / 4;
+        s += `<line x1="${(ax - 10).toFixed(1)}" y1="${(TOP_Y + WALL_H + 18).toFixed(1)}" x2="${(ax + 10).toFixed(1)}" y2="${(TOP_Y + WALL_H + 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-r)"/>`;
+        s += `<line x1="${(ax - 10).toFixed(1)}" y1="${(BOT_Y - 18).toFixed(1)}" x2="${(ax + 10).toFixed(1)}" y2="${(BOT_Y - 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-r)"/>`;
+      }
+    }
+    const rightStart = fX + fW;
+    const rightEnd = pRX;
+    const rightWidth = rightEnd - rightStart;
+    if (rightWidth > 20) {
+      for (let step = 1; step <= 3; step++) {
+        const ax = rightStart + (rightWidth * step) / 4;
+        s += `<line x1="${(ax + 10).toFixed(1)}" y1="${(TOP_Y + WALL_H + 18).toFixed(1)}" x2="${(ax - 10).toFixed(1)}" y2="${(TOP_Y + WALL_H + 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-l)"/>`;
+        s += `<line x1="${(ax + 10).toFixed(1)}" y1="${(BOT_Y - 18).toFixed(1)}" x2="${(ax - 10).toFixed(1)}" y2="${(BOT_Y - 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-l)"/>`;
+      }
+    }
+  } else {
+    // ── STANDARD TUNNEL LAYOUT ──
+    if (deadStart > 0) {
+      const pW = deadStart * bayW;
+      s += `<rect x="${bldX}" y="${TOP_Y}" width="${pW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
+      s += `<line x1="${(bldX+pW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+      if (pW > 8) {
+        const tagX = bldX + pW / 2;
+        const tagY = TOP_Y + WALL_H + BODY_H / 2;
+        s += makeVerticalText("COOLING PAD", tagX, tagY, pW, 9.0, "#22c55e");
+      }
+    }
+    const fanStart = deadStart + activeBays;
+    let fX = bldX + bldW;
+    let fW = 0;
+    if (fanStart < totalBays) {
+      fX = bldX + fanStart * bayW;
+      fW = bldW - fanStart * bayW;
+      s += `<rect x="${fX.toFixed(1)}" y="${TOP_Y}" width="${fW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.fanFill}"/>`;
+      s += `<line x1="${fX.toFixed(1)}" y1="${TOP_Y}" x2="${fX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+      if (fW > 8) {
+        const tagX = fX + fW / 2;
+        const tagY = TOP_Y + WALL_H + BODY_H / 2;
+        s += makeVerticalText("TUNNEL FANS", tagX, tagY, fW, 9.0, "#ef4444");
+      }
+    }
+
+    // ── Internal Airflow Directions (Standard: Left → Right) ──
+    const stdStart = bldX + (deadStart * bayW);
+    const stdEnd = fX;
+    const stdWidth = stdEnd - stdStart;
+    if (stdWidth > 20) {
+      for (let step = 1; step <= 5; step++) {
+        const ax = stdStart + (stdWidth * step) / 6;
+        s += `<line x1="${(ax - 10).toFixed(1)}" y1="${(TOP_Y + WALL_H + 18).toFixed(1)}" x2="${(ax + 10).toFixed(1)}" y2="${(TOP_Y + WALL_H + 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-r)"/>`;
+        s += `<line x1="${(ax - 10).toFixed(1)}" y1="${(BOT_Y - 18).toFixed(1)}" x2="${(ax + 10).toFixed(1)}" y2="${(BOT_Y - 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-r)"/>`;
+      }
+    }
+  }
+
+  // ── Walls (top + bottom) ──
+  s += `<rect x="${bldX}" y="${TOP_Y}" width="${bldW}" height="${WALL_H}" fill="${C.wall}"/>`;
+  s += `<rect x="${bldX}" y="${BOT_Y}" width="${bldW}" height="${WALL_H}" fill="${C.wall}"/>`;
+  // End caps (reduced width from 5px to 2px for cleaner design)
+  s += `<rect x="${bldX}" y="${TOP_Y}" width="2" height="${WALL_H+BODY_H+WALL_H}" fill="${C.wall}"/>`;
+  s += `<rect x="${bldX+bldW-2}" y="${TOP_Y}" width="2" height="${WALL_H+BODY_H+WALL_H}" fill="${C.wall}"/>`;
+
+  // Bay dividers on walls (subtle tick marks only)
+  for (let i = 1; i < totalBays; i++) {
+    const lx = (bldX + i * bayW).toFixed(1);
+    s += `<line x1="${lx}" y1="${TOP_Y}" x2="${lx}" y2="${TOP_Y + WALL_H}" stroke="${C.wallSt}" stroke-width="0.4"/>`;
+    s += `<line x1="${lx}" y1="${BOT_Y}" x2="${lx}" y2="${BOT_Y + WALL_H}" stroke="${C.wallSt}" stroke-width="0.4"/>`;
+  }
+
+  // ── Inlet symbols & count badges per bay ──
+  for (let i = 0; i < totalBays; i++) {
+    const cnt = bayInlets[i];
+    if (cnt === 0) continue;
+
+    const bx = bldX + i * bayW;
+    const cx = bx + bayW / 2;
+
+    // Adaptive inlet icon width: bigger when fewer inlets per bay
+    const iW = Math.max(5, Math.min(14, (bayW * 0.75) / cnt));
+    const gap = bayW / (cnt + 1);
+    const arLen = Math.min(15, BODY_H * 0.20);
+
+    for (let j = 0; j < cnt; j++) {
+      const ix = (bx + gap * (j + 1) - iW / 2).toFixed(1);
+
+      // ▐ TOP wall inlet (glowing cyan bar)
+      s += `<rect x="${ix}" y="${TOP_Y - 1}" width="${iW.toFixed(1)}" height="${WALL_H + 4}" fill="${C.cyan}" rx="1.5" filter="url(#gcn)"/>`;
+      // Arrow pointing INTO building (downward from top wall)
+      const ax = (bx + gap * (j + 1)).toFixed(1);
+      s += `<line x1="${ax}" y1="${TOP_Y + WALL_H + 1}" x2="${ax}" y2="${(TOP_Y + WALL_H + 1 + arLen).toFixed(1)}" stroke="${C.cyanGl}" stroke-width="1" marker-end="url(#awc)"/>`;
+
+      // ▐ BOTTOM wall inlet (mirrored)
+      s += `<rect x="${ix}" y="${BOT_Y - 3}" width="${iW.toFixed(1)}" height="${WALL_H + 4}" fill="${C.cyan}" rx="1.5" filter="url(#gcn)"/>`;
+      // Arrow pointing INTO building (upward from bottom wall)
+      s += `<line x1="${ax}" y1="${(BOT_Y - 4).toFixed(1)}" x2="${ax}" y2="${(BOT_Y - 4 - arLen).toFixed(1)}" stroke="${C.cyanGl}" stroke-width="1" marker-end="url(#awc)"/>`;
+    }
+
+    // ── Numbers AT TOP & BOTTOM WALLS (จำนวนบานอยู่ที่ริมผนังทั้ง 2 ด้าน) ──
+    if (bayW >= 8) {
+      const fs = Math.max(8, Math.min(12, bayW * 0.38));
+      // Top Wall count label (ชิดผนังด้านบน)
+      s += `<text x="${cx}" y="${TOP_Y - 5}" fill="${C.cyan}" font-size="${fs}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}</text>`;
+      // Bottom Wall count label (ชิดผนังด้านล่าง)
+      s += `<text x="${cx}" y="${BOT_Y + WALL_H + 11}" fill="${C.cyan}" font-size="${fs}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}</text>`;
+    }
+
+    // ── CENTER OF BAY: Jet Velocity Badge (ตัวเลขความเร็วลมพุ่งกลางเล้า) ──
+    if (bayW >= 14) {
+      const bdgW = Math.max(22, Math.min(48, bayW * 0.85));
+      const bdgH = 18;
+      const bdgX = (cx - bdgW / 2).toFixed(1);
+      const bdgY = (TOP_Y + WALL_H + (BODY_H - bdgH) / 2).toFixed(1);
+      const fs = Math.max(7.5, Math.min(9.5, bdgW * 0.22));
+      const vText = isMetric ? `${currentJetV.toFixed(1)}m/s` : `${Math.round(currentJetV * 196.85)}fpm`;
+      s += `<rect x="${bdgX}" y="${bdgY}" width="${bdgW.toFixed(1)}" height="${bdgH}" rx="3" fill="rgba(15,23,42,0.85)" stroke="rgba(56,189,248,0.4)" stroke-width="0.8"/>`;
+      s += `<text x="${cx}" y="${parseFloat(bdgY) + bdgH/2}" fill="var(--accent-cyan,#38bdf8)" font-size="${fs}" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" font-weight="700">${vText}</text>`;
+    }
+  }
+
+  // ── DIMENSION LINES ──
+
+  // 1. Building WIDTH (vertical, left side)
+  const dimLX = bldX - 16;
+  const midBldY = TOP_Y + (WALL_H + BODY_H + WALL_H) / 2;
+  s += `<line x1="${dimLX}" y1="${TOP_Y}" x2="${dimLX}" y2="${BLD_BTM}" stroke="${C.dimLn}" stroke-width="0.9" marker-start="url(#awr)" marker-end="url(#aw)"/>`;
+  s += `<text x="${dimLX - 4}" y="${midBldY}" fill="${C.white}" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700" transform="rotate(-90,${dimLX-4},${midBldY})">${isMetric ? `W = ${buildingW.toFixed(0)} m` : `W = ${(buildingW*3.281).toFixed(0)} ft`}</text>`;
+
+  // 2. Total building LENGTH (horizontal, below)
+  s += `<line x1="${bldX}" y1="${DIM1_Y}" x2="${bldX+bldW}" y2="${DIM1_Y}" stroke="${C.dimLn}" stroke-width="0.9" marker-start="url(#awr)" marker-end="url(#aw)"/>`;
+  s += `<text x="${bldX + bldW/2}" y="${DIM1_Y + 13}" fill="${C.white}" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">${isMetric ? `L = ${buildingL.toFixed(0)} m` : `L = ${(buildingL*3.281).toFixed(0)} ft`}</text>`;
+
+  // 3. ACTIVE zone length (cyan, below main length)
+  if (layoutMode === 'split') {
+    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
+    const padLeftBays = Math.max(1, Math.floor(deadBays / 2));
+    const padRightBays = Math.max(1, Math.ceil(deadBays / 2));
+
+    const lx1 = (bldX + padLeftBays * bayW).toFixed(1);
+    const lx2 = (bldX + fanStartBay * bayW).toFixed(1);
+    const rx1 = (bldX + (fanStartBay + fanBays) * bayW).toFixed(1);
+    const rx2 = (bldX + (totalBays - padRightBays) * bayW).toFixed(1);
+
+    s += `<line x1="${lx1}" y1="${DIM2_Y}" x2="${lx2}" y2="${DIM2_Y}" stroke="${C.cyanGl}" stroke-width="0.9" marker-start="url(#awcr)" marker-end="url(#awc)"/>`;
+    s += `<line x1="${rx1}" y1="${DIM2_Y}" x2="${rx2}" y2="${DIM2_Y}" stroke="${C.cyanGl}" stroke-width="0.9" marker-start="url(#awcr)" marker-end="url(#awc)"/>`;
+
+    const activeLeftM = (fanStartBay - padLeftBays) * baySpanM;
+    const activeRightM = (totalBays - padRightBays - (fanStartBay + fanBays)) * baySpanM;
+    const leftB = fanStartBay - padLeftBays;
+    const rightB = totalBays - padRightBays - (fanStartBay + fanBays);
+    s += `<text x="${bldX + bldW/2}" y="${DIM2_Y + 12}" fill="${C.blue}" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Active Zones: ฝั่งละ ~${activeLeftM.toFixed(0)}m (ซ้าย: ${leftB} ช่อง | ขวา: ${rightB} ช่อง)</text>`;
+  } else {
+    const ax1 = (bldX + deadStart * bayW).toFixed(1);
+    const ax2 = (bldX + (deadStart + activeBays) * bayW).toFixed(1);
+    s += `<line x1="${ax1}" y1="${DIM2_Y}" x2="${ax2}" y2="${DIM2_Y}" stroke="${C.cyanGl}" stroke-width="0.9" marker-start="url(#awcr)" marker-end="url(#awc)"/>`;
+    s += `<text x="${(parseFloat(ax1)+parseFloat(ax2))/2}" y="${DIM2_Y + 12}" fill="${C.blue}" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Active Zone: ${activeLengthM.toFixed(0)} m  (${activeBays} bays × ${baySpanM.toFixed(1)} m/bay)</text>`;
+  }
+
+  // 4. Bay SPAN label (above building, for the active bay)
+  if (bayW > 18 && totalBays > 0) {
+    const targetBay = layoutMode === 'split' ? (Math.max(1, Math.floor(deadBays / 2))) : deadStart;
+    const b1x1 = (bldX + targetBay * bayW).toFixed(1);
+    const b1x2 = (bldX + (targetBay + 1) * bayW).toFixed(1);
+    const bDimY = TOP_Y - 8;
+    s += `<line x1="${b1x1}" y1="${bDimY}" x2="${b1x2}" y2="${bDimY}" stroke="${C.mutedSt}" stroke-width="0.8" marker-start="url(#awr)" marker-end="url(#aw)"/>`;
+    s += `<text x="${((parseFloat(b1x1)+parseFloat(b1x2))/2).toFixed(1)}" y="${bDimY - 4}" fill="${C.cyan}" font-size="8.5" font-weight="700" text-anchor="middle" font-family="IBM Plex Mono,monospace">Bay ${baySpanM.toFixed(1)}m</text>`;
+  }
+
+  // Wall labels (right of building - full label inside canvas)
+  const rwX = bldX + bldW + 6;
+  s += `<text x="${rwX}" y="${TOP_Y + WALL_H/2}" fill="${C.wallSt}" font-size="7.5" font-weight="600" dominant-baseline="middle" font-family="IBM Plex Mono,monospace">SIDE WALL (TOP)</text>`;
+  s += `<text x="${rwX}" y="${BOT_Y + WALL_H/2}" fill="${C.wallSt}" font-size="7.5" font-weight="600" dominant-baseline="middle" font-family="IBM Plex Mono,monospace">SIDE WALL (BOT)</text>`;
+
+  // ── SUMMARY INFO BAR ──
+  s += `<rect x="0" y="${INFO_Y}" width="${W}" height="${H - INFO_Y}" fill="${C.infoBg}"/>`;
+  s += `<line x1="0" y1="${INFO_Y}" x2="${W}" y2="${INFO_Y}" stroke="rgba(34,211,238,0.18)" stroke-width="1"/>`;
+
+  const layoutPat = inletsPerBayCeil === inletsPerBayFloor
+    ? `${inletsPerBayCeil} บาน/ช่อง`
+    : `${inletsPerBayCeil}/${inletsPerBayFloor} บาน/ช่อง`;
+
+  let activeBaysText = String(activeBays);
+  if (layoutMode === 'split') {
+    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
+    const padLeftBays = Math.max(1, Math.floor(deadBays / 2));
+    const padRightBays = Math.max(1, Math.ceil(deadBays / 2));
+    const leftB = fanStartBay - padLeftBays;
+    const rightB = totalBays - padRightBays - (fanStartBay + fanBays);
+    activeBaysText = `${leftB + rightB} ช่อง (ซ้าย:${leftB}|ขวา:${rightB})`;
+  }
+
+  const stats = [
+    { v: String(p.numInletsTotal), u: 'บาน รวมทั้งหมด', c: C.cyan },
+    { v: String(numPerSide),       u: 'บาน ฝั่งซ้าย',  c: C.white },
+    { v: String(numPerSide),       u: 'บาน ฝั่งขวา',   c: C.white },
+    { v: layoutPat,                u: 'รูปแบบ/ช่องเสา', c: C.amber },
+    { v: activeBaysText,           u: 'ช่อง Bay Active', c: C.blue },
+    { v: layoutMode === 'split' ? 'Split-Tunnel' : 'Standard', u: 'รูปแบบระบบ', c: C.cyan },
+  ];
+
+  const iw = W / stats.length;
+  const midInfoY = INFO_Y + (H - INFO_Y) / 2;
+  stats.forEach((st, idx) => {
+    const ix = idx * iw + iw / 2;
+    if (idx > 0) s += `<line x1="${idx*iw}" y1="${INFO_Y+4}" x2="${idx*iw}" y2="${H-4}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    const vfs = Math.min(13, Math.max(9, iw * 0.24));
+    s += `<text x="${ix}" y="${midInfoY - 5}" fill="${st.c}" font-size="${vfs}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${st.v}</text>`;
+    s += `<text x="${ix}" y="${midInfoY + 8}" fill="${C.dimTx}" font-size="8" text-anchor="middle" dominant-baseline="hanging" font-family="IBM Plex Mono,monospace">${st.u}</text>`;
+  });
+
+  svg.innerHTML = s;
+}
+
+
 let isMetric = true;
 let currentLang = 'th';
 let pumpChart = null;
@@ -3705,15 +4548,27 @@ function getSoftStarterSizing(numAC, acPowerWatts, acAmps) {
   };
 }
 
-function updateSchematicFansSection(systemMode, fanCount, numEC, numAC) {
+function updateSchematicFansSection(systemMode, fanCount, numEC, numAC, layoutMode = 'standard') {
   const container = $('schematic-fans-container');
   if (!container) return;
   
   const sr = parseFloat($('motor-speed-slider')?.value || 100) / 100;
   const ecDur = Math.max(0.3, (1.2 / (sr || 1))).toFixed(2);
   const unitsStr = translations[currentLang].units;
+
+  // Split-tunnel symmetrical 2-side breakdown
+  const isSplit = layoutMode === 'split';
+  const sideFanCount = (fanCount / 2).toFixed(fanCount % 2 === 0 ? 0 : 1);
+  const splitSideNote = isSplit ? `
+    <div style="margin-top:4px;padding:3px 6px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);border-radius:4px;font-size:9.5px;color:var(--accent-cyan);text-align:center;font-family:'IBM Plex Mono',monospace;line-height:1.3">
+      <strong>↔️ ติดตั้ง 2 ฝั่งสมมาตร</strong><br>
+      <span style="color:var(--text-bright)">ฝั่งละ ${sideFanCount} ${unitsStr}</span>
+    </div>
+  ` : '';
   
   if (systemMode === 'hybrid') {
+    const sideEC = (numEC / 2).toFixed(numEC % 2 === 0 ? 0 : 1);
+    const sideAC = (numAC / 2).toFixed(numAC % 2 === 0 ? 0 : 1);
     container.innerHTML = `
       <div style="display:flex;gap:14px;align-items:center;">
         <!-- EC FAN -->
@@ -3729,6 +4584,7 @@ function updateSchematicFansSection(systemMode, fanCount, numEC, numAC) {
           </svg>
           <div class="schematic-label" style="color:#38bdf8;font-weight:600">พัดลม EC</div>
           <div class="schematic-val" style="color:#38bdf8;font-size:13px">${numEC} ${unitsStr}</div>
+          ${isSplit ? `<div style="font-size:8.5px;color:var(--text-dim)">(ฝั่งละ ${sideEC})</div>` : ''}
         </div>
         <!-- AC FAN -->
         <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
@@ -3743,11 +4599,13 @@ function updateSchematicFansSection(systemMode, fanCount, numEC, numAC) {
           </svg>
           <div class="schematic-label" style="color:#f87171;font-weight:600">พัดลม AC</div>
           <div class="schematic-val" style="color:#f87171;font-size:13px">${numAC} ${unitsStr}</div>
+          ${isSplit ? `<div style="font-size:8.5px;color:var(--text-dim)">(ฝั่งละ ${sideAC})</div>` : ''}
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:3px;font-family:'IBM Plex Mono',monospace;font-weight:600">
+      <div style="font-size:10px;color:var(--text-muted);margin-top:3px;font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:center">
         รวม ${fanCount} ${unitsStr}
       </div>
+      ${splitSideNote}
     `;
   } else if (systemMode === 'all-ec') {
     container.innerHTML = `
@@ -3761,8 +4619,9 @@ function updateSchematicFansSection(systemMode, fanCount, numEC, numAC) {
           </g>
           <circle cx="30" cy="30" r="6" fill="#7dd3fc" stroke="#38bdf8" stroke-width="1.5"/>
         </svg>
-        <div class="schematic-label" style="color:#38bdf8;font-weight:600">พัดลมดูดอากาศ (EC)</div>
+        <div class="schematic-label" style="color:#38bdf8;font-weight:600">${isSplit ? 'พัดลมกึ่งกลางอาคาร (EC)' : 'พัดลมดูดอากาศ (EC)'}</div>
         <div class="schematic-val" style="color:#38bdf8">${fanCount} ${unitsStr}</div>
+        ${splitSideNote}
       </div>
     `;
   } else {
@@ -3778,8 +4637,9 @@ function updateSchematicFansSection(systemMode, fanCount, numEC, numAC) {
           </g>
           <circle cx="30" cy="30" r="6" fill="#fca5a5" stroke="#f87171" stroke-width="1.5"/>
         </svg>
-        <div class="schematic-label" style="color:#f87171;font-weight:600">พัดลมดูดอากาศ (AC)</div>
+        <div class="schematic-label" style="color:#f87171;font-weight:600">${isSplit ? 'พัดลมกึ่งกลางอาคาร (AC)' : 'พัดลมดูดอากาศ (AC)'}</div>
         <div class="schematic-val" style="color:#f87171">${fanCount} ${unitsStr}</div>
+        ${splitSideNote}
       </div>
     `;
   }
@@ -3937,10 +4797,20 @@ function calculate() {
   }
 
   const crossSectionalArea = width * height;
-  const requiredAirflowM3H_design = crossSectionalArea * desiredVelocity * 3600;
+  const layoutMode = document.querySelector('input[name="layout-mode"]:checked')?.value || 'standard';
+  
+  // Split-Tunnel (พัดลมกลาง): อากาศเข้าจาก 2 ด้าน (แพดหัว-ท้าย) วิ่งเข้าหาพัดลมตรงกลาง
+  // แต่ละปีก (Wing) ต้องการความเร็วลม V_desired -> ลมแต่ละปีก = A * V_desired
+  // ปริมาณลมรวมที่พัดลมตรงกลางต้องดูด = 2 * (A * V_desired)
+  const isSplitTunnel = (layoutMode === 'split');
+  const requiredAirflowM3H_wing = crossSectionalArea * desiredVelocity * 3600;
+  const requiredAirflowM3H_design = isSplitTunnel ? (requiredAirflowM3H_wing * 2) : requiredAirflowM3H_wing;
+
+  // สำหรับ Split-Tunnel: ความยาวทางเดินลมของแต่ละปีก = L / 2
+  const effectiveAirLengthM = isSplitTunnel ? (length / 2) : length;
   const padPressure = 12.5 * Math.pow(padDesignVelocity / 1.78, 2);
   const transitionPressure = (7.5 / Math.pow(3.0,2)) * Math.pow(desiredVelocity,2);
-  const pipePressure = ((6.0 / Math.pow(3.0,2)) / 150) * length * Math.pow(desiredVelocity,2);
+  const pipePressure = ((6.0 / Math.pow(3.0,2)) / 150) * effectiveAirLengthM * Math.pow(desiredVelocity,2);
   const totalPressure = padPressure + transitionPressure + pipePressure + tunnelDoorPressure + lightTrapPressure + cageSystemPressure + equipmentPressure;
 
   // Update below-min markers in-place (no full rebuild needed just because totalPressure changed)
@@ -4089,11 +4959,25 @@ function calculate() {
       const checkAirflowM3S = actualSizingTotalAirflowM3H / 3600;
       const checkVelocityMS = crossSectionalArea > 0 ? checkAirflowM3S / crossSectionalArea : 0;
 
-      if (checkVelocityMS >= desiredVelocity - 0.001) {
+      if (checkVelocityMS >= (isSplitTunnel ? (desiredVelocity * 2) : desiredVelocity) - 0.001) {
         break; // Minimum required velocity satisfied at the chosen motor speed!
       }
       fanCount++;
       autoAttempts++;
+    }
+
+    // Enforce EVEN number of fans for Split-Tunnel layout (symmetrical installation on 2 sides)
+    if (isSplitTunnel && fanCount % 2 !== 0) {
+      fanCount += 1;
+    }
+    if (systemMode === 'hybrid') {
+      numEC = Math.ceil(fanCount * ecRatio);
+      if (isSplitTunnel && numEC % 2 !== 0 && numEC < fanCount) numEC += 1;
+      numAC = Math.max(0, fanCount - numEC);
+    } else if (systemMode === 'all-ec') {
+      numEC = fanCount; numAC = 0;
+    } else {
+      numEC = 0; numAC = fanCount;
     }
   }
 
@@ -4119,11 +5003,16 @@ function calculate() {
     fanAirflowCFM_atActual = acAirflowCFM;
   }
   const actualAirflowM3S = actualTotalAirflowM3H / 3600;
-  const actualHouseVelocityMS = crossSectionalArea > 0 ? actualAirflowM3S / crossSectionalArea : 0;
+  // ในระบบ Split-Tunnel ลมรวมแบ่งวิ่ง 2 ปีก -> ลมต่อปีก = actualAirflowM3S / 2
+  const actualHouseVelocityMS = crossSectionalArea > 0 
+    ? (isSplitTunnel ? (actualAirflowM3S / 2) : actualAirflowM3S) / crossSectionalArea 
+    : 0;
 
   const padHeightM = parseFloat($('pad-height').value);
   const padBlockWidthM = parseFloat($('pad-block-width').value);
   
+  // ลมที่ผ่าน Cooling Pad ในแต่ละด้าน (Split-Tunnel: แพดแต่ละฝั่งรับลม Q_total / 2)
+  const padAirflowM3S = isSplitTunnel ? (actualAirflowM3S / 2) : actualAirflowM3S;
   let requiredPadAreaM2 = 0;
   let requiredPadLengthM = 0;
   let actualPadVelocityMS = 0;
@@ -4133,11 +5022,11 @@ function calculate() {
     if (!isMetric) gutterLengthM /= CONVERSIONS.M_TO_FT;
     requiredPadLengthM = gutterLengthM;
     requiredPadAreaM2 = gutterLengthM * padHeightM;
-    actualPadVelocityMS = requiredPadAreaM2 > 0 ? actualAirflowM3S / requiredPadAreaM2 : 0;
+    actualPadVelocityMS = requiredPadAreaM2 > 0 ? padAirflowM3S / requiredPadAreaM2 : 0;
   } else {
-    requiredPadAreaM2 = actualAirflowM3S > 0 && padDesignVelocity > 0 ? actualAirflowM3S / padDesignVelocity : 0;
+    requiredPadAreaM2 = padAirflowM3S > 0 && padDesignVelocity > 0 ? padAirflowM3S / padDesignVelocity : 0;
     requiredPadLengthM = requiredPadAreaM2 > 0 && padHeightM > 0 ? requiredPadAreaM2 / padHeightM : 0;
-    actualPadVelocityMS = requiredPadAreaM2 > 0 ? actualAirflowM3S / requiredPadAreaM2 : 0;
+    actualPadVelocityMS = requiredPadAreaM2 > 0 ? padAirflowM3S / requiredPadAreaM2 : 0;
     gutterLengthM = requiredPadLengthM;
   }
   const requiredPadBlocks = requiredPadLengthM > 0 && padBlockWidthM > 0 ? Math.ceil(requiredPadLengthM / padBlockWidthM) : 0;
@@ -4180,19 +5069,41 @@ function calculate() {
   const distConv = isMetric ? 1 : CONVERSIONS.M_TO_FT;
   const distUnit = isMetric ? 'm' : 'ft';
 
-  // KPIs
-  const airflowDisplay = isMetric ? actualTotalAirflowM3H : actualTotalAirflowM3H * CONVERSIONS.M3H_TO_CFM;
-  $('kpi-airflow').textContent = fmtNum(airflowDisplay);
+  // KPIs (Dual Units Display)
+  const airflowM3H = actualTotalAirflowM3H;
+  const airflowCFM = actualTotalAirflowM3H * CONVERSIONS.M3H_TO_CFM;
+  $('kpi-airflow').textContent = fmtNum(airflowM3H);
+  const kpiAirflowUnitEl = document.querySelector('.kpi-blue .kpi-unit');
+  if (kpiAirflowUnitEl) {
+    kpiAirflowUnitEl.innerHTML = `m³/h <span style="opacity:0.75;font-size:9.5px">(${fmtNum(airflowCFM)} CFM)</span>`;
+  }
+
   $('kpi-fans').textContent = fanCount;
-  const displayRefPressure = (designPressurePa * pConv).toFixed(isMetric ? 1 : 2);
+  const displayRefPressurePa = designPressurePa.toFixed(1);
+  const displayRefPressureInWC = (designPressurePa * CONVERSIONS.PA_TO_INWC).toFixed(3);
   let breakdownStr = '';
   if (systemMode === 'hybrid') {
     breakdownStr = ` (EC ${numEC} + AC ${numAC})`;
   }
-  $('kpi-fans-ref').textContent = `${translations[currentLang].units}${breakdownStr} @ ${displayRefPressure} ${pUnit}`;
-  $('kpi-pressure').textContent = fmt(totalPressure * pConv, isMetric ? 1 : 3);
-  $('kpi-area').textContent = fmt(crossSectionalArea * areaConv, 2);
-  $('kpi-area-unit').textContent = isMetric ? 'm² · ft²' : 'ft² · m²';
+  if (isSplitTunnel) {
+    const sideFans = fanCount / 2;
+    breakdownStr += ` [ฝั่งละ ${sideFans}]`;
+  }
+  $('kpi-fans-ref').textContent = `${translations[currentLang].units}${breakdownStr} @ ${displayRefPressurePa} Pa (${displayRefPressureInWC}"wc)`;
+
+  const pressurePaVal = totalPressure.toFixed(1);
+  const pressureInWCVal = (totalPressure * CONVERSIONS.PA_TO_INWC).toFixed(3);
+  $('kpi-pressure').textContent = pressurePaVal;
+  const kpiPressUnitEl = document.querySelector('.kpi-yellow .kpi-unit');
+  if (kpiPressUnitEl) {
+    kpiPressUnitEl.innerHTML = `Pa <span style="opacity:0.75;font-size:9.5px">(${pressureInWCVal} in.H₂O)</span>`;
+  }
+
+  const areaM2Val = crossSectionalArea.toFixed(2);
+  const areaFt2Val = (crossSectionalArea * CONVERSIONS.M2_TO_FT2).toFixed(1);
+  $('kpi-area').textContent = areaM2Val;
+  $('kpi-area-unit').innerHTML = `m² <span style="opacity:0.75;font-size:9.5px">(${areaFt2Val} ft²)</span>`;
+
   $('kpi-ach').textContent = fmt(airChangesPerHour, 1);
   $('kpi-ach-sub').textContent = `ACH (${Math.round(airTransferTimeSeconds)}s)`;
 
@@ -4211,57 +5122,202 @@ function calculate() {
     $('vel-actual-val').textContent = `${actualVelStr} (เป้าหมาย ${targetVelStr})`;
   }
 
-  $('schematic-pad-velocity').innerHTML = `<span style="font-weight:700">${padActualVelStr}</span><br><span style="font-size:9.5px;color:var(--text-dim);font-weight:400">(เป้าหมาย ${padTargetVelStr})</span>`;
+  // ── DYNAMIC INFOGRAPHIC LAYOUT (Standard vs Split-Tunnel) ──
+  const rightWingEl = document.querySelector('.schematic-tunnel.right-wing');
+  const rightPadEl = document.querySelector('.schematic-pad.right-pad');
   
-  $('schematic-house-velocity').innerHTML = `<span style="font-weight:700;font-size:1.1em">${actualVelStr}</span><br><span style="font-size:10.5px;color:var(--text-dim);font-weight:400">(เป้าหมาย ${targetVelStr})</span>`;
+  if (layoutMode === 'split') {
+    if (rightWingEl) rightWingEl.style.display = 'flex';
+    if (rightPadEl) rightPadEl.style.display = 'flex';
+  } else {
+    if (rightWingEl) rightWingEl.style.display = 'none';
+    if (rightPadEl) rightPadEl.style.display = 'none';
+  }
 
-  // Pad Velocity Dynamic Status Badge
-  if ($('schematic-pad-badge')) {
-    const padBadge = $('schematic-pad-badge');
+  // Update Pad values
+  const padLabelLeft = $('schematic-pad-velocity-left');
+  const padLabelRight = $('schematic-pad-velocity-right');
+  const padBadgeLeft = $('schematic-pad-badge-left');
+  const padBadgeRight = $('schematic-pad-badge-right');
+
+  const padHtmlContent = `<span style="font-weight:700">${padActualVelStr}</span><br><span style="font-size:9.5px;color:var(--text-dim);font-weight:400">(เป้าหมาย ${padTargetVelStr})</span>`;
+  if (padLabelLeft) padLabelLeft.innerHTML = padHtmlContent;
+  if (padLabelRight) padLabelRight.innerHTML = padHtmlContent;
+
+  const setPadBadge = (badge) => {
+    if (!badge) return;
     if (actualPadVelocityMS <= 1.41) {
-      padBadge.className = 'schematic-badge badge-green';
-      padBadge.textContent = '⭐ Sweet Spot (1.2–1.4 m/s)';
+      badge.className = 'schematic-badge badge-green';
+      badge.textContent = '⭐ Sweet Spot (1.2–1.4 m/s)';
     } else if (actualPadVelocityMS <= 1.85) {
-      padBadge.className = 'schematic-badge badge-yellow';
-      padBadge.textContent = '🟢 Standard (1.5–1.8 m/s)';
+      badge.className = 'schematic-badge badge-yellow';
+      badge.textContent = '🟢 Standard (1.5–1.8 m/s)';
     } else {
-      padBadge.className = 'schematic-badge badge-red';
-      padBadge.textContent = '⚠ ลมหน้าแพดแรงเกินไป';
+      badge.className = 'schematic-badge badge-red';
+      badge.textContent = '⚠ ลมหน้าแพดแรงเกินไป';
     }
+  };
+  setPadBadge(padBadgeLeft);
+  setPadBadge(padBadgeRight);
+
+  // Update House values
+  const houseVelLeft = $('schematic-house-velocity-left');
+  const houseVelRight = $('schematic-house-velocity-right');
+  const houseBadgeLeft = $('schematic-house-badge-left');
+  const houseBadgeRight = $('schematic-house-badge-right');
+  const airTimeLeft = $('schematic-air-time-left');
+  const airTimeRight = $('schematic-air-time-right');
+
+  if (layoutMode === 'split') {
+    if (houseVelLeft) houseVelLeft.innerHTML = `<span style="font-weight:700;font-size:1.1em">${actualVelStr}</span><br><span style="font-size:10.5px;color:var(--text-dim);font-weight:400">(เป้าหมาย ${targetVelStr})</span>`;
+    if (houseVelRight) houseVelRight.innerHTML = `<span style="font-weight:700;font-size:1.1em">${actualVelStr}</span><br><span style="font-size:10.5px;color:var(--text-dim);font-weight:400">(เป้าหมาย ${targetVelStr})</span>`;
+    
+    const setHouseBadge = (badge) => {
+      if (!badge) return;
+      if (actualHouseVelocityMS >= desiredVelocity * 0.98) {
+        badge.className = 'schematic-badge badge-green';
+        badge.textContent = currentLang === 'th' ? '🟢 ผ่านเกณฑ์ (ตามเป้าหมาย)' : '🟢 Optimal Target Met';
+      } else if (actualHouseVelocityMS >= desiredVelocity * 0.90) {
+        badge.className = 'schematic-badge badge-yellow';
+        badge.textContent = currentLang === 'th' ? '🟡 ลมต่ำกว่าเป้าเล็กน้อย' : '🟡 Slightly Below Target';
+      } else {
+        badge.className = 'schematic-badge badge-red';
+        badge.textContent = currentLang === 'th' ? '🔴 ลมไม่เพียงพอ (Deficit)' : '🔴 Deficit Below Target';
+      }
+    };
+    setHouseBadge(houseBadgeLeft);
+    setHouseBadge(houseBadgeRight);
+
+    // Symmetric travel time for each wing (wind travels half length L/2 to middle fans)
+    const wingTravelTime = airTransferTimeSeconds / 2;
+    const wingACH = airChangesPerHour; // ACH is identical
+    const timeText = `⏱️ ปีกซ้าย: ${wingTravelTime.toFixed(1)}s | ACH: ${wingACH.toFixed(1)} รอบ/ชม.`;
+    const timeTextRight = `⏱️ ปีกขวา: ${wingTravelTime.toFixed(1)}s | ACH: ${wingACH.toFixed(1)} รอบ/ชม.`;
+    if (airTimeLeft) airTimeLeft.textContent = timeText;
+    if (airTimeRight) airTimeRight.textContent = timeTextRight;
+
+    // Rulers
+    if ($('schematic-ruler-start-left')) $('schematic-ruler-start-left').textContent = `📍 แพดซ้าย (0m)`;
+    if ($('schematic-building-length-tag')) $('schematic-building-length-tag').textContent = `📏 กึ่งกลาง ~${(length / 2).toFixed(0)}m`;
+    if ($('schematic-ruler-start-right')) $('schematic-ruler-start-right').textContent = `กึ่งกลาง ~${(length / 2).toFixed(0)}m`;
+    if ($('schematic-ruler-end-right')) $('schematic-ruler-end-right').textContent = `แพดขวา (${length.toFixed(0)}m) 📍`;
+
+    // Vel Labels
+    if ($('schematic-vel-label-left')) $('schematic-vel-label-left').textContent = currentLang === 'th' ? `ความเร็วปีกซ้าย (ค่าเฉลี่ย)` : `Left Wing Velocity (Avg)`;
+    if ($('schematic-vel-label-right')) $('schematic-vel-label-right').textContent = currentLang === 'th' ? `ความเร็วปีกขวา (ค่าเฉลี่ย)` : `Right Wing Velocity (Avg)`;
+
+  } else {
+    // Standard mode
+    if (houseVelLeft) houseVelLeft.innerHTML = `<span style="font-weight:700;font-size:1.1em">${actualVelStr}</span><br><span style="font-size:10.5px;color:var(--text-dim);font-weight:400">(เป้าหมาย ${targetVelStr})</span>`;
+    
+    if (houseBadgeLeft) {
+      if (actualHouseVelocityMS >= desiredVelocity * 0.98) {
+        houseBadgeLeft.className = 'schematic-badge badge-green';
+        houseBadgeLeft.textContent = currentLang === 'th' ? '🟢 ผ่านเกณฑ์ (ตามเป้าหมาย)' : '🟢 Optimal Target Met';
+      } else if (actualHouseVelocityMS >= desiredVelocity * 0.90) {
+        houseBadgeLeft.className = 'schematic-badge badge-yellow';
+        houseBadgeLeft.textContent = currentLang === 'th' ? '🟡 ลมต่ำกว่าเป้าเล็กน้อย' : '🟡 Slightly Below Target';
+      } else {
+        houseBadgeLeft.className = 'schematic-badge badge-red';
+        houseBadgeLeft.textContent = currentLang === 'th' ? '🔴 ลมไม่เพียงพอ (Deficit)' : '🔴 Deficit Below Target';
+      }
+    }
+
+    if (airTimeLeft) {
+      airTimeLeft.textContent = `⏱️ เวลาเดินทาง: ${airTransferTimeSeconds.toFixed(1)}s | ACH: ${airChangesPerHour.toFixed(1)} รอบ/ชม.`;
+    }
+
+    if ($('schematic-ruler-start-left')) $('schematic-ruler-start-left').textContent = `📍 แพด (0m)`;
+    if ($('schematic-building-length-tag')) {
+      const lenDisp = isMetric ? `📏 ยาว ${fmt(length, 1)} m` : `📏 ยาว ${fmt(length * CONVERSIONS.M_TO_FT, 0)} ft`;
+      $('schematic-building-length-tag').textContent = lenDisp;
+    }
+    if ($('schematic-vel-label-left')) $('schematic-vel-label-left').textContent = currentLang === 'th' ? `ความเร็วในโรงเรือน (ค่าเฉลี่ย)` : `House Air Velocity (Avg)`;
   }
 
-  // House Velocity Dynamic Status Badge
-  if ($('schematic-house-badge')) {
-    const houseBadge = $('schematic-house-badge');
-    if (actualHouseVelocityMS >= desiredVelocity * 0.98) {
-      houseBadge.className = 'schematic-badge badge-green';
-      houseBadge.textContent = currentLang === 'th' ? '🟢 ผ่านเกณฑ์ (ตามเป้าหมาย)' : '🟢 Optimal Target Met';
-    } else if (actualHouseVelocityMS >= desiredVelocity * 0.90) {
-      houseBadge.className = 'schematic-badge badge-yellow';
-      houseBadge.textContent = currentLang === 'th' ? '🟡 ลมต่ำกว่าเป้าเล็กน้อย' : '🟡 Slightly Below Target';
-    } else {
-      houseBadge.className = 'schematic-badge badge-red';
-      houseBadge.textContent = currentLang === 'th' ? '🔴 ลมไม่เพียงพอ (Deficit)' : '🔴 Deficit Below Target';
+  // Draw stations (symmetrical or single depending on mode)
+  const leftStationsContainer = $('schematic-velocity-stations-left');
+  const rightStationsContainer = $('schematic-velocity-stations-right');
+  const intervalM = 20;
+
+  if (layoutMode === 'split') {
+    const halfL = length / 2;
+    const numIntervals = Math.max(1, Math.floor(halfL / intervalM));
+    
+    // Left Wing Stations (0 to halfL)
+    let leftHTML = '';
+    for (let i = 1; i <= numIntervals; i++) {
+      const distM = i * intervalM;
+      if (distM >= halfL) break;
+      const posRatio = distM / halfL; // 0.0 at pad to 1.0 at fan (middle)
+      const vEstMS = posRatio < 0.25
+        ? actualPadVelocityMS + (actualHouseVelocityMS - actualPadVelocityMS) * (posRatio / 0.25)
+        : actualHouseVelocityMS * (0.98 + (posRatio - 0.25) * 0.04);
+      const pEstPa = (padPressure || (totalPressure * 0.25)) + (transitionPressure || (totalPressure * 0.20)) * posRatio;
+      leftHTML += `
+        <div class="velocity-station-item">
+          <span class="st-val">${fmt(vEstMS * vConv, isMetric ? 2 : 0)}</span>
+          <span class="st-press" style="font-size:8px;color:rgba(88,166,255,0.85);font-weight:600;margin:1px 0">${fmt(pEstPa * pConv, isMetric ? 1 : 2)} ${pUnit}</span>
+          <span class="st-dist">${isMetric ? `${distM}m` : `${Math.round(distM * CONVERSIONS.M_TO_FT)}ft`}</span>
+        </div>`;
     }
+    if (leftStationsContainer) leftStationsContainer.innerHTML = leftHTML;
+
+    // Right Wing Stations (halfL to length)
+    let rightHTML = '';
+    for (let i = numIntervals; i >= 1; i--) {
+      const distM = halfL + (halfL - i * intervalM);
+      if (distM <= halfL || distM >= length) continue;
+      const posRatio = (length - distM) / halfL; // 0.0 at right pad to 1.0 at fan (middle)
+      const vEstMS = posRatio < 0.25
+        ? actualPadVelocityMS + (actualHouseVelocityMS - actualPadVelocityMS) * (posRatio / 0.25)
+        : actualHouseVelocityMS * (0.98 + (posRatio - 0.25) * 0.04);
+      const pEstPa = (padPressure || (totalPressure * 0.25)) + (transitionPressure || (totalPressure * 0.20)) * posRatio;
+      rightHTML += `
+        <div class="velocity-station-item">
+          <span class="st-val">${fmt(vEstMS * vConv, isMetric ? 2 : 0)}</span>
+          <span class="st-press" style="font-size:8px;color:rgba(88,166,255,0.85);font-weight:600;margin:1px 0">${fmt(pEstPa * pConv, isMetric ? 1 : 2)} ${pUnit}</span>
+          <span class="st-dist">${isMetric ? `${distM.toFixed(0)}m` : `${Math.round(distM * CONVERSIONS.M_TO_FT)}ft`}</span>
+        </div>`;
+    }
+    if (rightStationsContainer) rightStationsContainer.innerHTML = rightHTML;
+  } else {
+    // Standard mode stations (0 to length)
+    const numIntervals = Math.max(2, Math.floor(length / intervalM));
+    let stationHTML = '';
+    for (let i = 1; i <= numIntervals; i++) {
+      const distM = i * intervalM;
+      if (distM > length) break;
+      const posRatio = distM / length;
+      const vEstMS = posRatio < 0.25
+        ? actualPadVelocityMS + (actualHouseVelocityMS - actualPadVelocityMS) * (posRatio / 0.25)
+        : (posRatio > 0.85 ? actualHouseVelocityMS * (1 + (posRatio - 0.85) * 0.25) : actualHouseVelocityMS * (0.98 + (posRatio - 0.25) * 0.04));
+      const pPadVal = padPressure || (totalPressure * 0.25);
+      const pTransVal = transitionPressure || (totalPressure * 0.20);
+      const pEstPa = posRatio <= 0.15 ? pPadVal * (posRatio / 0.15) : (posRatio <= 0.25 ? pPadVal + pTransVal * ((posRatio - 0.15) / 0.10) : pPadVal + pTransVal + Math.max(0, totalPressure - pPadVal - pTransVal) * ((posRatio - 0.25) / 0.75));
+
+      stationHTML += `
+        <div class="velocity-station-item">
+          <span class="st-val">${fmt(vEstMS * vConv, isMetric ? 2 : 0)}</span>
+          <span class="st-press" style="font-size:8px;color:rgba(88,166,255,0.85);font-weight:600;margin:1px 0">${fmt(pEstPa * pConv, isMetric ? 1 : 2)} ${pUnit}</span>
+          <span class="st-dist">${isMetric ? `${distM}m` : `${Math.round(distM * CONVERSIONS.M_TO_FT)}ft`}</span>
+        </div>`;
+    }
+    if (leftStationsContainer) leftStationsContainer.innerHTML = stationHTML;
   }
 
-  // Air Travel Time & ACH Info
-  // Building Length Tag
-  // ── DYNAMIC COOLING PAD DIMENSIONS & 3-SIDED DOGHOUSE ARRANGEMENT ──
+  // ── DYNAMIC COOLING PAD DIMENSIONS & ARRANGEMENT BREAKDOWN ──
   if ($('schematic-pad-layout-details')) {
     const padW_m = parseFloat($('pad-block-width')?.value || 0.6);
     const padH_m = parseFloat($('pad-height')?.value || 1.8);
     const installedPadLenM = requiredPadBlocks * padW_m;
     const houseWidthM = width;
 
-    const lenUnit = isMetric ? 'm' : 'ft';
-    const lenConv = isMetric ? 1 : CONVERSIONS.M_TO_FT;
-
     let layoutTitle = '';
     let layoutDetails = '';
 
     if (installedPadLenM > houseWidthM) {
-      // 3-Sided Doghouse Arrangement (หน้าอาคาร + ข้างซ้าย-ขวา)
+      // 3-Sided Doghouse Arrangement
       const frontPadLenM = houseWidthM;
       const sidePadLenEachM = (installedPadLenM - houseWidthM) / 2;
 
@@ -4273,19 +5329,19 @@ function calculate() {
         <div style="display:flex;flex-direction:column;gap:3px;text-align:left;padding-left:2px;margin-top:4px">
           <div style="display:flex;align-items:center;gap:6px">
             <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">🏠</span>
-            <span><strong>หน้าอาคาร:</strong> ${fmt(frontPadLenM * lenConv, 1)} ${lenUnit}</span>
+            <span><strong>หน้าอาคาร:</strong> ${fmt(frontPadLenM * distConv, 1)} ${distUnit}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">↔️</span>
-            <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * lenConv, 1)} ${lenUnit} / ข้าง</span>
+            <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * distConv, 1)} ${distUnit} / ข้าง</span>
           </div>
           <div style="font-size:8.5px;color:var(--text-dim);margin-top:2px;padding-left:24px;text-align:left">
-            (รวม ${fmt(installedPadLenM * lenConv, 1)} ${lenUnit} · ${requiredPadBlocks} บล็อก)
+            (รวม ${fmt(installedPadLenM * distConv, 1)} ${distUnit} · ${requiredPadBlocks} บล็อก)
           </div>
         </div>
       `;
     } else {
-      // 2-Sided Side Wall Arrangement (ข้างซ้าย-ขวา)
+      // 2-Sided Side Wall Arrangement
       const sidePadLenEachM = installedPadLenM / 2;
 
       layoutTitle = isMetric 
@@ -4296,10 +5352,10 @@ function calculate() {
         <div style="display:flex;flex-direction:column;gap:3px;text-align:left;padding-left:2px;margin-top:4px">
           <div style="display:flex;align-items:center;gap:6px">
             <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">↔️</span>
-            <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * lenConv, 1)} ${lenUnit} / ข้าง</span>
+            <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * distConv, 1)} ${distUnit} / ข้าง</span>
           </div>
           <div style="font-size:8.5px;color:var(--text-dim);margin-top:2px;padding-left:24px;text-align:left">
-            (รวม ${fmt(installedPadLenM * lenConv, 1)} ${lenUnit} · ${requiredPadBlocks} บล็อก)
+            (รวม ${fmt(installedPadLenM * distConv, 1)} ${distUnit} · ${requiredPadBlocks} บล็อก)
           </div>
         </div>
       `;
@@ -4307,62 +5363,13 @@ function calculate() {
 
     $('schematic-pad-layout-title').innerHTML = layoutTitle;
     $('schematic-pad-layout-details').innerHTML = layoutDetails;
-  }
 
-  if ($('schematic-building-length-tag')) {
-    const lenDisp = isMetric ? `📏 ยาว ${fmt(length, 1)} m` : `📏 ยาว ${fmt(length * CONVERSIONS.M_TO_FT, 0)} ft`;
-    $('schematic-building-length-tag').textContent = lenDisp;
-  }
-
-  // 20-meter Interval Velocity & Static Pressure Gradient Analysis
-  if ($('schematic-velocity-stations')) {
-    const stationsContainer = $('schematic-velocity-stations');
-    const intervalM = 20;
-    const numIntervals = Math.max(2, Math.floor(length / intervalM));
-    let stationHTML = '';
-
-    for (let i = 1; i <= numIntervals; i++) {
-      const distM = i * intervalM;
-      if (distM > length) break;
-      
-      const posRatio = distM / length; // 0.0 at pad to 1.0 at fan
-      
-      // 1. Velocity Profile
-      let vEstMS;
-      if (posRatio < 0.25) {
-        vEstMS = actualPadVelocityMS + (actualHouseVelocityMS - actualPadVelocityMS) * (posRatio / 0.25);
-      } else if (posRatio > 0.85) {
-        vEstMS = actualHouseVelocityMS * (1 + (posRatio - 0.85) * 0.25);
-      } else {
-        vEstMS = actualHouseVelocityMS * (0.98 + (posRatio - 0.25) * 0.04);
-      }
-
-      // 2. Static Pressure Gradient Profile (Pa / in.H2O)
-      const pPadVal = (typeof pPad !== 'undefined' && pPad > 0) ? pPad : (totalPressure * 0.25);
-      const pTransVal = (typeof pTrans !== 'undefined' && pTrans > 0) ? pTrans : (totalPressure * 0.20);
-      
-      let pEstPa;
-      if (posRatio <= 0.15) {
-        pEstPa = pPadVal * (posRatio / 0.15);
-      } else if (posRatio <= 0.25) {
-        pEstPa = pPadVal + pTransVal * ((posRatio - 0.15) / 0.10);
-      } else {
-        const remainingP = Math.max(0, totalPressure - pPadVal - pTransVal);
-        pEstPa = pPadVal + pTransVal + remainingP * ((posRatio - 0.25) / 0.75);
-      }
-
-      const vDisp = fmt(vEstMS * vConv, isMetric ? 2 : 0);
-      const pEstDisp = fmt(pEstPa * pConv, isMetric ? 1 : 2);
-      const distDisp = isMetric ? `${distM}m` : `${Math.round(distM * CONVERSIONS.M_TO_FT)}ft`;
-
-      stationHTML += `
-        <div class="velocity-station-item">
-          <span class="st-val">${vDisp}</span>
-          <span class="st-press" style="font-size:8px;color:rgba(88,166,255,0.85);font-weight:600;margin:1px 0">${pEstDisp} ${pUnit}</span>
-          <span class="st-dist">${distDisp}</span>
-        </div>`;
+    if ($('schematic-pad-layout-title-right')) {
+      $('schematic-pad-layout-title-right').innerHTML = layoutTitle;
     }
-    stationsContainer.innerHTML = stationHTML;
+    if ($('schematic-pad-layout-details-right')) {
+      $('schematic-pad-layout-details-right').innerHTML = layoutDetails;
+    }
   }
 
   if ($('schematic-air-time')) {
@@ -4371,7 +5378,7 @@ function calculate() {
 
   // Adjust fan spin speed based on motor speed ratio
   // Update dynamic EC/AC fan icons in schematic
-  updateSchematicFansSection(systemMode, fanCount, numEC, numAC);
+  updateSchematicFansSection(systemMode, fanCount, numEC, numAC, layoutMode);
 
   // Fan capacity display
   const fanCapCFM = fanAirflowM3H_atUserTarget * CONVERSIONS.M3H_TO_CFM;
@@ -5081,7 +6088,7 @@ ${softInfo ? `
   }
 
   // Air Inlet & BOQ Real-time Calculation
-  calculateAirInletsAndBOQ(actualAirflowM3H, width, length, height, fanCount);
+  calculateAirInletsAndBOQ(actualTotalAirflowM3H, width, length, height, fanCount);
 
   // Motor speed control visibility
   const currentSysMode = $q('input[name="system-mode"]:checked')?.value || 'hybrid';
@@ -5120,8 +6127,8 @@ function toggleUnits() {
   const dC = isMetric ? 1/CONVERSIONS.M_TO_FT : CONVERSIONS.M_TO_FT;
   const vC = isMetric ? CONVERSIONS.FTMIN_TO_MS : 1/CONVERSIONS.FTMIN_TO_MS;
   const pC = isMetric ? 1/CONVERSIONS.PA_TO_INWC : CONVERSIONS.PA_TO_INWC;
-  ['building-width','building-height','building-length','pad-gutter-length-override'].forEach(id => {
-    const el = $(id); if(el.value) el.value = (parseFloat(el.value) * dC).toFixed(id === 'building-length' ? 1 : 2);
+  ['building-width','building-height','building-length','column-bay-span','pad-gutter-length-override'].forEach(id => {
+    const el = $(id); if(el && el.value) el.value = (parseFloat(el.value) * dC).toFixed(id === 'building-length' ? 1 : 2);
   });
   ['desired-velocity','pad-velocity'].forEach(id => {
     const el = $(id); el.value = (parseFloat(el.value) * vC).toFixed(isMetric ? 2 : 0);
@@ -5150,6 +6157,7 @@ function updateUnitLabels() {
   $('building-width').step = ms ? '0.1' : '0.5';
   $('building-height').step = ms ? '0.1' : '0.5';
   $('building-length').step = ms ? '1' : '5';
+  if ($('column-bay-span')) $('column-bay-span').step = ms ? '0.5' : '1.0';
   $('desired-velocity').step = ms ? '0.1' : '10';
   $('pad-velocity').step = ms ? '0.01' : '1';
   // Rebuild fan table with new units
@@ -5294,8 +6302,8 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Input listeners
-  ['building-width','building-height','building-length','desired-velocity','pad-velocity',
-   'pad-gutter-length-override', 'inlet-percent-input', 'inlet-design-sp', 'inlet-custom-flow', 'inlet-custom-width'].forEach(id => {
+  ['building-width','building-height','building-length','column-bay-span','desired-velocity','pad-velocity',
+   'pad-gutter-length-override', 'inlet-percent-input', 'inlet-opening-percent', 'inlet-design-sp', 'inlet-custom-flow', 'inlet-custom-width'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('input', debouncedCalc);
   });
@@ -5333,6 +6341,7 @@ window.addEventListener('DOMContentLoaded', () => {
     lastTotalPressure = 0;
     calculate();
   }));
+  $qa('input[name="layout-mode"]').forEach(el => el.addEventListener('change', calculate));
 
   $('target-pressure').addEventListener('input', function(){ markSpAsManual(); debouncedCalc(); });
   $('unit-toggle').addEventListener('change', toggleUnits);
@@ -5365,32 +6374,15 @@ window.addEventListener('DOMContentLoaded', () => {
   $('info-modal').addEventListener('click', e => { if(e.target === $('info-modal')) $('info-modal').classList.remove('show'); });
   $('pump-curve-modal').addEventListener('click', e => { if(e.target === $('pump-curve-modal')) $('pump-curve-modal').classList.remove('show'); });
 
-  // ── PASSCODE AUTHENTICATION (ksp.2548) ──
+  // ── PASSCODE AUTHENTICATION (Bypassed / Temporarily Disabled) ──
   function checkPasscodeAuth() {
     const overlay = $('passcode-overlay');
-    if (!overlay) return;
-    if (sessionStorage.getItem('ksp_auth') === '1') {
-      overlay.style.display = 'none';
-    } else {
-      overlay.style.display = 'flex';
-      setTimeout(() => { const inp = $('passcode-input'); if (inp) inp.focus(); }, 150);
-    }
+    if (overlay) overlay.style.display = 'none';
   }
 
   function handlePasscodeSubmit() {
-    const input = $('passcode-input');
-    const error = $('passcode-error');
     const overlay = $('passcode-overlay');
-    if (input && input.value.trim() === 'ksp.2548') {
-      sessionStorage.setItem('ksp_auth', '1');
-      overlay.style.display = 'none';
-      if (error) error.style.display = 'none';
-    } else {
-      if (error) {
-        error.style.display = 'block';
-        if (input) { input.value = ''; input.focus(); }
-      }
-    }
+    if (overlay) overlay.style.display = 'none';
   }
 
   const passForm = $('passcode-form');
@@ -5401,8 +6393,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const lockBtn = $('lock-screen-btn');
   if (lockBtn) {
     lockBtn.addEventListener('click', () => {
-      sessionStorage.removeItem('ksp_auth');
-      checkPasscodeAuth();
+      // Temporarily disabled
     });
   }
 
@@ -5436,11 +6427,17 @@ function openIframeModal(url, title) {
     
     // Auto-inject recommended values if available
     let finalUrl = url;
-    if (url.includes('boq air.html')) {
+    if (url.includes('boq air.html') || url.includes('boq%20air.html')) {
        const reqQty = document.getElementById('inlet-total-count');
+       const bldgLen = document.getElementById('building-length')?.value || 120;
+       const baySpan = document.getElementById('column-bay-span')?.value || 4.0;
+       let params = [];
+       params.push('l=' + encodeURIComponent(bldgLen));
+       params.push('bay=' + encodeURIComponent(baySpan));
        if (reqQty && reqQty.textContent !== '—' && reqQty.textContent !== '-') {
-          finalUrl += '?qty=' + parseInt(reqQty.textContent, 10);
+          params.push('qty=' + parseInt(reqQty.textContent, 10));
        }
+       finalUrl += (finalUrl.includes('?') ? '&' : '?') + params.join('&');
     }
     
     frame.src = finalUrl;
