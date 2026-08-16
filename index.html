@@ -1824,15 +1824,37 @@ input.invalid { border-color: var(--accent-red) !important; }
     </div>
 
     <!-- AIR INLET SIZING & CONTROL -->
+    <!-- AIR INLET SIZING & CONTROL -->
     <div class="sidebar-section">
       <div class="sidebar-section-header">
         <span class="section-badge">07</span>
         <h2>บานเกล็ดลม / Air Inlet &amp; BOQ</h2>
+      </div>
+
+      <!-- Inlet Model Selection -->
+      <div class="form-group">
+        <label class="field-label">ประเภท &amp; รุ่น Air Inlet (WUSEN Catalog)</label>
+        <select id="inlet-model-select">
+          <optgroup label="── Poultry Air Inlet (ABS / ฉนวนกันความร้อน) ──">
+            <option value="WUSEN-908" selected>Wusen 908 (908×454mm | เปิด 870×400mm | 3,000 m³/h @20Pa) [มาตรฐาน]</option>
+            <option value="WUSEN-880">Wusen 880 (880×325mm | เปิด 840×272mm | 3,000 m³/h @20Pa)</option>
+            <option value="WUSEN-600">Wusen 600 (600×330mm | เปิด 560×275mm | 1,800 m³/h @20Pa)</option>
+          </optgroup>
+          <optgroup label="── Side Wall Air Inlet (PVC Plastic) ──">
+            <option value="WUSEN-400-PVC">Wusen 400 PVC (850×500mm | เปิด 760×410mm | 3,780 m³/h @20Pa)</option>
+            <option value="WUSEN-340-PVC">Wusen 340 PVC (800×365mm | เปิด 760×345mm | 2,200 m³/h @20Pa)</option>
+            <option value="WUSEN-270-PVC">Wusen 270 PVC (720×360mm | เปิด 640×280mm | 1,200 m³/h @20Pa)</option>
+          </optgroup>
+          <optgroup label="── Polyurethane / Gravity Air Inlet (PU) ──">
+            <option value="WUSEN-800-PU">Wusen 800 PU (880×480mm | เปิด 810×410mm | 3,536 m³/h @20Pa)</option>
+            <option value="WUSEN-1200-PU">Wusen 1200 PU (1280×480mm | เปิด 1210×410mm | 5,381 m³/h @20Pa)</option>
+            <option value="WUSEN-1500-PU">Wusen 1500 PU (1580×480mm | เปิด 1510×410mm | 7,860 m³/h @20Pa)</option>
+            <option value="WUSEN-650-PU">Wusen 650 PU (730×350mm | เปิด 660×280mm | 2,050 m³/h @20Pa)</option>
+            <option value="WUSEN-752-GRAVITY">Wusen 752 Gravity (752×615mm | เปิด 700×500mm | 3,350 m³/h @20Pa)</option>
           </optgroup>
           <option value="CUSTOM">กำหนดค่าสเปกเอง (Custom Spec)</option>
         </select>
       </div>
-
       <!-- Custom Spec Inputs (hidden by default unless CUSTOM selected) -->
       <div id="inlet-custom-fields" style="display:none;background:var(--bg3);padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:8px">
         <div class="grid-2">
@@ -2595,16 +2617,19 @@ input.invalid { border-color: var(--accent-red) !important; }
                 </div>
               </div>
             </div>
-            <!-- Bay installation visual recommendation banner -->
-            <div id="inlet-bay-recommend-banner" style="margin-top:10px;padding:8px 12px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:6px;font-size:11px;color:var(--text);display:flex;align-items:center;justify-content:space-between">
-              <div>
-                <span style="color:var(--accent-cyan);font-weight:700">💡 ข้อแนะนำวิศวกรรมการจัดวางในช่อง Bay:</span>
-                <span id="inlet-bay-recommend-text" style="margin-left:6px;color:var(--text-muted)">—</span>
+            <!-- Bay installation visual recommendation banner (with Hood 1147mm constraint check) -->
+            <div id="inlet-bay-recommend-banner" style="margin-top:10px;padding:10px 14px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:6px;font-size:11px;color:var(--text);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <div style="flex:1;min-width:280px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span id="inlet-bay-status-icon" style="color:var(--accent-cyan);font-weight:700">💡 ข้อแนะนำวิศวกรรมการจัดวางในช่อง Bay:</span>
+                  <span id="inlet-bay-hood-limit-tag" style="background:rgba(34,211,238,0.15);padding:1px 6px;border-radius:3px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--accent-cyan);border:1px solid rgba(34,211,238,0.3)">Hood กว้าง 1,147mm</span>
+                </div>
+                <div id="inlet-bay-recommend-text" style="margin-top:4px;color:var(--text-muted);line-height:1.45">—</div>
               </div>
-              <span id="inlet-model-size-badge" style="background:var(--bg2);padding:2px 8px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent-blue);border:1px solid var(--border)">WUSEN 908 (908×454mm)</span>
+              <span id="inlet-model-size-badge" style="background:var(--bg2);padding:3px 10px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent-blue);border:1px solid var(--border)">WUSEN 908 (908×454mm)</span>
             </div>
-          </div>
 
+          </div>
           <!-- ── AutoCAD-Style Air Inlet Engineering Schematic ── -->
           <div style="margin-top:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -3280,13 +3305,18 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   const throwAchievedM = Math.max(0, 5.0 + ((designSP - 20) / 2.5) * 0.61);
   const throwRatio = throwAchievedM / Math.max(1, throwDistTargetM);
 
-  // 7. Bay Span & Spacing Calculation (Split-Tunnel: 105m, Bay 3m)
+  // 7. Bay Span & Spacing Calculation (Inlets cover all Pad zones, only Fans are excluded)
   let baySpanM = parseFloat($('column-bay-span')?.value || 3.0);
   if (isNaN(baySpanM) || baySpanM <= 0) baySpanM = 3.0;
   if (!isMetric) baySpanM /= CONVERSIONS.M_TO_FT;
 
   const totalBays = Math.max(1, Math.round(buildingL / baySpanM));
-  const firstInletDistM = 2.5;
+  const firstInletDistM = 0; // ติดตั้งตั้งแต่หัวเล้าถึงท้ายเล้า
+
+  // ── Physical Indoor Dimensions (ยึดขนาดติดตั้งภายใน 908mm / ระยะเสาหัก 20cm): ──
+  const clearSpanM = Math.max(1.0, baySpanM - 0.20);
+  const inletWidthM = inletSpec.widthM || 0.908;
+  const maxInletsPerBayPhysical = Math.max(1, Math.floor(clearSpanM / inletWidthM));
   
   let activeLengthM = 0;
   let activeBays = 0;
@@ -3297,41 +3327,48 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   let baysWithFloor = 0;
   let bayAdviceText = '';
   let bayLayoutSummary = '';
+  let isBayCapacityExceeded = false;
+  let maxPhysicalCapacityPerSide = 0;
 
   if (layoutMode === 'split') {
+    // Split-Tunnel: พัดลมอยู่ตรงกลาง (MID FANS) เว้นเฉพาะช่องพัดลมกลางเล้า ส่วนฝั่ง Pad ติดตั้ง Inlet ได้เต็มพื้นที่
     const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
-    const padBaysEach = Math.max(1, Math.round((totalBays * 0.10) / 2));
-    const padBaysTotal = padBaysEach * 2;
+    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
     
-    activeBays = Math.max(2, totalBays - fanBays - padBaysTotal);
-    if (activeBays % 2 !== 0 && activeBays > 2) {
-      activeBays -= 1;
-    }
-    
-    const activeBaysPerSideWing = activeBays / 2;
-    const inletsPerWing = numPerSide / 2;
+    const leftBaysCount = fanStartBay; // ช่องเสาฝั่งซ้าย (ตั้งแต่หัวเล้ารวม Pad ถึงพัดลม)
+    const rightBaysCount = totalBays - (fanStartBay + fanBays); // ช่องเสาฝั่งขวา (ตั้งแต่พัดลมถึงท้ายเล้ารวม Pad)
+    activeBays = leftBaysCount + rightBaysCount;
     activeLengthM = activeBays * baySpanM;
     spacingM = activeLengthM / Math.max(1, numPerSide);
 
-    inletsPerBayFloor = Math.floor(inletsPerWing / activeBaysPerSideWing);
-    inletsPerBayCeil = Math.ceil(inletsPerWing / activeBaysPerSideWing);
-    baysWithCeil = inletsPerWing % activeBaysPerSideWing;
-    baysWithFloor = activeBaysPerSideWing - baysWithCeil;
+    const leftWingInlets = Math.floor(numPerSide / 2);
+    const rightWingInlets = numPerSide - leftWingInlets;
+    const avgBaysPerWing = Math.max(1, Math.floor(activeBays / 2));
 
-    if (layoutDist === 'progressive') {
-      bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive)`;
-      bayAdviceText = `<strong>โหมด Split-Tunnel (Progressive):</strong> ฝั่งละ ${numPerSide} บาน (ติดตั้งถี่บริเวณใกล้แผ่น Pad ลดหลั่นลงบริเวณใกล้พัดลม เพื่อรักษาสมดุลความเร็วลม)`;
+    inletsPerBayFloor = Math.floor(numPerSide / activeBays);
+    inletsPerBayCeil = Math.ceil(numPerSide / activeBays);
+    baysWithCeil = numPerSide % activeBays;
+    baysWithFloor = activeBays - baysWithCeil;
+    maxPhysicalCapacityPerSide = activeBays * maxInletsPerBayPhysical;
+    isBayCapacityExceeded = inletsPerBayCeil > maxInletsPerBayPhysical;
+
+    if (isBayCapacityExceeded) {
+      bayLayoutSummary = `เกินขีดจำกัด (${inletsPerBayCeil} > ${maxInletsPerBayPhysical} บาน/ช่อง)`;
+      bayAdviceText = `<strong style="color:var(--accent-red)">⚠ เกินพื้นที่ผนังภายใน:</strong> ช่วงเสา ${baySpanM.toFixed(1)}m (พื้นที่ในจริง ≈ ${clearSpanM.toFixed(2)}m) ติดตั้งได้สูงสุด <strong>${maxInletsPerBayPhysical} บาน/ช่องเสา</strong> แต่คำนวณต้องการ ${inletsPerBayCeil} บาน/ช่อง — <em>แนะนำเปลี่ยนใช้รุ่น Flow สูงขึ้น เช่น PU-1200/1500</em>`;
+    } else if (layoutDist === 'progressive') {
+      bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive สูงสุด ${Math.min(maxInletsPerBayPhysical, inletsPerBayCeil + 1)} บาน/ช่อง)`;
+      bayAdviceText = `<strong>โหมด Split-Tunnel (Progressive ครอบคลุมโซน Pad):</strong> ฝั่งละ ${numPerSide} บาน ติดตั้งเต็มความยาวรวมแนว Cooling Pad เว้นเฉพาะแนวพัดลมกลาง โดยจัดวางหนาแน่นฝั่งหัว-ท้ายเล้า และลดหลั่นลงเข้าหาพัดลมกลาง`;
     } else if (inletsPerBayFloor === inletsPerBayCeil) {
       bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
-      bayAdviceText = `<strong>โหมด Split-Tunnel:</strong> ฝั่งละ ${numPerSide} บาน (ปีกละ ${inletsPerWing} บาน ใน ${activeBaysPerSideWing} ช่องเสา ติดตั้งช่องละ ${inletsPerBayFloor} บานเท่ากันทุกช่อง)`;
+      bayAdviceText = `<strong>โหมด Split-Tunnel (รวมโซน Pad):</strong> ฝั่งละ ${numPerSide} บาน กระจายต่อเนื่องรวมแนว Cooling Pad ทั้งสองฝั่ง (เว้นเฉพาะช่องพัดลมกลาง ${fanBays} ช่อง) ติดตั้งช่องละ ${inletsPerBayFloor} บานเท่ากันทุกช่อง`;
     } else {
       bayLayoutSummary = `สลับ ${inletsPerBayCeil} / ${inletsPerBayFloor} บาน/ช่วงเสา`;
-      bayAdviceText = `<strong>โหมด Split-Tunnel:</strong> ปีกละ ${inletsPerWing} บาน กระจาย ${activeBaysPerSideWing} ช่องเสา (ติดตั้งช่องละ ${inletsPerBayCeil} บาน จำนวน ${baysWithCeil} ช่อง และช่องละ ${inletsPerBayFloor} บาน จำนวน ${baysWithFloor} ช่อง)`;
+      bayAdviceText = `<strong>โหมด Split-Tunnel (รวมโซน Pad):</strong> ฝั่งละ ${numPerSide} บาน กระจายต่อเนื่องรวมแนว Cooling Pad ทั้งสองฝั่ง ติดตั้งสลับช่องละ ${inletsPerBayCeil} บาน (${baysWithCeil} ช่อง) และ ${inletsPerBayFloor} บาน (${baysWithFloor} ช่อง)`;
     }
   } else {
-    const deadBaysAtPad = Math.max(1, Math.round(totalBays * 0.08));
+    // Standard Tunnel: เว้นเฉพาะฝั่งพัดลมท้าย (TUNNEL FANS) ส่วนฝั่ง Cooling Pad ด้านหน้าติดตั้ง Inlet ได้เต็มพื้นที่
     const deadBaysAtFan = Math.max(1, Math.round(totalBays * 0.05));
-    activeBays = Math.max(1, totalBays - deadBaysAtPad - deadBaysAtFan);
+    activeBays = Math.max(1, totalBays - deadBaysAtFan);
     activeLengthM = activeBays * baySpanM;
     spacingM = activeLengthM / Math.max(1, numPerSide);
 
@@ -3339,16 +3376,21 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     inletsPerBayCeil = Math.ceil(numPerSide / activeBays);
     baysWithCeil = numPerSide % activeBays;
     baysWithFloor = activeBays - baysWithCeil;
+    maxPhysicalCapacityPerSide = activeBays * maxInletsPerBayPhysical;
+    isBayCapacityExceeded = inletsPerBayCeil > maxInletsPerBayPhysical;
 
-    if (layoutDist === 'progressive') {
-      bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive)`;
-      bayAdviceText = `แนะนำติดตั้งแบบ <strong>Progressive</strong> (กระจายบานหนาแน่นฝั่ง Pad และค่อยๆ เบาบางลงมาฝั่ง Fan)`;
+    if (isBayCapacityExceeded) {
+      bayLayoutSummary = `เกินขีดจำกัด (${inletsPerBayCeil} > ${maxInletsPerBayPhysical} บาน/ช่อง)`;
+      bayAdviceText = `<strong style="color:var(--accent-red)">⚠ เกินพื้นที่ผนังภายใน:</strong> ช่วงเสา ${baySpanM.toFixed(1)}m (พื้นที่ในจริง ≈ ${clearSpanM.toFixed(2)}m) ติดตั้งได้สูงสุด <strong>${maxInletsPerBayPhysical} บาน/ช่องเสา</strong> แต่คำนวณต้องการ ${inletsPerBayCeil} บาน/ช่อง — <em>แนะนำเปลี่ยนใช้รุ่น Flow สูงขึ้น เช่น PU-1200/1500</em>`;
+    } else if (layoutDist === 'progressive') {
+      bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive สูงสุด ${Math.min(maxInletsPerBayPhysical, inletsPerBayCeil + 1)} บาน/ช่อง)`;
+      bayAdviceText = `แนะนำติดตั้งแบบ <strong>Progressive (รวมโซน Pad ด้านหน้า)</strong>: กระจายบานหนาแน่นตั้งแต่หัวเล้าแนว Pad และค่อยๆ เบาบางลงมาฝั่ง Fan`;
     } else if (inletsPerBayFloor === inletsPerBayCeil) {
       bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
-      bayAdviceText = `แนะนำติดตั้ง <strong>${inletsPerBayFloor} บานต่อช่วงเสา</strong> ต่อเนื่องกัน ${activeBays} ช่อง`;
+      bayAdviceText = `แนะนำติดตั้ง <strong>${inletsPerBayFloor} บานต่อช่วงเสา</strong> ต่อเนื่องตั้งแต่หัวเล้า (รวมแนว Pad) จนถึงหน้าแนวพัดลมท้ายเล้า (${activeBays} ช่อง)`;
     } else {
       bayLayoutSummary = `สลับ ${inletsPerBayCeil} / ${inletsPerBayFloor} บาน/ช่วงเสา`;
-      bayAdviceText = `แนะนำติดตั้งสลับ <strong>${inletsPerBayCeil} บาน (${baysWithCeil} ช่อง)</strong> และ <strong>${inletsPerBayFloor} บาน (${baysWithFloor} ช่อง)</strong>`;
+      bayAdviceText = `แนะนำติดตั้งสลับ <strong>${inletsPerBayCeil} บาน (${baysWithCeil} ช่อง)</strong> และ <strong>${inletsPerBayFloor} บาน (${baysWithFloor} ช่อง)</strong> ตั้งแต่หัวเล้ารวมแนว Pad ถึงก่อนแนวพัดลมท้าย`;
     }
   }
 
@@ -3468,6 +3510,38 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   if ($('inlet-bay-count-val')) $('inlet-bay-count-val').textContent = `${totalBays} ช่อง (ช่วงติด Inlet: ${activeBays} ช่อง @ ${baySpanM.toFixed(1)}m)`;
   if ($('inlet-per-bay-val')) $('inlet-per-bay-val').textContent = `${bayLayoutSummary} (ฝั่งละ ${numPerSide} บาน)`;
   if ($('inlet-bay-recommend-text')) $('inlet-bay-recommend-text').innerHTML = bayAdviceText;
+  const bannerEl = $('inlet-bay-recommend-banner');
+  const iconEl = $('inlet-bay-status-icon');
+  const hoodTagEl = $('inlet-bay-hood-limit-tag');
+  if (bannerEl) {
+    if (isBayCapacityExceeded) {
+      bannerEl.style.background = 'rgba(239,68,68,0.12)';
+      bannerEl.style.borderColor = 'rgba(239,68,68,0.5)';
+      if (iconEl) {
+        iconEl.textContent = '⛔ ขีดจำกัดมิติหน้างาน (ไม่สามารถติดตั้งได้จริง):';
+        iconEl.style.color = 'var(--accent-red,#ef4444)';
+      }
+      if (hoodTagEl) {
+        hoodTagEl.textContent = `เสา ${baySpanM.toFixed(1)}m (พื้นที่ใน ${clearSpanM.toFixed(2)}m) รับได้สูงสุด ${maxInletsPerBayPhysical} บาน/ช่อง`;
+        hoodTagEl.style.background = 'rgba(239,68,68,0.2)';
+        hoodTagEl.style.borderColor = 'rgba(239,68,68,0.6)';
+        hoodTagEl.style.color = '#fca5a5';
+      }
+    } else {
+      bannerEl.style.background = 'rgba(56,189,248,0.08)';
+      bannerEl.style.borderColor = 'rgba(56,189,248,0.25)';
+      if (iconEl) {
+        iconEl.textContent = '💡 ข้อแนะนำวิศวกรรมการจัดวางในช่อง Bay:';
+        iconEl.style.color = 'var(--accent-cyan,#22d3ee)';
+      }
+      if (hoodTagEl) {
+        hoodTagEl.textContent = `ขนาดใน ${inletWidthM*1000}mm | เสา ${baySpanM.toFixed(1)}m (พื้นที่ใน ${clearSpanM.toFixed(2)}m) สูงสุด ${maxInletsPerBayPhysical} บาน/ช่อง`;
+        hoodTagEl.style.background = 'rgba(34,211,238,0.15)';
+        hoodTagEl.style.borderColor = 'rgba(34,211,238,0.3)';
+        hoodTagEl.style.color = 'var(--accent-cyan)';
+      }
+    }
+  }
   
   const dimTag = inletSpec.dimOuter ? `นอก ${inletSpec.dimOuter}` : `${inletSpec.widthM*1000}×${inletSpec.heightM*1000}mm`;
   const openTag = inletSpec.openingSize ? ` | เปิด ${inletSpec.openingSize}` : '';
@@ -3556,7 +3630,8 @@ function renderInletSchematic(p) {
     buildingL, buildingW, baySpanM, totalBays, activeBays,
     numPerSide, inletsPerBayCeil, inletsPerBayFloor,
     baysWithCeil, modelName, openingSize, activeLengthM, isMetric, layoutMode, jetVelocityMS,
-    zoneMode, layoutDist
+    zoneMode, layoutDist,
+    maxInletsPerBayPhysical = 2, isBayCapacityExceeded = false
   } = p;
   const currentJetV = (typeof jetVelocityMS === "number" && !isNaN(jetVelocityMS)) ? jetVelocityMS : 7.5;
 
@@ -3580,62 +3655,82 @@ function renderInletSchematic(p) {
   const bldW = drawW;
   const bayW = bldW / Math.max(totalBays, 1);
 
-  // ── Per-bay inlet count array ──
+  // ── Per-bay inlet count array (Continuous installation covering Pad zones) ──
   const bayInlets = Array(totalBays).fill(0);
-  const deadBays  = Math.max(0, totalBays - activeBays);
-  const deadStart = Math.floor(deadBays / 2); // dead bays at Pad side
 
   if (layoutMode === 'split') {
-    // ── SPLIT-TUNNEL: Central Fans (8% of bays), Pads at both ends ──
+    // ── SPLIT-TUNNEL: Fans at Center, Inlets cover from Bay 0 to Mid Fan & Mid Fan to End ──
     const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
     const fanStartBay = Math.floor((totalBays - fanBays) / 2);
-    const remainingDeadBays = Math.max(0, deadBays - fanBays);
-    const padLeftBays = Math.max(1, Math.floor(remainingDeadBays / 2));
-    const padRightBays = Math.max(1, Math.ceil(remainingDeadBays / 2));
 
     const leftWingBays = [];
-    for (let i = padLeftBays; i < fanStartBay; i++) leftWingBays.push(i);
+    for (let i = 0; i < fanStartBay; i++) leftWingBays.push(i);
 
     const rightWingBays = [];
-    for (let i = fanStartBay + fanBays; i < totalBays - padRightBays; i++) rightWingBays.push(i);
+    for (let i = fanStartBay + fanBays; i < totalBays; i++) rightWingBays.push(i);
 
     const nLeftBays = leftWingBays.length;
     const nRightBays = rightWingBays.length;
 
-    // Distribute total inlets per wall (numPerSide) equally between Left Wing & Right Wing
     const leftWingInlets = Math.floor(numPerSide / 2);
-    const rightWingInlets = numPerSide - leftWingInlets; // handles any odd number symmetrically
+    const rightWingInlets = numPerSide - leftWingInlets;
 
-    // Helper: distribute count across bays with mirror capability
-    const distributeWing = (inletCount, baysList, fromPadToFan) => {
+    const distributeWing = (inletCount, baysList, fromHeadToCenter) => {
       const nBays = baysList.length;
       if (nBays <= 0) return;
-      const baseFloor = Math.floor(inletCount / nBays);
-      const baseCeil = Math.ceil(inletCount / nBays);
-      let ceilCount = inletCount % nBays;
 
-      for (let k = 0; k < nBays; k++) {
-        // fromPadToFan = true: higher density closer to cooling pad zone (or vice versa)
-        const targetBayIdx = fromPadToFan ? baysList[k] : baysList[nBays - 1 - k];
-        bayInlets[targetBayIdx] = ceilCount-- > 0 ? baseCeil : baseFloor;
+      if (layoutDist === 'progressive') {
+        const sumW = (nBays * (nBays + 1)) / 2;
+        let remaining = inletCount;
+        for (let k = 0; k < nBays; k++) {
+          const targetBayIdx = fromHeadToCenter ? baysList[k] : baysList[nBays - 1 - k];
+          const w = nBays - k;
+          let qty = (k === nBays - 1) ? remaining : Math.round((w / sumW) * inletCount);
+          bayInlets[targetBayIdx] = qty;
+          remaining -= qty;
+        }
+      } else {
+        const baseFloor = Math.floor(inletCount / nBays);
+        const baseCeil = Math.ceil(inletCount / nBays);
+        let ceilCount = inletCount % nBays;
+
+        for (let k = 0; k < nBays; k++) {
+          const targetBayIdx = fromHeadToCenter ? baysList[k] : baysList[nBays - 1 - k];
+          bayInlets[targetBayIdx] = ceilCount-- > 0 ? baseCeil : baseFloor;
+        }
       }
     };
 
-    // Left Wing: index 0 (Pad Left) -> index N-1 (Mid Fans)
+    // Left Wing: Bay 0 (Head/Pad) -> Mid Fans
     distributeWing(leftWingInlets, leftWingBays, true);
 
-    // Right Wing: index N-1 (Pad Right) -> index 0 (Mid Fans) - Mirrored so highest density is near Pad Right!
+    // Right Wing: End (Tail/Pad) -> Mid Fans (Mirrored)
     distributeWing(rightWingInlets, rightWingBays, false);
   } else {
-    // ── STANDARD: Pad left, Fan right ──
-    if (numPerSide <= activeBays) {
+    // ── STANDARD TUNNEL: Inlets from Bay 0 (Head/Pad) up to Tunnel Fans at tail ──
+    const fanBays = Math.max(1, Math.round(totalBays * 0.05));
+    const fanStart = Math.max(1, totalBays - fanBays);
+    const nActive = fanStart;
+
+    if (layoutDist === 'progressive') {
+      const sumW = (nActive * (nActive + 1)) / 2;
+      let remaining = numPerSide;
+      for (let k = 0; k < nActive; k++) {
+        const w = nActive - k;
+        let qty = (k === nActive - 1) ? remaining : Math.round((w / sumW) * numPerSide);
+        bayInlets[k] = qty;
+        remaining -= qty;
+      }
+    } else if (numPerSide <= nActive) {
       for (let i = 0; i < numPerSide; i++) {
-        if (deadStart + i < totalBays) bayInlets[deadStart + i] = 1;
+        bayInlets[i] = 1;
       }
     } else {
-      let ceilR = baysWithCeil;
-      for (let i = deadStart; i < deadStart + activeBays; i++) {
-        bayInlets[i] = ceilR-- > 0 ? inletsPerBayCeil : inletsPerBayFloor;
+      const baseFloor = Math.floor(numPerSide / nActive);
+      const baseCeil = Math.ceil(numPerSide / nActive);
+      let ceilCount = numPerSide % nActive;
+      for (let i = 0; i < nActive; i++) {
+        bayInlets[i] = ceilCount-- > 0 ? baseCeil : baseFloor;
       }
     }
   }
@@ -3694,56 +3789,12 @@ function renderInletSchematic(p) {
 
   // ── Building interior ──
   s += `<rect x="${bldX}" y="${TOP_Y}" width="${bldW}" height="${WALL_H + BODY_H + WALL_H}" fill="${C.bldFill}"/>`;
-  // ── SP Gradient Labels (improved: yellow, zone-centered without overlap) ──
+  // ── SP Constants & Helpers ──
   const dSP = parseFloat($('inlet-design-sp')?.value || 30);
   const mSP = Math.max(10, dSP - 5);
-  const spLabelY = TOP_Y + WALL_H + BODY_H / 2;  // vertical center of body
-  const spFontSize = '10';
-  const spYellow = '#e3b341';
-  const spRed = '#f85149';
-  const spFont = 'IBM Plex Mono,monospace';
 
-  // To prevent overlap with vertical zone labels (which are exactly at the center),
-  // we shift the vertical zone label left (cx - 7) and the SP label right (cx + 7).
-  // All labels will be vertical for consistent visual design.
-  
-  if (layoutMode === 'split') {
-    const _fanBays2 = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
-    const _fanStart2 = Math.floor((totalBays - _fanBays2) / 2);
-    const _remDead2  = Math.max(0, deadBays - _fanBays2);
-    const _pLBays2   = Math.max(1, Math.floor(_remDead2 / 2));
-    const _pRBays2   = Math.max(1, Math.ceil(_remDead2 / 2));
-    const _pLW2   = _pLBays2 * bayW;
-    const _pRW2   = _pRBays2 * bayW;
-    const _pRX2   = bldX + bldW - _pRW2;
-    const _fX2    = bldX + _fanStart2 * bayW;
-    const _fW2    = _fanBays2 * bayW;
-
-    const cxPL = (_pLW2 / 2 + bldX) + 8; // shift right
-    const cxPR = (_pRX2 + _pRW2 / 2) + 8;
-    const cxFan = (_fX2 + _fW2 / 2) + 8;
-
-    s += '<text x="' + cxPL.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="700" fill="' + spYellow + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxPL.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">SP≈' + mSP + 'Pa</text>';
-    
-    s += '<text x="' + cxPR.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="700" fill="' + spYellow + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxPR.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">SP≈' + mSP + 'Pa</text>';
-    
-    s += '<text x="' + cxFan.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="800" fill="' + spRed + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxFan.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">Max SP: ' + dSP + ' Pa</text>';
-  } else {
-    const _pWstd = deadStart * bayW;
-    const cxPad = (bldX + _pWstd / 2) + 8;
-    const _fanStartStd = deadStart + activeBays;
-    const _fXstd = bldX + _fanStartStd * bayW;
-    const _fWstd = bldW - _fanStartStd * bayW;
-    const cxFan = (_fXstd + _fWstd / 2) + 8;
-    
-    s += '<text x="' + cxPad.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="700" fill="' + spYellow + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxPad.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">SP≈' + mSP + 'Pa</text>';
-    
-    s += '<text x="' + cxFan.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="800" fill="' + spRed + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxFan.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">Max SP: ' + dSP + ' Pa</text>';
-  }
-
-  // ── Helper: Render Vertical Text (Rotated text centered in zone) ──
+  // ── Helper: Render Vertical Text ──
   const makeVerticalText = (text, x, y, maxW, fontSize, fill) => {
-    // Check if vertical rotated single-string fits or stack characters
     const targetFs = Math.min(fontSize, Math.max(7, maxW * 0.45));
     return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${fill}" font-size="${targetFs}" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" letter-spacing="1.5px" transform="rotate(-90,${x.toFixed(1)},${y.toFixed(1)})">${text}</text>`;
   };
@@ -3755,49 +3806,41 @@ function renderInletSchematic(p) {
     s += `<rect x="${bx.toFixed(1)}" y="${TOP_Y + WALL_H}" width="${bayW.toFixed(1)}" height="${BODY_H}" fill="${has ? C.bayFill : C.bayEFill}" stroke="${has ? C.bayBdr : C.bayEBdr}" stroke-width="0.5"/>`;
   }
 
-  // ── PAD & FAN zone overlays with Vertical Labels to prevent overlap ──
+  // ── PAD & FAN zone overlays ──
   if (layoutMode === 'split') {
     const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
     const fanStartBay = Math.floor((totalBays - fanBays) / 2);
-    const remainingDeadBays = Math.max(0, deadBays - fanBays);
-    const padLeftBays = Math.max(1, Math.floor(remainingDeadBays / 2));
-    const padRightBays = Math.max(1, Math.ceil(remainingDeadBays / 2));
+    const padBaysEach = Math.max(1, Math.round((totalBays * 0.10) / 2));
+    const pLW = padBaysEach * bayW;
+    const pRW = padBaysEach * bayW;
+    const pRX = bldX + bldW - pRW;
 
-    // Left PAD
-    const pLW = padLeftBays * bayW;
+    // Left PAD Zone Box & Top Label
     s += `<rect x="${bldX}" y="${TOP_Y}" width="${pLW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
     s += `<line x1="${(bldX+pLW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pLW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-    if (pLW > 8) {
-      const tagX = (bldX + pLW / 2) - 8;
-      const tagY = TOP_Y + WALL_H + BODY_H / 2;
-      s += makeVerticalText("PAD LEFT", tagX, tagY, pLW, 9.0, "#22c55e");
-    }
+    const tagLX = bldX + pLW / 2;
+    s += `<text x="${tagLX.toFixed(1)}" y="${TOP_Y - 14}" fill="#22c55e" font-size="8.5" font-weight="700" text-anchor="middle" font-family="IBM Plex Mono,monospace">PAD LEFT (SP≈${mSP}Pa)</text>`;
 
-    // Right PAD
-    const pRW = padRightBays * bayW;
-    const pRX = bldX + bldW - pRW;
+    // Right PAD Zone Box & Top Label
     s += `<rect x="${pRX.toFixed(1)}" y="${TOP_Y}" width="${pRW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
     s += `<line x1="${pRX.toFixed(1)}" y1="${TOP_Y}" x2="${pRX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-    if (pRW > 8) {
-      const tagX = (pRX + pRW / 2) - 8;
-      const tagY = TOP_Y + WALL_H + BODY_H / 2;
-      s += makeVerticalText("PAD RIGHT", tagX, tagY, pRW, 9.0, "#22c55e");
-    }
+    const tagRX = pRX + pRW / 2;
+    s += `<text x="${tagRX.toFixed(1)}" y="${TOP_Y - 14}" fill="#22c55e" font-size="8.5" font-weight="700" text-anchor="middle" font-family="IBM Plex Mono,monospace">PAD RIGHT (SP≈${mSP}Pa)</text>`;
 
-    // Center FANS (Split-Tunnel layout)
+    // Center FANS Box & Clean Centered Label
     const fX = bldX + fanStartBay * bayW;
     const fW = fanBays * bayW;
     s += `<rect x="${fX.toFixed(1)}" y="${TOP_Y}" width="${fW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.fanFill}"/>`;
     s += `<line x1="${fX.toFixed(1)}" y1="${TOP_Y}" x2="${fX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
     s += `<line x1="${(fX+fW).toFixed(1)}" y1="${TOP_Y}" x2="${(fX+fW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
     if (fW > 8) {
-      const tagX = (fX + fW / 2) - 8;
+      const tagX = fX + fW / 2;
       const tagY = TOP_Y + WALL_H + BODY_H / 2;
-      s += makeVerticalText("MID FANS", tagX, tagY, fW, 9.0, "#ef4444");
+      s += makeVerticalText(`MID FANS (Max ${dSP}Pa)`, tagX, tagY, fW, 8.5, "#ef4444");
     }
 
-    // ── Internal Airflow Directions (Split-Tunnel: Left wing → MID FANS ← Right wing) ──
-    const leftStart = bldX + pLW;
+    // ── Internal Airflow Directions ──
+    const leftStart = bldX;
     const leftEnd = fX;
     const leftWidth = leftEnd - leftStart;
     if (leftWidth > 20) {
@@ -3808,7 +3851,7 @@ function renderInletSchematic(p) {
       }
     }
     const rightStart = fX + fW;
-    const rightEnd = pRX;
+    const rightEnd = bldX + bldW;
     const rightWidth = rightEnd - rightStart;
     if (rightWidth > 20) {
       for (let step = 1; step <= 3; step++) {
@@ -3819,33 +3862,27 @@ function renderInletSchematic(p) {
     }
   } else {
     // ── STANDARD TUNNEL LAYOUT ──
-    if (deadStart > 0) {
-      const pW = deadStart * bayW;
-      s += `<rect x="${bldX}" y="${TOP_Y}" width="${pW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
-      s += `<line x1="${(bldX+pW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-      if (pW > 8) {
-        const tagX = (bldX + pW / 2) - 8;
-        const tagY = TOP_Y + WALL_H + BODY_H / 2;
-        s += makeVerticalText("COOLING PAD", tagX, tagY, pW, 9.0, "#22c55e");
-      }
-    }
-    const fanStart = deadStart + activeBays;
-    let fX = bldX + bldW;
-    let fW = 0;
-    if (fanStart < totalBays) {
-      fX = bldX + fanStart * bayW;
-      fW = bldW - fanStart * bayW;
-      s += `<rect x="${fX.toFixed(1)}" y="${TOP_Y}" width="${fW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.fanFill}"/>`;
-      s += `<line x1="${fX.toFixed(1)}" y1="${TOP_Y}" x2="${fX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
-      if (fW > 8) {
-        const tagX = fX + fW / 2;
-        const tagY = TOP_Y + WALL_H + BODY_H / 2;
-        s += makeVerticalText("TUNNEL FANS", tagX, tagY, fW, 9.0, "#ef4444");
-      }
+    const padBays = Math.max(1, Math.round(totalBays * 0.08));
+    const pW = padBays * bayW;
+    s += `<rect x="${bldX}" y="${TOP_Y}" width="${pW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
+    s += `<line x1="${(bldX+pW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+    const tagX = bldX + pW / 2;
+    s += `<text x="${tagX.toFixed(1)}" y="${TOP_Y - 14}" fill="#22c55e" font-size="8.5" font-weight="700" text-anchor="middle" font-family="IBM Plex Mono,monospace">COOLING PAD (SP≈${mSP}Pa)</text>`;
+
+    const fanBays = Math.max(1, Math.round(totalBays * 0.05));
+    const fanStart = totalBays - fanBays;
+    const fX = bldX + fanStart * bayW;
+    const fW = bldW - fanStart * bayW;
+    s += `<rect x="${fX.toFixed(1)}" y="${TOP_Y}" width="${fW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.fanFill}"/>`;
+    s += `<line x1="${fX.toFixed(1)}" y1="${TOP_Y}" x2="${fX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
+    if (fW > 8) {
+      const fTagX = fX + fW / 2;
+      const fTagY = TOP_Y + WALL_H + BODY_H / 2;
+      s += makeVerticalText(`TUNNEL FANS (Max ${dSP}Pa)`, fTagX, fTagY, fW, 8.5, "#ef4444");
     }
 
     // ── Internal Airflow Directions (Standard: Left → Right) ──
-    const stdStart = bldX + (deadStart * bayW);
+    const stdStart = bldX;
     const stdEnd = fX;
     const stdWidth = stdEnd - stdStart;
     if (stdWidth > 20) {
@@ -3855,20 +3892,6 @@ function renderInletSchematic(p) {
         s += `<line x1="${(ax - 10).toFixed(1)}" y1="${(BOT_Y - 18).toFixed(1)}" x2="${(ax + 10).toFixed(1)}" y2="${(BOT_Y - 18).toFixed(1)}" stroke="rgba(34,211,238,0.25)" stroke-width="1.1" marker-end="url(#awh-r)"/>`;
       }
     }
-  }
-
-  // ── Walls (top + bottom) ──
-  s += `<rect x="${bldX}" y="${TOP_Y}" width="${bldW}" height="${WALL_H}" fill="${C.wall}"/>`;
-  s += `<rect x="${bldX}" y="${BOT_Y}" width="${bldW}" height="${WALL_H}" fill="${C.wall}"/>`;
-  // End caps (reduced width from 5px to 2px for cleaner design)
-  s += `<rect x="${bldX}" y="${TOP_Y}" width="2" height="${WALL_H+BODY_H+WALL_H}" fill="${C.wall}"/>`;
-  s += `<rect x="${bldX+bldW-2}" y="${TOP_Y}" width="2" height="${WALL_H+BODY_H+WALL_H}" fill="${C.wall}"/>`;
-
-  // Bay dividers on walls (subtle tick marks only)
-  for (let i = 1; i < totalBays; i++) {
-    const lx = (bldX + i * bayW).toFixed(1);
-    s += `<line x1="${lx}" y1="${TOP_Y}" x2="${lx}" y2="${TOP_Y + WALL_H}" stroke="${C.wallSt}" stroke-width="0.4"/>`;
-    s += `<line x1="${lx}" y1="${BOT_Y}" x2="${lx}" y2="${BOT_Y + WALL_H}" stroke="${C.wallSt}" stroke-width="0.4"/>`;
   }
 
   // ── Inlet symbols & count badges per bay ──
@@ -3899,28 +3922,29 @@ function renderInletSchematic(p) {
       s += `<line x1="${ax}" y1="${(BOT_Y - 4).toFixed(1)}" x2="${ax}" y2="${(BOT_Y - 4 - arLen).toFixed(1)}" stroke="${C.cyanGl}" stroke-width="1" marker-end="url(#awc)"/>`;
     }
 
-    // ── Numbers AT TOP & BOTTOM WALLS (จำนวนบานอยู่ที่ริมผนังทั้ง 2 ด้าน) ──
+    // ── Numbers AT TOP & BOTTOM WALLS (จำนวนบานอยู่ที่ริมผนังทั้ง 2 ด้าน พร้อมแจ้งเตือนหากเกินพิกัด Hood 1,147mm) ──
     if (bayW >= 8) {
-      const fs = Math.max(8, Math.min(12, bayW * 0.38));
+      const countFontSize = Math.max(8, Math.min(12, bayW * 0.38));
+      const isExceeded = cnt > maxInletsPerBayPhysical;
+      const countColor = isExceeded ? "#ef4444" : C.cyan;
       // Top Wall count label (ชิดผนังด้านบน)
-      s += `<text x="${cx}" y="${TOP_Y - 5}" fill="${C.cyan}" font-size="${fs}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}</text>`;
+      s += `<text x="${cx}" y="${TOP_Y - 5}" fill="${countColor}" font-size="${countFontSize}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}${isExceeded ? "⚠" : ""}</text>`;
       // Bottom Wall count label (ชิดผนังด้านล่าง)
-      s += `<text x="${cx}" y="${BOT_Y + WALL_H + 11}" fill="${C.cyan}" font-size="${fs}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}</text>`;
+      s += `<text x="${cx}" y="${BOT_Y + WALL_H + 11}" fill="${countColor}" font-size="${countFontSize}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}${isExceeded ? "⚠" : ""}</text>`;
     }
 
-    // ── CENTER OF BAY: Jet Velocity Badge (ตัวเลขความเร็วลมพุ่งกลางเล้า) ──
-    if (bayW >= 14) {
-      const bdgW = Math.max(22, Math.min(48, bayW * 0.85));
-      const bdgH = 18;
+    // ── CENTER OF BAY: Compact Jet Velocity Badge (ขนาดกะทัดรัด ตัวอักษรเล็กลง 50% ไม่เกะกะ) ──
+    if (bayW >= 10) {
+      const bdgW = Math.max(16, Math.min(28, bayW * 0.70));
+      const bdgH = 11;
       const bdgX = (cx - bdgW / 2).toFixed(1);
       const bdgY = (TOP_Y + WALL_H + (BODY_H - bdgH) / 2).toFixed(1);
-      const fs = Math.max(7.5, Math.min(9.5, bdgW * 0.22));
+      const badgeFontSize = Math.max(5.0, Math.min(6.5, bdgW * 0.24));
       const vText = isMetric ? `${currentJetV.toFixed(1)}m/s` : `${Math.round(currentJetV * 196.85)}fpm`;
-      s += `<rect x="${bdgX}" y="${bdgY}" width="${bdgW.toFixed(1)}" height="${bdgH}" rx="3" fill="rgba(15,23,42,0.85)" stroke="rgba(56,189,248,0.4)" stroke-width="0.8"/>`;
-      s += `<text x="${cx}" y="${parseFloat(bdgY) + bdgH/2}" fill="var(--accent-cyan,#38bdf8)" font-size="${fs}" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" font-weight="700">${vText}</text>`;
+      s += `<rect x="${bdgX}" y="${bdgY}" width="${bdgW.toFixed(1)}" height="${bdgH}" rx="2" fill="rgba(15,23,42,0.85)" stroke="rgba(56,189,248,0.3)" stroke-width="0.5"/>`;
+      s += `<text x="${cx}" y="${parseFloat(bdgY) + bdgH/2}" fill="var(--accent-cyan,#38bdf8)" font-size="${badgeFontSize}" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" font-weight="600">${vText}</text>`;
     }
   }
-
   // ── DIMENSION LINES ──
 
   // 1. Building WIDTH (vertical, left side)
@@ -3937,39 +3961,37 @@ function renderInletSchematic(p) {
   if (layoutMode === 'split') {
     const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
     const fanStartBay = Math.floor((totalBays - fanBays) / 2);
-    const padLeftBays = Math.max(1, Math.floor(deadBays / 2));
-    const padRightBays = Math.max(1, Math.ceil(deadBays / 2));
 
-    const lx1 = (bldX + padLeftBays * bayW).toFixed(1);
+    const lx1 = bldX.toFixed(1);
     const lx2 = (bldX + fanStartBay * bayW).toFixed(1);
     const rx1 = (bldX + (fanStartBay + fanBays) * bayW).toFixed(1);
-    const rx2 = (bldX + (totalBays - padRightBays) * bayW).toFixed(1);
+    const rx2 = (bldX + bldW).toFixed(1);
 
     s += `<line x1="${lx1}" y1="${DIM2_Y}" x2="${lx2}" y2="${DIM2_Y}" stroke="${C.cyanGl}" stroke-width="0.9" marker-start="url(#awcr)" marker-end="url(#awc)"/>`;
     s += `<line x1="${rx1}" y1="${DIM2_Y}" x2="${rx2}" y2="${DIM2_Y}" stroke="${C.cyanGl}" stroke-width="0.9" marker-start="url(#awcr)" marker-end="url(#awc)"/>`;
 
-    const activeLeftM = (fanStartBay - padLeftBays) * baySpanM;
-    const activeRightM = (totalBays - padRightBays - (fanStartBay + fanBays)) * baySpanM;
-    const leftB = fanStartBay - padLeftBays;
-    const rightB = totalBays - padRightBays - (fanStartBay + fanBays);
-    s += `<text x="${bldX + bldW/2}" y="${DIM2_Y + 12}" fill="${C.blue}" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Active Zones: ฝั่งละ ~${activeLeftM.toFixed(0)}m (ซ้าย: ${leftB} ช่อง | ขวา: ${rightB} ช่อง)</text>`;
+    const activeLeftM = fanStartBay * baySpanM;
+    const activeRightM = (totalBays - (fanStartBay + fanBays)) * baySpanM;
+    const leftB = fanStartBay;
+    const rightB = totalBays - (fanStartBay + fanBays);
+    s += `<text x="${bldX + bldW/2}" y="${DIM2_Y + 12}" fill="${C.blue}" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Active Zones: ฝั่งละ ~${activeLeftM.toFixed(0)}m (ซ้าย: ${leftB} ช่อง | ขวา: ${rightB} ช่อง | รวมแนว Pad)</text>`;
   } else {
-    const ax1 = (bldX + deadStart * bayW).toFixed(1);
-    const ax2 = (bldX + (deadStart + activeBays) * bayW).toFixed(1);
+    const ax1 = bldX.toFixed(1);
+    const fanBays = Math.max(1, Math.round(totalBays * 0.05));
+    const ax2 = (bldX + (totalBays - fanBays) * bayW).toFixed(1);
     s += `<line x1="${ax1}" y1="${DIM2_Y}" x2="${ax2}" y2="${DIM2_Y}" stroke="${C.cyanGl}" stroke-width="0.9" marker-start="url(#awcr)" marker-end="url(#awc)"/>`;
-    s += `<text x="${(parseFloat(ax1)+parseFloat(ax2))/2}" y="${DIM2_Y + 12}" fill="${C.blue}" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Active Zone: ${activeLengthM.toFixed(0)} m  (${activeBays} bays × ${baySpanM.toFixed(1)} m/bay)</text>`;
+    s += `<text x="${(parseFloat(ax1)+parseFloat(ax2))/2}" y="${DIM2_Y + 12}" fill="${C.blue}" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Active Zone: ${activeLengthM.toFixed(0)} m (${activeBays} bays × ${baySpanM.toFixed(1)} m/bay | เริ่มจากหัวเล้าแนว Pad)</text>`;
   }
 
-  // 4. Bay SPAN label (above building, for the active bay)
+  // 4. Bay SPAN label (ย้ายมาอยู่ที่ตำแหน่งผนังด้านล่างใต้ตัวเลขบาน)
   if (bayW > 18 && totalBays > 0) {
-    const targetBay = layoutMode === 'split' ? (Math.max(1, Math.floor(deadBays / 2))) : deadStart;
+    const targetBay = 0; // แสดงระยะ Bay ที่ช่องแรกฝั่งซ้ายล่าง
     const b1x1 = (bldX + targetBay * bayW).toFixed(1);
     const b1x2 = (bldX + (targetBay + 1) * bayW).toFixed(1);
-    const bDimY = TOP_Y - 8;
+    const bDimY = BOT_Y + WALL_H + 24;
     s += `<line x1="${b1x1}" y1="${bDimY}" x2="${b1x2}" y2="${bDimY}" stroke="${C.mutedSt}" stroke-width="0.8" marker-start="url(#awr)" marker-end="url(#aw)"/>`;
-    s += `<text x="${((parseFloat(b1x1)+parseFloat(b1x2))/2).toFixed(1)}" y="${bDimY - 4}" fill="${C.cyan}" font-size="8.5" font-weight="700" text-anchor="middle" font-family="IBM Plex Mono,monospace">Bay ${baySpanM.toFixed(1)}m</text>`;
+    s += `<text x="${((parseFloat(b1x1)+parseFloat(b1x2))/2).toFixed(1)}" y="${bDimY + 9}" fill="${C.cyan}" font-size="8.5" font-weight="700" text-anchor="middle" font-family="IBM Plex Mono,monospace">Bay ${baySpanM.toFixed(1)}m</text>`;
   }
-
   // Wall labels (right of building - full label inside canvas)
   const rwX = bldX + bldW + 6;
   s += `<text x="${rwX}" y="${TOP_Y + WALL_H/2}" fill="${C.wallSt}" font-size="7.5" font-weight="600" dominant-baseline="middle" font-family="IBM Plex Mono,monospace">SIDE WALL (TOP)</text>`;
@@ -3987,18 +4009,17 @@ function renderInletSchematic(p) {
   if (layoutMode === 'split') {
     const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
     const fanStartBay = Math.floor((totalBays - fanBays) / 2);
-    const padLeftBays = Math.max(1, Math.floor(deadBays / 2));
-    const padRightBays = Math.max(1, Math.ceil(deadBays / 2));
-    const leftB = fanStartBay - padLeftBays;
-    const rightB = totalBays - padRightBays - (fanStartBay + fanBays);
+    const leftB = fanStartBay;
+    const rightB = totalBays - (fanStartBay + fanBays);
     activeBaysText = `${leftB + rightB} ช่อง (ซ้าย:${leftB}|ขวา:${rightB})`;
   }
-
+  const formatPat = isBayCapacityExceeded ? `${layoutPat} (เกินพิกัด)` : layoutPat;
+  const formatColor = isBayCapacityExceeded ? '#ef4444' : C.amber;
   const stats = [
     { v: String(p.numInletsTotal), u: 'บาน รวมทั้งหมด', c: C.cyan },
     { v: String(numPerSide),       u: 'บาน ฝั่งซ้าย',  c: C.white },
     { v: String(numPerSide),       u: 'บาน ฝั่งขวา',   c: C.white },
-    { v: layoutPat,                u: 'รูปแบบ/ช่องเสา', c: C.amber },
+    { v: formatPat,                u: isBayCapacityExceeded ? `พิกัดเสา ${baySpanM.toFixed(1)}m ≤ ${maxInletsPerBayPhysical} บาน` : 'รูปแบบ/ช่องเสา', c: formatColor },
     { v: activeBaysText,           u: 'ช่อง Bay Active', c: C.blue },
     { v: layoutMode === 'split' ? 'Split-Tunnel' : 'Standard', u: 'รูปแบบระบบ', c: C.cyan },
   ];
