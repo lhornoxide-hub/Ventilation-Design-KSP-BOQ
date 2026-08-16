@@ -1828,29 +1828,6 @@ input.invalid { border-color: var(--accent-red) !important; }
       <div class="sidebar-section-header">
         <span class="section-badge">07</span>
         <h2>บานเกล็ดลม / Air Inlet &amp; BOQ</h2>
-      </div>
-
-
-      <!-- Inlet Model Selection -->
-      <div class="form-group">
-        <label class="field-label">ประเภท &amp; รุ่น Air Inlet (WUSEN Catalog)</label>
-        <select id="inlet-model-select">
-          <optgroup label="── Poultry Air Inlet (ABS / ฉนวนกันความร้อน) ──">
-            <option value="WUSEN-908" selected>Wusen 908 (908×454mm | เปิด 870×400mm | 3,000 m³/h @20Pa) [มาตรฐาน]</option>
-            <option value="WUSEN-880">Wusen 880 (880×325mm | เปิด 840×272mm | 3,000 m³/h @20Pa)</option>
-            <option value="WUSEN-600">Wusen 600 (600×330mm | เปิด 560×275mm | 1,800 m³/h @20Pa)</option>
-          </optgroup>
-          <optgroup label="── Side Wall Air Inlet (PVC Plastic) ──">
-            <option value="WUSEN-400-PVC">Wusen 400 PVC (850×500mm | เปิด 760×410mm | 3,780 m³/h @20Pa)</option>
-            <option value="WUSEN-340-PVC">Wusen 340 PVC (800×365mm | เปิด 760×345mm | 2,200 m³/h @20Pa)</option>
-            <option value="WUSEN-270-PVC">Wusen 270 PVC (720×360mm | เปิด 640×280mm | 1,200 m³/h @20Pa)</option>
-          </optgroup>
-          <optgroup label="── Polyurethane / Gravity Air Inlet (PU) ──">
-            <option value="WUSEN-800-PU">Wusen 800 PU (880×480mm | เปิด 810×410mm | 3,536 m³/h @20Pa)</option>
-            <option value="WUSEN-1200-PU">Wusen 1200 PU (1280×480mm | เปิด 1210×410mm | 5,381 m³/h @20Pa)</option>
-            <option value="WUSEN-1500-PU">Wusen 1500 PU (1580×480mm | เปิด 1510×410mm | 7,860 m³/h @20Pa)</option>
-            <option value="WUSEN-650-PU">Wusen 650 PU (730×350mm | เปิด 660×280mm | 2,050 m³/h @20Pa)</option>
-            <option value="WUSEN-752-GRAVITY">Wusen 752 Gravity (752×615mm | เปิด 700×500mm | 3,350 m³/h @20Pa)</option>
           </optgroup>
           <option value="CUSTOM">กำหนดค่าสเปกเอง (Custom Spec)</option>
         </select>
@@ -1915,6 +1892,20 @@ input.invalid { border-color: var(--accent-red) !important; }
           <option value="linear_24vdc" selected>DC 24V Linear Actuator (610mm | 3,500N | 10kΩ Pot)</option>
           <option value="winch_auto">Winch Motor อัตโนมัติ (0.37 - 0.55 kW) พร้อมสลิงเมน</option>
           <option value="manual_winch">Winch กว้านมือหมุน (Manual)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top:6px">
+        <label class="field-label" style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="color:var(--accent-blue)">⚡</span> Zoned Actuation Option</label>
+        <select id="inlet-zone-mode">
+          <option value="single" selected>Single Zone (ดึงพร้อมกันทั้งเล้า)</option>
+          <option value="multi">Multi-Zone (แยกดึงอิสระ ซ้าย-ขวา/หน้า-หลัง)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top:6px">
+        <label class="field-label" style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="color:var(--accent-blue)">📐</span> การกระจายบาน (Inlet Distribution)</label>
+        <select id="inlet-layout-dist">
+          <option value="uniform" selected>Uniform Spacing (เท่ากันทุกช่อง)</option>
+          <option value="progressive">Progressive (หนาแน่น Pad → เบาบาง Fan)</option>
         </select>
       </div>
     </div>
@@ -3217,6 +3208,8 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   // Design SP: User input or fallback to cobbReqPa
   const designSP = parseFloat($('inlet-design-sp')?.value || cobbReqPa);
   const actuatorType = $('inlet-actuator-type')?.value || 'winch_auto';
+  const zoneMode = $('inlet-zone-mode')?.value || 'single';
+  const layoutDist = $('inlet-layout-dist')?.value || 'uniform';
 
   let inletSpec = AIR_INLET_CATALOG[modelKey];
   if (modelKey === 'CUSTOM' || !inletSpec) {
@@ -3325,7 +3318,10 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     baysWithCeil = inletsPerWing % activeBaysPerSideWing;
     baysWithFloor = activeBaysPerSideWing - baysWithCeil;
 
-    if (inletsPerBayFloor === inletsPerBayCeil) {
+    if (layoutDist === 'progressive') {
+      bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive)`;
+      bayAdviceText = `<strong>โหมด Split-Tunnel (Progressive):</strong> ฝั่งละ ${numPerSide} บาน (ติดตั้งถี่บริเวณใกล้แผ่น Pad ลดหลั่นลงบริเวณใกล้พัดลม เพื่อรักษาสมดุลความเร็วลม)`;
+    } else if (inletsPerBayFloor === inletsPerBayCeil) {
       bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
       bayAdviceText = `<strong>โหมด Split-Tunnel:</strong> ฝั่งละ ${numPerSide} บาน (ปีกละ ${inletsPerWing} บาน ใน ${activeBaysPerSideWing} ช่องเสา ติดตั้งช่องละ ${inletsPerBayFloor} บานเท่ากันทุกช่อง)`;
     } else {
@@ -3344,7 +3340,10 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     baysWithCeil = numPerSide % activeBays;
     baysWithFloor = activeBays - baysWithCeil;
 
-    if (inletsPerBayFloor === inletsPerBayCeil) {
+    if (layoutDist === 'progressive') {
+      bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive)`;
+      bayAdviceText = `แนะนำติดตั้งแบบ <strong>Progressive</strong> (กระจายบานหนาแน่นฝั่ง Pad และค่อยๆ เบาบางลงมาฝั่ง Fan)`;
+    } else if (inletsPerBayFloor === inletsPerBayCeil) {
       bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
       bayAdviceText = `แนะนำติดตั้ง <strong>${inletsPerBayFloor} บานต่อช่วงเสา</strong> ต่อเนื่องกัน ${activeBays} ช่อง`;
     } else {
@@ -3362,8 +3361,9 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   let winchQty = 1;
   const actuatorMaxPullKg = 350;
 
+  const isMultiZone = (zoneMode === 'multi');
   if (actuatorType === 'linear_24vdc') {
-    if (layoutMode === 'split') {
+    if (layoutMode === 'split' || isMultiZone) {
       const pullPerWingKg = (numInletsTotal / 2) * inletSpec.pullForceKg;
       winchQty = pullPerWingKg > actuatorMaxPullKg ? 4 : 2;
       actuatorModelDesc = `กระบอกขับเชิงเส้น Linear Actuator DC 24V (610mm / 3,500N) × ${winchQty} ตัว [แยกปีกซ้าย-ขวา + 10kΩ Pot Feedback]`;
@@ -3371,7 +3371,7 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
       winchQty = totalPullKg > actuatorMaxPullKg ? Math.ceil(totalPullKg / actuatorMaxPullKg) : 1;
       actuatorModelDesc = `กระบอกขับเชิงเส้น Linear Actuator DC 24V (610mm / 3,500N / 84W) × ${winchQty} ตัว [IP65/67 + 10kΩ Pot Feedback]`;
     }
-  } else if (layoutMode === 'split') {
+  } else if (layoutMode === 'split' || isMultiZone) {
     if (actuatorType === 'winch_auto') {
       winchQty = 2;
       actuatorModelDesc = 'มอเตอร์กว้าน Winch 0.37 kW × 2 ตัว [แยกดึงปีกซ้าย - ปีกขวา อิสระ]';
@@ -3555,7 +3555,8 @@ function renderInletSchematic(p) {
   const {
     buildingL, buildingW, baySpanM, totalBays, activeBays,
     numPerSide, inletsPerBayCeil, inletsPerBayFloor,
-    baysWithCeil, modelName, openingSize, activeLengthM, isMetric, layoutMode, jetVelocityMS
+    baysWithCeil, modelName, openingSize, activeLengthM, isMetric, layoutMode, jetVelocityMS,
+    zoneMode, layoutDist
   } = p;
   const currentJetV = (typeof jetVelocityMS === "number" && !isNaN(jetVelocityMS)) ? jetVelocityMS : 7.5;
 
@@ -3693,6 +3694,52 @@ function renderInletSchematic(p) {
 
   // ── Building interior ──
   s += `<rect x="${bldX}" y="${TOP_Y}" width="${bldW}" height="${WALL_H + BODY_H + WALL_H}" fill="${C.bldFill}"/>`;
+  // ── SP Gradient Labels (improved: yellow, zone-centered without overlap) ──
+  const dSP = parseFloat($('inlet-design-sp')?.value || 30);
+  const mSP = Math.max(10, dSP - 5);
+  const spLabelY = TOP_Y + WALL_H + BODY_H / 2;  // vertical center of body
+  const spFontSize = '10';
+  const spYellow = '#e3b341';
+  const spRed = '#f85149';
+  const spFont = 'IBM Plex Mono,monospace';
+
+  // To prevent overlap with vertical zone labels (which are exactly at the center),
+  // we shift the vertical zone label left (cx - 7) and the SP label right (cx + 7).
+  // All labels will be vertical for consistent visual design.
+  
+  if (layoutMode === 'split') {
+    const _fanBays2 = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    const _fanStart2 = Math.floor((totalBays - _fanBays2) / 2);
+    const _remDead2  = Math.max(0, deadBays - _fanBays2);
+    const _pLBays2   = Math.max(1, Math.floor(_remDead2 / 2));
+    const _pRBays2   = Math.max(1, Math.ceil(_remDead2 / 2));
+    const _pLW2   = _pLBays2 * bayW;
+    const _pRW2   = _pRBays2 * bayW;
+    const _pRX2   = bldX + bldW - _pRW2;
+    const _fX2    = bldX + _fanStart2 * bayW;
+    const _fW2    = _fanBays2 * bayW;
+
+    const cxPL = (_pLW2 / 2 + bldX) + 8; // shift right
+    const cxPR = (_pRX2 + _pRW2 / 2) + 8;
+    const cxFan = (_fX2 + _fW2 / 2) + 8;
+
+    s += '<text x="' + cxPL.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="700" fill="' + spYellow + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxPL.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">SP≈' + mSP + 'Pa</text>';
+    
+    s += '<text x="' + cxPR.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="700" fill="' + spYellow + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxPR.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">SP≈' + mSP + 'Pa</text>';
+    
+    s += '<text x="' + cxFan.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="800" fill="' + spRed + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxFan.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">Max SP: ' + dSP + ' Pa</text>';
+  } else {
+    const _pWstd = deadStart * bayW;
+    const cxPad = (bldX + _pWstd / 2) + 8;
+    const _fanStartStd = deadStart + activeBays;
+    const _fXstd = bldX + _fanStartStd * bayW;
+    const _fWstd = bldW - _fanStartStd * bayW;
+    const cxFan = (_fXstd + _fWstd / 2) + 8;
+    
+    s += '<text x="' + cxPad.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="700" fill="' + spYellow + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxPad.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">SP≈' + mSP + 'Pa</text>';
+    
+    s += '<text x="' + cxFan.toFixed(1) + '" y="' + spLabelY.toFixed(1) + '" font-family="' + spFont + '" font-size="' + spFontSize + '" font-weight="800" fill="' + spRed + '" text-anchor="middle" dominant-baseline="middle" transform="rotate(-90,' + cxFan.toFixed(1) + ',' + spLabelY.toFixed(1) + ')">Max SP: ' + dSP + ' Pa</text>';
+  }
 
   // ── Helper: Render Vertical Text (Rotated text centered in zone) ──
   const makeVerticalText = (text, x, y, maxW, fontSize, fill) => {
@@ -3721,7 +3768,7 @@ function renderInletSchematic(p) {
     s += `<rect x="${bldX}" y="${TOP_Y}" width="${pLW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
     s += `<line x1="${(bldX+pLW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pLW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
     if (pLW > 8) {
-      const tagX = bldX + pLW / 2;
+      const tagX = (bldX + pLW / 2) - 8;
       const tagY = TOP_Y + WALL_H + BODY_H / 2;
       s += makeVerticalText("PAD LEFT", tagX, tagY, pLW, 9.0, "#22c55e");
     }
@@ -3732,7 +3779,7 @@ function renderInletSchematic(p) {
     s += `<rect x="${pRX.toFixed(1)}" y="${TOP_Y}" width="${pRW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
     s += `<line x1="${pRX.toFixed(1)}" y1="${TOP_Y}" x2="${pRX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
     if (pRW > 8) {
-      const tagX = pRX + pRW / 2;
+      const tagX = (pRX + pRW / 2) - 8;
       const tagY = TOP_Y + WALL_H + BODY_H / 2;
       s += makeVerticalText("PAD RIGHT", tagX, tagY, pRW, 9.0, "#22c55e");
     }
@@ -3744,7 +3791,7 @@ function renderInletSchematic(p) {
     s += `<line x1="${fX.toFixed(1)}" y1="${TOP_Y}" x2="${fX.toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
     s += `<line x1="${(fX+fW).toFixed(1)}" y1="${TOP_Y}" x2="${(fX+fW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.fanBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
     if (fW > 8) {
-      const tagX = fX + fW / 2;
+      const tagX = (fX + fW / 2) - 8;
       const tagY = TOP_Y + WALL_H + BODY_H / 2;
       s += makeVerticalText("MID FANS", tagX, tagY, fW, 9.0, "#ef4444");
     }
@@ -3777,7 +3824,7 @@ function renderInletSchematic(p) {
       s += `<rect x="${bldX}" y="${TOP_Y}" width="${pW.toFixed(1)}" height="${WALL_H+BODY_H+WALL_H}" fill="${C.padFill}"/>`;
       s += `<line x1="${(bldX+pW).toFixed(1)}" y1="${TOP_Y}" x2="${(bldX+pW).toFixed(1)}" y2="${BLD_BTM}" stroke="${C.padBdr}" stroke-width="1.2" stroke-dasharray="3,2"/>`;
       if (pW > 8) {
-        const tagX = bldX + pW / 2;
+        const tagX = (bldX + pW / 2) - 8;
         const tagY = TOP_Y + WALL_H + BODY_H / 2;
         s += makeVerticalText("COOLING PAD", tagX, tagY, pW, 9.0, "#22c55e");
       }
@@ -5885,9 +5932,12 @@ function calculate() {
     $('harm-a-orders').textContent = `I5=${harm_a_I5}A, I7=${harm_a_I7}A, I11=${harm_a_I11}A, I13=${harm_a_I13}A`;
     const harm_a_res = $('harm-a-result');
     harm_a_res.textContent = `หลังติดตั้ง AHF ${harm_a_AHF_std} A → THDi ≤5% ✓ ผ่าน PEA/MEA`;
+    ['pad-height','pad-block-width','inlet-actuator-type','inlet-zone-mode','inlet-layout-dist','inlet-control-type','inlet-open-pct'].forEach(id => {
+      const el = $(id);
+      if (el) el.addEventListener('change', calculate);
+    });
     harm_a_res.className   = 'hv eit-ok';
 
-    // ── ค. กรณี B — มี Line Reactor 3–5%, THDi ≈ 15% ──
     const harm_b_THDi     = 15;
     const harm_b_Iharm    = harm_Ifund * (harm_b_THDi/100);
     const harm_b_Icomp    = harm_b_Iharm - harm_I_limit;    // excess above 5%
@@ -6307,7 +6357,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const el = $(id);
     if (el) el.addEventListener('input', debouncedCalc);
   });
-  ['pad-height','pad-block-width','inlet-actuator-type'].forEach(id => {
+  ['pad-height','pad-block-width','inlet-actuator-type','inlet-zone-mode','inlet-layout-dist'].forEach(id => {
     const el = $(id);
     if (el) el.addEventListener('change', calculate);
   });
