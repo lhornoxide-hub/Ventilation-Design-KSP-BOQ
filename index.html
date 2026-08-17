@@ -1536,7 +1536,7 @@ input.invalid { border-color: var(--accent-red) !important; }
           <input type="radio" name="ec-fan-model" id="fan-ec-50-ln" value="AG-50-LN-EC">
           <label for="fan-ec-50-ln"><span class="motor-tag tag-ec">EC</span> 50" Low Noise <span class="bess">BESS</span></label>
           <input type="radio" name="ec-fan-model" id="fan-ec-57" value="AG-57-EC">
-          <label for="fan-ec-57"><span class="motor-tag tag-ec">EC</span> ZPJ57-2.2ECS <span class="bess">BESS</span></label>
+          <label for="fan-ec-57"><span class="motor-tag tag-ec">EC</span> ZP-57-2.2ECS-150 <span class="bess">BESS#23432</span></label>
         </div>
       </div>
       <div id="motor-speed-control" style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
@@ -2989,11 +2989,21 @@ const fanData = {
     {p:0.30,a:25200,w:2209,am:3.65},{p:0.35,a:23200,w:2245,am:3.72},{p:0.40,a:21400,w:2269,am:3.76},
     {p:0.45,a:19200,w:2370,am:3.93},{p:0.50,a:17800,w:2440,am:4.03}
   ]},
-  'AG-57-EC': { name: 'Agrifan ZPJ57-2.2ECS-150 (EC)', isEC: true, curve: [
-    {p:0.15,a:40700,w:2463,am:3.93},{p:0.20,a:39200,w:2557,am:4.09},{p:0.25,a:37400,w:2656,am:4.25},
-    {p:0.30,a:35700,w:2731,am:4.36},{p:0.35,a:33900,w:2794,am:4.46},{p:0.40,a:31600,w:2843,am:4.54},
-    {p:0.45,a:29100,w:2893,am:4.62},{p:0.50,a:26200,w:2898,am:4.63},{p:0.55,a:21300,w:2789,am:4.46},
-    {p:0.60,a:14800,w:2732,am:4.37}
+  'AG-57-EC': { name: 'Agrifan ZP-57-2.2ECS-150 (EC 2.2kW BESS#23432)', isEC: true, curve: [
+    {p:0.10,a:41400,w:2466,am:3.95},
+    {p:0.15,a:39600,w:2590,am:4.14},
+    {p:0.20,a:37900,w:2673,am:4.27},
+    {p:0.25,a:36200,w:2765,am:4.41},
+    {p:0.30,a:34000,w:2831,am:4.52},
+    {p:0.35,a:32100,w:2884,am:4.60},
+    {p:0.40,a:29700,w:2892,am:4.62},
+    {p:0.45,a:26900,w:2868,am:4.58},
+    {p:0.50,a:23800,w:2854,am:4.55},
+    {p:0.55,a:20100,w:2897,am:4.62},
+    {p:0.60,a:14900,w:2878,am:4.59},
+    {p:0.65,a:11100,w:2881,am:4.59},
+    {p:0.70,a:8900,w:2869,am:4.58},
+    {p:0.75,a:6900,w:2880,am:4.59}
   ]},
   'ZP50': { name: 'Agrifan ZP50 50PP (AC 1.8kW BESS#24579)', isEC: false, curve: [
     {p:0.00,a:34800,w:1569,am:4.40},{p:0.05,a:33800,w:1676,am:4.55},{p:0.10,a:32800,w:1779,am:4.70},
@@ -5079,8 +5089,8 @@ function calculate() {
   const padHeightM = parseFloat($('pad-height').value);
   const padBlockWidthM = parseFloat($('pad-block-width').value);
   
-  // ลมที่ผ่าน Cooling Pad ในแต่ละด้าน (Split-Tunnel: แพดแต่ละฝั่งรับลม Q_total / 2)
-  const padAirflowM3S = isSplitTunnel ? (actualAirflowM3S / 2) : actualAirflowM3S;
+  // ── COOLING PAD SIZING (Single-Source of Truth) ──
+  // พื้นที่แพดรวมทั้งโรงเรือนคำนวณจากปริมาณลมรวมทั้งหมดที่ต้องผ่านแพด (Total Airflow / V_target)
   let requiredPadAreaM2 = 0;
   let requiredPadLengthM = 0;
   let actualPadVelocityMS = 0;
@@ -5090,15 +5100,21 @@ function calculate() {
     if (!isMetric) gutterLengthM /= CONVERSIONS.M_TO_FT;
     requiredPadLengthM = gutterLengthM;
     requiredPadAreaM2 = gutterLengthM * padHeightM;
-    actualPadVelocityMS = requiredPadAreaM2 > 0 ? padAirflowM3S / requiredPadAreaM2 : 0;
+    actualPadVelocityMS = requiredPadAreaM2 > 0 ? actualAirflowM3S / requiredPadAreaM2 : 0;
   } else {
-    requiredPadAreaM2 = padAirflowM3S > 0 && padDesignVelocity > 0 ? padAirflowM3S / padDesignVelocity : 0;
+    requiredPadAreaM2 = actualAirflowM3S > 0 && padDesignVelocity > 0 ? actualAirflowM3S / padDesignVelocity : 0;
     requiredPadLengthM = requiredPadAreaM2 > 0 && padHeightM > 0 ? requiredPadAreaM2 / padHeightM : 0;
-    actualPadVelocityMS = requiredPadAreaM2 > 0 ? padAirflowM3S / requiredPadAreaM2 : 0;
+    actualPadVelocityMS = requiredPadAreaM2 > 0 ? actualAirflowM3S / requiredPadAreaM2 : 0;
     gutterLengthM = requiredPadLengthM;
   }
+  // จำนวนบล็อกรวมทั้งโรงเรือน
   const requiredPadBlocks = requiredPadLengthM > 0 && padBlockWidthM > 0 ? Math.ceil(requiredPadLengthM / padBlockWidthM) : 0;
 
+  // การแบ่งติดตั้งต่อฝั่ง (Split-Tunnel แบ่ง 2 ฝั่งสมมาตร, Standard ติดตั้งด้านหน้าฝั่งเดียว)
+  const requiredPadBlocks_perSide = isSplitTunnel ? Math.ceil(requiredPadBlocks / 2) : requiredPadBlocks;
+  const requiredPadLengthM_perSide = requiredPadBlocks_perSide * padBlockWidthM;
+  const requiredPadAreaM2_perSide = requiredPadLengthM_perSide * padHeightM;
+  const gutterLengthM_perSide = requiredPadLengthM_perSide;
   const buildingVolume = width * height * length;
   const airChangesPerHour = buildingVolume > 0 ? actualTotalAirflowM3H / buildingVolume : 0;
   const airTransferTimeSeconds = airChangesPerHour > 0 ? 3600 / airChangesPerHour : 0;
@@ -5374,69 +5390,67 @@ function calculate() {
     if (leftStationsContainer) leftStationsContainer.innerHTML = stationHTML;
   }
 
-  // ── DYNAMIC COOLING PAD DIMENSIONS & ARRANGEMENT BREAKDOWN ──
+  // ── DYNAMIC COOLING PAD DIMENSIONS & ARRANGEMENT BREAKDOWN (Per-Wing for Split-Tunnel) ──
   if ($('schematic-pad-layout-details')) {
     const padW_m = parseFloat($('pad-block-width')?.value || 0.6);
     const padH_m = parseFloat($('pad-height')?.value || 1.8);
-    const installedPadLenM = requiredPadBlocks * padW_m;
+    const installedPadLenM_side = requiredPadBlocks_perSide * padW_m;
     const houseWidthM = width;
 
-    let layoutTitle = '';
-    let layoutDetails = '';
-
-    if (installedPadLenM > houseWidthM) {
-      // 3-Sided Doghouse Arrangement
-      const frontPadLenM = houseWidthM;
-      const sidePadLenEachM = (installedPadLenM - houseWidthM) / 2;
-
-      layoutTitle = isMetric 
-        ? '<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>การจัดวางแพด 3 ด้าน (Doghouse)</span></div>' 
-        : '<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>3-Sided Pad Layout (Doghouse)</span></div>';
-      
-      layoutDetails = `
-        <div style="display:flex;flex-direction:column;gap:3px;text-align:left;padding-left:2px;margin-top:4px">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">🏠</span>
-            <span><strong>หน้าอาคาร:</strong> ${fmt(frontPadLenM * distConv, 1)} ${distUnit}</span>
+    const makePadLayoutHTML = (wingLabel) => {
+      let layoutTitle = '';
+      let layoutDetails = '';
+      if (installedPadLenM_side > houseWidthM) {
+        // 3-Sided Doghouse Arrangement per side
+        const frontPadLenM = houseWidthM;
+        const sidePadLenEachM = (installedPadLenM_side - houseWidthM) / 2;
+        layoutTitle = isMetric 
+          ? `<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>จัดวาง 3 ด้าน (Doghouse)</span></div>`
+          : `<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>3-Sided Doghouse Layout</span></div>`;
+        layoutDetails = `
+          <div style="display:flex;flex-direction:column;gap:3px;text-align:left;padding-left:2px;margin-top:4px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">🏠</span>
+              <span><strong>หน้าอาคาร:</strong> ${fmt(frontPadLenM * distConv, 1)} ${distUnit}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">↔️</span>
+              <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * distConv, 1)} ${distUnit} / ข้าง</span>
+            </div>
+            <div style="font-size:8.5px;color:var(--accent-green);margin-top:2px;padding-left:24px;text-align:left;font-weight:600">
+              (${wingLabel}: ${fmt(installedPadLenM_side * distConv, 1)} ${distUnit} · ${requiredPadBlocks_perSide} บล็อก)
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">↔️</span>
-            <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * distConv, 1)} ${distUnit} / ข้าง</span>
+        `;
+      } else {
+        // 2-Sided Side Wall Arrangement per side
+        const sidePadLenEachM = installedPadLenM_side / 2;
+        layoutTitle = isMetric 
+          ? `<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>จัดวาง 2 ด้านข้าง</span></div>`
+          : `<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>2-Sided Side Wall Layout</span></div>`;
+        layoutDetails = `
+          <div style="display:flex;flex-direction:column;gap:3px;text-align:left;padding-left:2px;margin-top:4px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">↔️</span>
+              <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * distConv, 1)} ${distUnit} / ข้าง</span>
+            </div>
+            <div style="font-size:8.5px;color:var(--accent-green);margin-top:2px;padding-left:24px;text-align:left;font-weight:600">
+              (${wingLabel}: ${fmt(installedPadLenM_side * distConv, 1)} ${distUnit} · ${requiredPadBlocks_perSide} บล็อก)
+            </div>
           </div>
-          <div style="font-size:8.5px;color:var(--text-dim);margin-top:2px;padding-left:24px;text-align:left">
-            (รวม ${fmt(installedPadLenM * distConv, 1)} ${distUnit} · ${requiredPadBlocks} บล็อก)
-          </div>
-        </div>
-      `;
-    } else {
-      // 2-Sided Side Wall Arrangement
-      const sidePadLenEachM = installedPadLenM / 2;
+        `;
+      }
+      return { layoutTitle, layoutDetails };
+    };
 
-      layoutTitle = isMetric 
-        ? '<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>การจัดวางแพด 2 ด้านข้าง</span></div>' 
-        : '<div style="display:flex;align-items:center;gap:6px"><span style="width:18px;text-align:center;flex-shrink:0">📐</span><span>2-Sided Side Wall Pad Layout</span></div>';
-
-      layoutDetails = `
-        <div style="display:flex;flex-direction:column;gap:3px;text-align:left;padding-left:2px;margin-top:4px">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="width:18px;text-align:center;flex-shrink:0;font-size:11px">↔️</span>
-            <span><strong>ข้างซ้าย-ขวา:</strong> ${fmt(sidePadLenEachM * distConv, 1)} ${distUnit} / ข้าง</span>
-          </div>
-          <div style="font-size:8.5px;color:var(--text-dim);margin-top:2px;padding-left:24px;text-align:left">
-            (รวม ${fmt(installedPadLenM * distConv, 1)} ${distUnit} · ${requiredPadBlocks} บล็อก)
-          </div>
-        </div>
-      `;
-    }
-
-    $('schematic-pad-layout-title').innerHTML = layoutTitle;
-    $('schematic-pad-layout-details').innerHTML = layoutDetails;
+    const leftPadLayout = makePadLayoutHTML(isSplitTunnel ? "แพดซ้าย" : "รวมทั้งเล้า");
+    $('schematic-pad-layout-title').innerHTML = leftPadLayout.layoutTitle;
+    $('schematic-pad-layout-details').innerHTML = leftPadLayout.layoutDetails;
 
     if ($('schematic-pad-layout-title-right')) {
-      $('schematic-pad-layout-title-right').innerHTML = layoutTitle;
-    }
-    if ($('schematic-pad-layout-details-right')) {
-      $('schematic-pad-layout-details-right').innerHTML = layoutDetails;
+      const rightPadLayout = makePadLayoutHTML("แพดขวา");
+      $('schematic-pad-layout-title-right').innerHTML = rightPadLayout.layoutTitle;
+      $('schematic-pad-layout-details-right').innerHTML = rightPadLayout.layoutDetails;
     }
   }
 
@@ -5532,7 +5546,7 @@ function calculate() {
     $('calc-src-vactual').textContent = `${fmtNum(actualAirflowDisp_b)} ${flowUnit_b} → ${actualHouseVelDisp_b.toFixed(isMetric ? 2 : 0)} ${vUnit_b}`;
   }
 
-  // 2. COOLING PAD SIZING CALCULATION BREAKDOWN
+  // 2. COOLING PAD SIZING CALCULATION BREAKDOWN (แจกแจงชัดเจน: ทั้งโรงเรือน & แบ่ง 2 ฝั่ง)
   const padH_m = parseFloat($('pad-height')?.value || 1.8);
   const padW_m = parseFloat($('pad-block-width')?.value || 0.6);
 
@@ -5546,6 +5560,9 @@ function calculate() {
   const installedPadAreaDisp_b = (requiredPadBlocks * padW_m * padH_m) * areaConv_b;
   const actualPadVelDisp_b = actualPadVelocityMS * vConv_b;
 
+  const reqPadAreaPerSideDisp_b = requiredPadAreaM2_perSide * areaConv_b;
+  const reqPadLenPerSideDisp_b = requiredPadLengthM_perSide * distConv_b;
+
   if ($('pad-calc-vdesign-ref')) {
     $('pad-calc-vdesign-ref').textContent = `@ ${padDesignVelDisp_b.toFixed(isMetric ? 2 : 0)} ${vUnit_b}`;
   }
@@ -5554,14 +5571,18 @@ function calculate() {
     const isPadOverride = !isNaN(parseFloat($('pad-gutter-length-override').value)) && parseFloat($('pad-gutter-length-override').value) > 0;
     if (isMetric) {
       if (isPadOverride) {
-        $('calc-src-apad').textContent = `กำหนดขนาดเอง = ${reqPadAreaDisp_b.toFixed(2)} m²`;
+        $('calc-src-apad').textContent = `กำหนดขนาดเอง = ${reqPadAreaDisp_b.toFixed(2)} m² ${isSplitTunnel ? `(ฝั่งละ ${reqPadAreaPerSideDisp_b.toFixed(2)} m²)` : ''}`;
+      } else if (isSplitTunnel) {
+        $('calc-src-apad').textContent = `${actualAirflowM3S.toFixed(2)}m³/s ÷ ${padDesignVelDisp_b.toFixed(2)}m/s = ${reqPadAreaDisp_b.toFixed(2)} m² (ฝั่งละ ${reqPadAreaPerSideDisp_b.toFixed(2)} m²)`;
       } else {
         $('calc-src-apad').textContent = `${actualAirflowM3S.toFixed(2)}m³/s ÷ ${padDesignVelDisp_b.toFixed(2)}m/s = ${reqPadAreaDisp_b.toFixed(2)} m²`;
       }
     } else {
       const airflowCFM = actualTotalAirflowM3H * CONVERSIONS.M3H_TO_CFM;
       if (isPadOverride) {
-        $('calc-src-apad').textContent = `กำหนดขนาดเอง = ${fmtNum(reqPadAreaDisp_b)} ft²`;
+        $('calc-src-apad').textContent = `กำหนดขนาดเอง = ${fmtNum(reqPadAreaDisp_b)} ft² ${isSplitTunnel ? `(ฝั่งละ ${fmtNum(reqPadAreaPerSideDisp_b)} ft²)` : ''}`;
+      } else if (isSplitTunnel) {
+        $('calc-src-apad').textContent = `${fmtNum(airflowCFM)} CFM ÷ ${padDesignVelDisp_b.toFixed(0)}ft/min = ${fmtNum(reqPadAreaDisp_b)} ft² (ฝั่งละ ${fmtNum(reqPadAreaPerSideDisp_b)} ft²)`;
       } else {
         $('calc-src-apad').textContent = `${fmtNum(airflowCFM)} CFM ÷ ${padDesignVelDisp_b.toFixed(0)}ft/min = ${fmtNum(reqPadAreaDisp_b)} ft²`;
       }
@@ -5569,19 +5590,39 @@ function calculate() {
   }
 
   if ($('calc-src-lpad')) {
-    $('calc-src-lpad').textContent = `${isMetric ? reqPadAreaDisp_b.toFixed(2) : fmtNum(reqPadAreaDisp_b)}${areaUnit_b} ÷ ${padH_disp.toFixed(1)}${distUnit_b} (สูง) = ${reqPadLengthDisp_b.toFixed(1)} ${distUnit_b}`;
+    if (isSplitTunnel) {
+      $('calc-src-lpad').textContent = `${isMetric ? reqPadAreaDisp_b.toFixed(2) : fmtNum(reqPadAreaDisp_b)}${areaUnit_b} ÷ ${padH_disp.toFixed(1)}${distUnit_b} (สูง) = ${reqPadLengthDisp_b.toFixed(1)} ${distUnit_b} (ฝั่งละ ${reqPadLenPerSideDisp_b.toFixed(1)} ${distUnit_b})`;
+    } else {
+      $('calc-src-lpad').textContent = `${isMetric ? reqPadAreaDisp_b.toFixed(2) : fmtNum(reqPadAreaDisp_b)}${areaUnit_b} ÷ ${padH_disp.toFixed(1)}${distUnit_b} (สูง) = ${reqPadLengthDisp_b.toFixed(1)} ${distUnit_b}`;
+    }
   }
 
   if ($('calc-src-nblocks')) {
-    $('calc-src-nblocks').textContent = `⌈${reqPadLengthDisp_b.toFixed(1)}${distUnit_b} ÷ ${padW_disp.toFixed(2)}${distUnit_b}⌉ = ${requiredPadBlocks} บล็อก (${installedPadLengthDisp_b.toFixed(1)} ${distUnit_b})`;
+    if (isSplitTunnel) {
+      $('calc-src-nblocks').textContent = `รวม ${requiredPadBlocks} บล็อก (${installedPadLengthDisp_b.toFixed(1)}${distUnit_b}) ➔ [แพดซ้าย: ${requiredPadBlocks_perSide} บล็อก | แพดขวา: ${requiredPadBlocks_perSide} บล็อก]`;
+    } else {
+      $('calc-src-nblocks').textContent = `⌈${reqPadLengthDisp_b.toFixed(1)}${distUnit_b} ÷ ${padW_disp.toFixed(2)}${distUnit_b}⌉ = ${requiredPadBlocks} บล็อก (${installedPadLengthDisp_b.toFixed(1)} ${distUnit_b})`;
+    }
   }
 
   if ($('calc-src-vpadactual')) {
     if (isMetric) {
-      $('calc-src-vpadactual').textContent = `${actualAirflowM3S.toFixed(2)}m³/s ÷ ${installedPadAreaDisp_b.toFixed(2)}m² = ${actualPadVelDisp_b.toFixed(2)} m/s`;
+      if (isSplitTunnel) {
+        const sideFlowM3S = actualAirflowM3S / 2;
+        const sideInstalledAreaM2 = requiredPadBlocks_perSide * padW_m * padH_m;
+        $('calc-src-vpadactual').textContent = `${sideFlowM3S.toFixed(2)}m³/s ÷ ${sideInstalledAreaM2.toFixed(2)}m² = ${actualPadVelDisp_b.toFixed(2)} m/s (เท่ากันทั้ง 2 ฝั่ง)`;
+      } else {
+        $('calc-src-vpadactual').textContent = `${actualAirflowM3S.toFixed(2)}m³/s ÷ ${installedPadAreaDisp_b.toFixed(2)}m² = ${actualPadVelDisp_b.toFixed(2)} m/s`;
+      }
     } else {
       const airflowCFM = actualTotalAirflowM3H * CONVERSIONS.M3H_TO_CFM;
-      $('calc-src-vpadactual').textContent = `${fmtNum(airflowCFM)} CFM ÷ ${fmtNum(installedPadAreaDisp_b)}ft² = ${actualPadVelDisp_b.toFixed(0)} ft/min`;
+      if (isSplitTunnel) {
+        const sideFlowCFM = airflowCFM / 2;
+        const sideInstalledAreaFt2 = (requiredPadBlocks_perSide * padW_m * padH_m) * CONVERSIONS.M2_TO_FT2;
+        $('calc-src-vpadactual').textContent = `${fmtNum(sideFlowCFM)} CFM ÷ ${fmtNum(sideInstalledAreaFt2)}ft² = ${actualPadVelDisp_b.toFixed(0)} ft/min (เท่ากันทั้ง 2 ฝั่ง)`;
+      } else {
+        $('calc-src-vpadactual').textContent = `${fmtNum(airflowCFM)} CFM ÷ ${fmtNum(installedPadAreaFt2)}ft² = ${actualPadVelDisp_b.toFixed(0)} ft/min`;
+      }
     }
   }
 
@@ -6096,10 +6137,18 @@ ${softInfo ? `
 
 
   // Cooling pad
-  $('total-pad-area').textContent = `${fmt(requiredPadAreaM2, 2)} m²`;
-  $('total-pad-area-imp').textContent = `${fmt(requiredPadAreaM2 * CONVERSIONS.M2_TO_FT2, 2)} ft²`;
-  $('pad-length-val').textContent = `${fmt(requiredPadLengthM, 2)} m / ${fmt(requiredPadLengthM * CONVERSIONS.M_TO_FT, 2)} ft`;
-  $('pad-blocks-val').textContent = requiredPadBlocks;
+  // Cooling pad (Section 03 Card - Display Total House & Per-Wing details in Split-Tunnel)
+  if (isSplitTunnel) {
+    $('total-pad-area').textContent = `${fmt(requiredPadAreaM2, 2)} m²`;
+    $('total-pad-area-imp').textContent = `${fmt(requiredPadAreaM2 * CONVERSIONS.M2_TO_FT2, 2)} ft² (ฝั่งละ ${fmt(requiredPadAreaM2_perSide, 2)} m²)`;
+    $('pad-length-val').textContent = `${fmt(requiredPadLengthM, 2)} m / ${fmt(requiredPadLengthM * CONVERSIONS.M_TO_FT, 2)} ft (ฝั่งละ ${fmt(requiredPadLengthM_perSide, 2)} m)`;
+    $('pad-blocks-val').textContent = `${requiredPadBlocks} บล็อก (แพดซ้าย: ${requiredPadBlocks_perSide} | แพดขวา: ${requiredPadBlocks_perSide})`;
+  } else {
+    $('total-pad-area').textContent = `${fmt(requiredPadAreaM2, 2)} m²`;
+    $('total-pad-area-imp').textContent = `${fmt(requiredPadAreaM2 * CONVERSIONS.M2_TO_FT2, 2)} ft²`;
+    $('pad-length-val').textContent = `${fmt(requiredPadLengthM, 2)} m / ${fmt(requiredPadLengthM * CONVERSIONS.M_TO_FT, 2)} ft`;
+    $('pad-blocks-val').textContent = `${requiredPadBlocks}`;
+  }
 
   // Water
   const flowImp = requiredWaterFlowLPM * (1/3.78541);
