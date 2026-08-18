@@ -1969,6 +1969,7 @@ input.invalid { border-color: var(--accent-red) !important; }
         <label class="field-label">เกณฑ์ออกแบบปริมาณลมผ่าน Inlet (Design Criteria)</label>
         <select id="inlet-calc-mode">
           <option value="percent" selected>★ มาตรฐานสากล &amp; Cobb: 40% พัดลมอุโมงค์ (Transitional Stage)</option>
+          <option value="side_fan_only">⚡ เปิดเฉพาะ Side Fan (พัดลมข้างล้วน ปิด Tunnel + ปิด Pad 100%)</option>
           <option value="minvent">⚠ สำหรับเขตหนาว/ลูกไก่เล็ก: 20% พัดลม (Minimum Vent Only)</option>
           <option value="custom_flow">กำหนดปริมาณลมเป้าหมายเอง (Custom Target CFM / m³/h)</option>
         </select>
@@ -1977,9 +1978,9 @@ input.invalid { border-color: var(--accent-red) !important; }
       <!-- Dynamic Warning / Recommendation Note -->
       <div id="inlet-mode-note" style="margin-bottom:10px;padding:8px 10px;border-radius:6px;font-size:11px;line-height:1.45;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);color:var(--text)">
         <div style="color:var(--accent-green);font-weight:700;margin-bottom:3px">★ เกณฑ์มาตรฐานสากล &amp; Cobb (แนะนำสำหรับ BOQ):</div>
-        <div>• <strong>ลมออกแบบ:</strong> 40% พัดลมรวม (Transitional)</div>
+        <div>• <strong>ลมออกแบบ:</strong> 40% พัดลมรวม (Transitional) หรือ คำนวณตรงจากพัดลม Side Fan ทั้งหมด</div>
         <div>• <strong>เปิดบานมาตรฐาน:</strong> 50% (1.74 ft² / บาน) เพื่อสร้าง Jet Velocity 7.5 m/s</div>
-        <div style="color:var(--text-dim);font-size:10px;margin-top:3px"><em>* มอเตอร์จะหรี่บานเหลือ 20% ตอนลูกไก่เล็ก และเปิด 50% ตอนไก่รุ่นก่อนตัดเข้าสู่ Tunnel Mode</em></div>
+        <div style="color:var(--text-dim);font-size:10px;margin-top:3px"><em>* ในโหมด Side Fan Only อากาศจะเข้าทาง Air Inlet เท่านั้น (Tunnel Fan &amp; Pad ปิด 100%)</em></div>
       </div>
       <div class="grid-2" style="gap:8px;margin-bottom:6px">
         <div class="form-group" id="inlet-percent-wrap" style="margin-bottom:0">
@@ -3341,14 +3342,24 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   const openingPercent = parseFloat($('inlet-opening-percent')?.value || 50); // เปิดบาน 50%
   const openingRatio = Math.max(0.1, Math.min(1.0, openingPercent / 100)); // 0.50
   
-  // ── Cobb Ventilation Standards Model based on House Width ──
-  // Target throw distance: half building width to roof ridge/apex (L_throw = W / 2)
-  const throwDistTargetM = buildingW / 2;
+  // ── Cobb Ventilation Standards Model based on House Width & Geometry ──
+  // Calculate true trajectory throw distance along pitched ceiling slope (Pythagorean theorem)
+  let apexH = parseFloat(document.getElementById('apex-height')?.value || buildingH);
+  if (!isMetric && !isNaN(apexH)) apexH /= CONVERSIONS.M_TO_FT;
+  const roofTypeVal = document.getElementById('roof-type')?.value || 'flat';
+  const deltaRoofH = (roofTypeVal === 'pitched' && apexH > buildingH) ? (apexH - buildingH) : 0;
   
+  // True Diagonal Throw Distance to Apex / Ridge (L_throw = sqrt((W/2)^2 + deltaH^2))
+  const throwDistTargetM = Math.sqrt(Math.pow(buildingW / 2, 2) + Math.pow(deltaRoofH, 2));
+  
+  // Animal specific minimum SP floor (Layer high-cage houses require minimum 30 Pa to prevent draft on top tier)
+  const animalTypeVal = document.querySelector('input[name="animal-type"]:checked')?.value || 'broiler';
+  const minSPFloor = (animalTypeVal === 'layer' || buildingH >= 4.0) ? 30 : 20;
+
   // Cobb Standard Negative Pressure Formula:
   // Base 20 Pa @ 10m width (5m throw) -> +2.5 Pa per 0.61m (2 ft) additional throw
-  // For 15m width -> 7.5m throw -> cobbReqPa ≈ 30 - 35 Pa
-  const cobbReqPa = Math.max(20, Math.round(20 + Math.max(0, (throwDistTargetM - 5.0) / 0.61) * 2.5));
+  // Factoring in diagonal throw distance and animal house height floor
+  const cobbReqPa = Math.max(minSPFloor, Math.round(20 + Math.max(0, (throwDistTargetM - 5.0) / 0.61) * 2.5));
   
   // Design SP: User input or fallback to cobbReqPa
   const designSP = parseFloat($('inlet-design-sp')?.value || cobbReqPa);
@@ -3374,9 +3385,17 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     };
   }
 
-  // 1. Airflow requirement: 40% of Total Tunnel Airflow
+  // 1. Airflow requirement calculation:
+  // - side_fan_only: อากาศเข้าทาง Air Inlet 100% ตรงกับลมดูดของ Side Fans ทั้งหมด (Tunnel Fan & Cooling Pad ปิดสนิท)
+  // - percent: 40% ของลม Tunnel (Transitional Stage)
+  // - minvent: 20% ของลม Tunnel (Minimum Vent)
   let targetInletFlowM3H = 0;
-  if (calcMode === 'percent') {
+  const sideDetailsForFlow = (typeof getActiveSideFanDetails === 'function') ? getActiveSideFanDetails() : { sideQty: 12, sideFlow: 33700 };
+  const totalSideFanFlowM3H = (sideDetailsForFlow.sideQty || 12) * (sideDetailsForFlow.sideFlow || 33700);
+
+  if (calcMode === 'side_fan_only') {
+    targetInletFlowM3H = totalSideFanFlowM3H;
+  } else if (calcMode === 'percent') {
     targetInletFlowM3H = totalHouseAirflowM3H * percentVal;
   } else if (calcMode === 'minvent') {
     targetInletFlowM3H = totalHouseAirflowM3H * 0.20;
@@ -3451,13 +3470,21 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   let maxPhysicalCapacityPerSide = 0;
 
   if (layoutMode === 'split') {
-    // Split-Tunnel: พัดลมอยู่ตรงกลาง (MID FANS) เว้นเฉพาะช่องพัดลมกลางเล้า ส่วนฝั่ง Pad ติดตั้ง Inlet ได้เต็มพื้นที่
-    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+    // Split-Tunnel: 
+    // กรณีโหมด Side Fan Only หรืออาคารทรงสูง (ผนัง ≥4.0m) ซึ่งมีพื้นที่เหนือแนว Mid Fans เหลือเพียงพอตามโครงสร้างจริง
+    // สามารถติดตั้ง Air Inlet ต่อเนื่องได้เต็ม 100% ครอบคลุมทั้งเล้า (รวมช่วงเหนือพัดลมกลาง)
+    const isHighWallOrSideMode = (calcMode === 'side_fan_only' || buildingH >= 4.0);
+    const fanBays = isHighWallOrSideMode ? 0 : Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
     const fanStartBay = Math.floor((totalBays - fanBays) / 2);
     
-    const leftBaysCount = fanStartBay; // ช่องเสาฝั่งซ้าย (ตั้งแต่หัวเล้ารวม Pad ถึงพัดลม)
-    const rightBaysCount = totalBays - (fanStartBay + fanBays); // ช่องเสาฝั่งขวา (ตั้งแต่พัดลมถึงท้ายเล้ารวม Pad)
-    activeBays = leftBaysCount + rightBaysCount;
+    if (isHighWallOrSideMode) {
+      activeBays = totalBays;
+    } else {
+      const leftBaysCount = fanStartBay; // ช่องเสาฝั่งซ้าย (ตั้งแต่หัวเล้ารวม Pad ถึงพัดลม)
+      const rightBaysCount = totalBays - (fanStartBay + fanBays); // ช่องเสาฝั่งขวา (ตั้งแต่พัดลมถึงท้ายเล้ารวม Pad)
+      activeBays = leftBaysCount + rightBaysCount;
+    }
+
     activeLengthM = activeBays * baySpanM;
     spacingM = activeLengthM / Math.max(1, numPerSide);
 
@@ -3475,6 +3502,14 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     if (isBayCapacityExceeded) {
       bayLayoutSummary = `เกินขีดจำกัด (${inletsPerBayCeil} > ${maxInletsPerBayPhysical} บาน/ช่อง)`;
       bayAdviceText = `<strong style="color:var(--accent-red)">⚠ เกินพื้นที่ผนังภายใน:</strong> ช่วงเสา ${baySpanM.toFixed(1)}m (พื้นที่ในจริง ≈ ${clearSpanM.toFixed(2)}m) ติดตั้งได้สูงสุด <strong>${maxInletsPerBayPhysical} บาน/ช่องเสา</strong> แต่คำนวณต้องการ ${inletsPerBayCeil} บาน/ช่อง — <em>แนะนำเปลี่ยนใช้รุ่น Flow สูงขึ้น เช่น PU-1200/1500</em>`;
+    } else if (isHighWallOrSideMode) {
+      if (inletsPerBayFloor === inletsPerBayCeil) {
+        bayLayoutSummary = `${inletsPerBayFloor} บาน/ช่วงเสา`;
+        bayAdviceText = `<strong>โหมดเปิดเฉพาะ Side Fan (ติดตั้งต่อเนื่องเต็มความยาวรวมเหนือแนว Mid Fans):</strong> ฝั่งละ ${numPerSide} บาน กระจายสม่ำเสมอตลอดแนวผนัง 105m (${activeBays} ช่อง) ช่องละ ${inletsPerBayFloor} บานเท่ากันทุกช่องเพื่อสร้าง Even Flow สูงสุด`;
+      } else {
+        bayLayoutSummary = `สลับ ${inletsPerBayCeil} / ${inletsPerBayFloor} บาน/ช่วงเสา`;
+        bayAdviceText = `<strong>โหมดเปิดเฉพาะ Side Fan (ติดตั้งต่อเนื่องเต็มความยาวรวมเหนือแนว Mid Fans):</strong> ฝั่งละ ${numPerSide} บาน กระจายสม่ำเสมอตลอดแนวผนัง 105m (${activeBays} ช่อง) ติดตั้งสลับช่องละ ${inletsPerBayCeil} บาน (${baysWithCeil} ช่อง) และ ${inletsPerBayFloor} บาน (${baysWithFloor} ช่อง)`;
+      }
     } else if (layoutDist === 'progressive') {
       bayLayoutSummary = `หนาแน่นหน้าเล้า (Progressive สูงสุด ${Math.min(maxInletsPerBayPhysical, inletsPerBayCeil + 1)} บาน/ช่อง)`;
       bayAdviceText = `<strong>โหมด Split-Tunnel (Progressive ครอบคลุมโซน Pad):</strong> ฝั่งละ ${numPerSide} บาน ติดตั้งเต็มความยาวรวมแนว Cooling Pad เว้นเฉพาะแนวพัดลมกลาง โดยจัดวางหนาแน่นฝั่งหัว-ท้ายเล้า และลดหลั่นลงเข้าหาพัดลมกลาง`;
@@ -3669,7 +3704,8 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   if ($('inlet-pull-force-val')) $('inlet-pull-force-val').textContent = `≈ ${fmt(totalPullKg, 1)} kgf`;
   if ($('inlet-stroke-val')) $('inlet-stroke-val').textContent = `${inletSpec.strokeMm} mm`;
   if ($('inlet-throw-dist-val')) {
-    $('inlet-throw-dist-val').textContent = `พุ่งได้ ≈ ${fmt(throwAchievedM * distConv, 1)} ${distUnitStr} (เป้าหมายกึ่งกลางหลังคา ${fmt(throwDistTargetM * distConv, 1)} ${distUnitStr})`;
+    const roofSlopeTag = deltaRoofH > 0 ? ` (ตามแนวสโลปจั่ว ${fmt(throwDistTargetM * distConv, 2)} ${distUnitStr})` : ` (เป้าหมายกึ่งกลางหลังคา ${fmt(throwDistTargetM * distConv, 1)} ${distUnitStr})`;
+    $('inlet-throw-dist-val').textContent = `พุ่งได้ ≈ ${fmt(throwAchievedM * distConv, 1)} ${distUnitStr}${roofSlopeTag}`;
   }
 
   // ── POPULATE LIVE STEP-BY-STEP CALCULATION BREAKDOWN ──
@@ -3679,7 +3715,9 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   const vConv = isMetric ? 1 : (1 / CONVERSIONS.FTMIN_TO_MS);
   
   if ($('inlet-calc-mode-badge')) {
-    if (calcMode === 'percent') {
+    if (calcMode === 'side_fan_only') {
+      $('inlet-calc-mode-badge').textContent = `โหมด: เปิดเฉพาะ Side Fan (${sideDetailsForFlow.sideQty || 12} ตัว | ปิด Tunnel & Pad 100%)`;
+    } else if (calcMode === 'percent') {
       $('inlet-calc-mode-badge').textContent = `โหมด: % พัดลมอุโมงค์ลม (${(percentVal * 100).toFixed(0)}% Transitional)`;
     } else if (calcMode === 'minvent') {
       $('inlet-calc-mode-badge').textContent = 'โหมด: Minimum Ventilation (20% พัดลม)';
@@ -3688,10 +3726,16 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     }
   }
   if ($('inlet-calc-qtotal')) {
-    $('inlet-calc-qtotal').textContent = `${fmtNum(totalHouseAirflowM3H * flowConv)} ${flowUnitStr} (พัดลมรวม ${totalFansRequired || '—'} ตัว)`;
+    if (calcMode === 'side_fan_only') {
+      $('inlet-calc-qtotal').textContent = `${fmtNum(totalSideFanFlowM3H * flowConv)} ${flowUnitStr} (พัดลมข้าง Side Fan รวม ${sideDetailsForFlow.sideQty || 12} ตัว @ ${sideDetailsForFlow.sideModel || '50PP EC'})`;
+    } else {
+      $('inlet-calc-qtotal').textContent = `${fmtNum(totalHouseAirflowM3H * flowConv)} ${flowUnitStr} (พัดลมรวม ${totalFansRequired || '—'} ตัว)`;
+    }
   }
   if ($('inlet-calc-pct-label')) {
-    if (calcMode === 'percent') {
+    if (calcMode === 'side_fan_only') {
+      $('inlet-calc-pct-label').textContent = `100% ของพัดลมข้าง Side Fan (${sideDetailsForFlow.sideQty || 12} ตัว) ลมเข้าผ่าน Air Inlet 100%`;
+    } else if (calcMode === 'percent') {
       $('inlet-calc-pct-label').textContent = `${(percentVal * 100).toFixed(0)}% ของลมรวม (Transitional Stage Ventilation)`;
     } else if (calcMode === 'minvent') {
       $('inlet-calc-pct-label').textContent = '20% ของลมรวม (Minimum Ventilation Standard)';
@@ -3730,7 +3774,7 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   // ── RENDER AutoCAD-STYLE SCHEMATIC ──
   const sideDetails = (typeof getActiveSideFanDetails === 'function') ? getActiveSideFanDetails() : { tunnelQty: 28, sideQty: 12 };
   const schematicParams = {
-    buildingL, buildingW, baySpanM, totalBays, activeBays,
+    buildingL, buildingW, buildingH, baySpanM, totalBays, activeBays,
     numPerSide, numInletsTotal, inletsPerBayCeil, inletsPerBayFloor,
     baysWithCeil: numPerSide > activeBays ? numPerSide % activeBays : 0,
     inletWidthM: inletSpec.widthM, inletHeightM: inletSpec.heightM,
@@ -4277,7 +4321,7 @@ function renderInletSchematic(p) {
   if (!svg && !topSvg) return;
 
   const {
-    buildingL, buildingW, baySpanM, totalBays, activeBays,
+    buildingL, buildingW, buildingH = 4.5, baySpanM, totalBays, activeBays,
     numPerSide, inletsPerBayCeil, inletsPerBayFloor,
     baysWithCeil, modelName, openingSize, activeLengthM, isMetric, layoutMode, jetVelocityMS,
     zoneMode, layoutDist,
@@ -4309,53 +4353,77 @@ function renderInletSchematic(p) {
   const bayInlets = Array(totalBays).fill(0);
 
   if (layoutMode === 'split') {
-    // ── SPLIT-TUNNEL: Fans at Center, Inlets cover from Bay 0 to Mid Fan & Mid Fan to End ──
-    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
-    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
+    // ── SPLIT-TUNNEL: Fans at Center ──
+    const calcModeVal = $('inlet-calc-mode')?.value || 'percent';
+    const isHighWallOrSideMode = (calcModeVal === 'side_fan_only' || buildingH >= 4.0 || activeBays === totalBays);
 
-    const leftWingBays = [];
-    for (let i = 0; i < fanStartBay; i++) leftWingBays.push(i);
-
-    const rightWingBays = [];
-    for (let i = fanStartBay + fanBays; i < totalBays; i++) rightWingBays.push(i);
-
-    const nLeftBays = leftWingBays.length;
-    const nRightBays = rightWingBays.length;
-
-    const leftWingInlets = Math.floor(numPerSide / 2);
-    const rightWingInlets = numPerSide - leftWingInlets;
-
-    const distributeWing = (inletCount, baysList, fromHeadToCenter) => {
-      const nBays = baysList.length;
-      if (nBays <= 0) return;
-
+    if (isHighWallOrSideMode) {
+      // ติดตั้งเต็มความยาว 100% ต่อเนื่องรวมเหนือแนวพัดลมกลาง
       if (layoutDist === 'progressive') {
-        const sumW = (nBays * (nBays + 1)) / 2;
-        let remaining = inletCount;
-        for (let k = 0; k < nBays; k++) {
-          const targetBayIdx = fromHeadToCenter ? baysList[k] : baysList[nBays - 1 - k];
-          const w = nBays - k;
-          let qty = (k === nBays - 1) ? remaining : Math.round((w / sumW) * inletCount);
-          bayInlets[targetBayIdx] = qty;
+        const sumW = (totalBays * (totalBays + 1)) / 2;
+        let remaining = numPerSide;
+        for (let k = 0; k < totalBays; k++) {
+          const w = totalBays - k;
+          let qty = (k === totalBays - 1) ? remaining : Math.round((w / sumW) * numPerSide);
+          bayInlets[k] = qty;
           remaining -= qty;
         }
       } else {
-        const baseFloor = Math.floor(inletCount / nBays);
-        const baseCeil = Math.ceil(inletCount / nBays);
-        let ceilCount = inletCount % nBays;
-
-        for (let k = 0; k < nBays; k++) {
-          const targetBayIdx = fromHeadToCenter ? baysList[k] : baysList[nBays - 1 - k];
-          bayInlets[targetBayIdx] = ceilCount-- > 0 ? baseCeil : baseFloor;
+        const baseFloor = Math.floor(numPerSide / totalBays);
+        const baseCeil = Math.ceil(numPerSide / totalBays);
+        let ceilCount = numPerSide % totalBays;
+        for (let k = 0; k < totalBays; k++) {
+          bayInlets[k] = ceilCount-- > 0 ? baseCeil : baseFloor;
         }
       }
-    };
+    } else {
+      const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+      const fanStartBay = Math.floor((totalBays - fanBays) / 2);
 
-    // Left Wing: Bay 0 (Head/Pad) -> Mid Fans
-    distributeWing(leftWingInlets, leftWingBays, true);
+      const leftWingBays = [];
+      for (let i = 0; i < fanStartBay; i++) leftWingBays.push(i);
 
-    // Right Wing: End (Tail/Pad) -> Mid Fans (Mirrored)
-    distributeWing(rightWingInlets, rightWingBays, false);
+      const rightWingBays = [];
+      for (let i = fanStartBay + fanBays; i < totalBays; i++) rightWingBays.push(i);
+
+      const nLeftBays = leftWingBays.length;
+      const nRightBays = rightWingBays.length;
+
+      const leftWingInlets = Math.floor(numPerSide / 2);
+      const rightWingInlets = numPerSide - leftWingInlets;
+
+      const distributeWing = (inletCount, baysList, fromHeadToCenter) => {
+        const nBays = baysList.length;
+        if (nBays <= 0) return;
+
+        if (layoutDist === 'progressive') {
+          const sumW = (nBays * (nBays + 1)) / 2;
+          let remaining = inletCount;
+          for (let k = 0; k < nBays; k++) {
+            const targetBayIdx = fromHeadToCenter ? baysList[k] : baysList[nBays - 1 - k];
+            const w = nBays - k;
+            let qty = (k === nBays - 1) ? remaining : Math.round((w / sumW) * inletCount);
+            bayInlets[targetBayIdx] = qty;
+            remaining -= qty;
+          }
+        } else {
+          const baseFloor = Math.floor(inletCount / nBays);
+          const baseCeil = Math.ceil(inletCount / nBays);
+          let ceilCount = inletCount % nBays;
+
+          for (let k = 0; k < nBays; k++) {
+            const targetBayIdx = fromHeadToCenter ? baysList[k] : baysList[nBays - 1 - k];
+            bayInlets[targetBayIdx] = ceilCount-- > 0 ? baseCeil : baseFloor;
+          }
+        }
+      };
+
+      // Left Wing: Bay 0 (Head/Pad) -> Mid Fans
+      distributeWing(leftWingInlets, leftWingBays, true);
+
+      // Right Wing: End (Tail/Pad) -> Mid Fans (Mirrored)
+      distributeWing(rightWingInlets, rightWingBays, false);
+    }
   } else {
     // ── STANDARD TUNNEL: Inlets from Bay 0 (Head/Pad) up to Tunnel Fans at tail ──
     const fanBays = Math.max(1, Math.round(totalBays * 0.05));
@@ -4657,11 +4725,15 @@ function renderInletSchematic(p) {
 
   let activeBaysText = String(activeBays);
   if (layoutMode === 'split') {
-    const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
-    const fanStartBay = Math.floor((totalBays - fanBays) / 2);
-    const leftB = fanStartBay;
-    const rightB = totalBays - (fanStartBay + fanBays);
-    activeBaysText = `${leftB + rightB} ช่อง (ซ้าย:${leftB}|ขวา:${rightB})`;
+    if (activeBays === totalBays) {
+      activeBaysText = `${totalBays} ช่อง (เต็มแนว 100%)`;
+    } else {
+      const fanBays = Math.max(1, Math.min(3, Math.round(totalBays * 0.08)));
+      const fanStartBay = Math.floor((totalBays - fanBays) / 2);
+      const leftB = fanStartBay;
+      const rightB = totalBays - (fanStartBay + fanBays);
+      activeBaysText = `${leftB + rightB} ช่อง (ซ้าย:${leftB}|ขวา:${rightB})`;
+    }
   }
   const formatPat = isBayCapacityExceeded ? `${layoutPat} (เกินพิกัด)` : layoutPat;
   const formatColor = isBayCapacityExceeded ? '#ef4444' : C.amber;
