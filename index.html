@@ -1469,117 +1469,197 @@ input.invalid { border-color: var(--accent-red) !important; }
         <h2 data-translate="systemModeLabel">โหมดระบบพัดลม & การคำนวณ</h2>
       </div>
 
-      <!-- System Mode Chips (Hybrid / All-EC / All-AC) -->
-      <div style="margin-bottom:12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px" data-translate="systemModeSelectTitle">โหมดระบบทำงาน:</div>
-        <div class="chip-group">
-          <input type="radio" name="system-mode" id="mode-hybrid" value="hybrid" checked>
-          <label for="mode-hybrid"><span class="motor-tag tag-ec">HYBRID</span> EC+AC</label>
-          <input type="radio" name="system-mode" id="mode-allec" value="all-ec">
-          <label for="mode-allec"><span class="motor-tag tag-ec">ALL-EC</span></label>
-          <input type="radio" name="system-mode" id="mode-allac" value="all-ac">
-          <label for="mode-allac"><span class="motor-tag tag-ac">ALL-AC</span></label>
+      <!-- Ventilation Mode & Schematic Tab Selector in Section 01 -->
+      <div style="margin-bottom:12px;padding:10px;background:rgba(34,211,238,0.06);border-radius:var(--radius);border:1px solid rgba(34,211,238,0.25)">
+        <div style="font-size:10px;color:var(--accent-cyan);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">
+          🌀 โหมดการระบายอากาศ (Ventilation Mode):
+        </div>
+        <div class="chip-group" style="margin-bottom:8px">
+          <input type="radio" name="ventilation-mode" id="vent-dual" value="dual" checked onchange="onVentModeRadioChange('dual')">
+          <label for="vent-dual" style="font-size:11px"><span class="motor-tag tag-ec">DUAL</span> พัดลมข้าง + Tunnel</label>
+          <input type="radio" name="ventilation-mode" id="vent-tunnel" value="tunnel" onchange="onVentModeRadioChange('tunnel')">
+          <label for="vent-tunnel" style="font-size:11px"><span class="motor-tag tag-ac">TUNNEL</span> อุโมงค์อย่างเดียว</label>
+        </div>
+
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">
+          📐 แถบปุ่มสลับผังแบบแปลน (Plan View):
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button type="button" id="side-btn-schematic-inlet" onclick="switchSchematicTab('inlet')" class="btn btn-sm" style="font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:4px;background:#22d3ee;color:#050a14;border:1px solid #22d3ee;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            🌬️ ผัง Air Inlet
+          </button>
+          <button type="button" id="side-btn-schematic-vent" onclick="switchSchematicTab('vent')" class="btn btn-sm" style="font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:4px;background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            🌀 ผังพัดลม &amp; ทรานสิชั่น
+          </button>
         </div>
       </div>
 
-      <!-- Fan Count Mode Chips (Auto / Manual) -->
-      <div style="margin-bottom:12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px" data-translate="calcModeSelectTitle">โหมดคำนวณจำนวน:</div>
-        <div class="chip-group">
-          <input type="radio" name="fancount-mode" id="count-auto" value="auto" checked>
-          <label for="count-auto" data-translate="modeAutoLabel">⚡ Auto (คำนวณอัตโนมัติ)</label>
-          <input type="radio" name="fancount-mode" id="count-manual" value="manual">
-          <label for="count-manual" data-translate="modeManualLabel">✋ Manual (กำหนดเอง)</label>
-        </div>
-      </div>
-
-      <!-- Hybrid Ratio Panel -->
-      <div id="hybrid-ratio-panel" style="margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:11px;color:var(--text-muted);font-weight:500" data-translate="ecRatioLabel">สัดส่วน EC Base Load:</span>
-          <span id="ec-ratio-value" style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--accent-green)">30%</span>
-        </div>
-        <input type="range" id="ec-ratio-slider" min="10" max="60" value="30" step="5" class="slider-track">
-        <div class="slider-labels"><span>10%</span><span>35%</span><span>60%</span></div>
-      </div>
-
-      <!-- Manual Count Inputs Panel -->
-      <div id="manual-count-panel" style="display:none;margin-bottom:12px;padding:10px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px" data-translate="manualInputTitle">กำหนดจำนวนพัดลมเอง (ตัว):</div>
-        <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div id="manual-ec-wrap">
-            <label class="field-label" style="font-size:10px">พัดลม EC</label>
-            <input type="number" id="manual-ec-count" value="4" min="1" max="100">
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- พัดลมชุดที่ 1: พัดลมอุโมงค์หลัก (Tunnel Exhaust Fan) -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <div style="margin-bottom:14px;padding:10px;background:#0d1117;border-radius:var(--radius);border:1px solid #30363d;border-left:3px solid var(--accent-blue)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--accent-blue);display:flex;align-items:center;gap:5px">
+            <span>1️⃣ พัดลมอุโมงค์หลัก (Tunnel Fans)</span>
           </div>
-          <div id="manual-ac-wrap">
-            <label class="field-label" style="font-size:10px">พัดลม AC</label>
-            <input type="number" id="manual-ac-count" value="6" min="0" max="100">
+          <span class="motor-tag tag-ec" style="font-size:9px">Tunnel Mode</span>
+        </div>
+
+        <!-- System Mode Chips (Hybrid / All-EC / All-AC) -->
+        <div style="margin-bottom:8px">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">ระบบพัดลมอุโมงค์:</div>
+          <div class="chip-group">
+            <input type="radio" name="system-mode" id="mode-hybrid" value="hybrid" checked>
+            <label for="mode-hybrid" style="font-size:10.5px"><span class="motor-tag tag-ec">HYBRID</span> EC+AC</label>
+            <input type="radio" name="system-mode" id="mode-allec" value="all-ec">
+            <label for="mode-allec" style="font-size:10.5px"><span class="motor-tag tag-ec">ALL-EC</span></label>
+            <input type="radio" name="system-mode" id="mode-allac" value="all-ac">
+            <label for="mode-allac" style="font-size:10.5px"><span class="motor-tag tag-ac">ALL-AC</span></label>
           </div>
         </div>
-        <div id="manual-count-note" class="note-pill error"></div>
-      </div>
-      <div id="ec-motor-section" style="margin-bottom:8px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">EC Motor — Direct Drive</div>
-        <div class="chip-group">
-          <input type="radio" name="ec-fan-model" id="fan-ec" value="ZP-50-1.5ECS-125" checked>
-          <label for="fan-ec"><span class="motor-tag tag-ec">EC</span> ZP-50-1.5ECS</label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-zmd50" value="ZMD50-2-1.5ECS-125">
-          <label for="fan-ec-zmd50"><span class="motor-tag tag-ec">EC</span> ZMD50 ECS 1.5kW <span class="bess">#26238</span></label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-36-3.5" value="ZP36-5-3ECS-325">
-          <label for="fan-ec-36-3.5"><span class="motor-tag tag-ec">EC</span> ZP36-5 3.5kW <span class="bess">#22648</span></label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-36" value="ZP36-2-3.5ECS-350">
-          <label for="fan-ec-36"><span class="motor-tag tag-ec">EC</span> ZP36-2 3.5kW <span class="bess">#23238</span></label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-36-3.0" value="ZP36-2-3ECS-300">
-          <label for="fan-ec-36-3.0"><span class="motor-tag tag-ec">EC</span> ZP36-2 3.0kW <span class="bess">#23239</span></label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-56-vs" value="AG-56-VS-EC">
-          <label for="fan-ec-56-vs"><span class="motor-tag tag-ec">EC</span> 56" Var Speed <span class="bess">#20285</span></label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-50-ln" value="AG-50-LN-EC">
-          <label for="fan-ec-50-ln"><span class="motor-tag tag-ec">EC</span> 50" Low Noise <span class="bess">#25056</span></label>
-          <input type="radio" name="ec-fan-model" id="fan-ec-57" value="AG-57-EC">
-          <label for="fan-ec-57"><span class="motor-tag tag-ec">EC</span> ZP-57-2.2ECS-150 <span class="bess">#23432</span></label>
+
+        <!-- Fan Count Mode Chips (Auto / Manual) -->
+        <div style="margin-bottom:8px">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">การคำนวณจำนวนพัดลมอุโมงค์:</div>
+          <div class="chip-group">
+            <input type="radio" name="fancount-mode" id="count-auto" value="auto" checked>
+            <label for="count-auto" style="font-size:10.5px">⚡ Auto (คำนวณอัตโนมัติ)</label>
+            <input type="radio" name="fancount-mode" id="count-manual" value="manual">
+            <label for="count-manual" style="font-size:10.5px">✋ Manual (กำหนดเอง)</label>
+          </div>
+        </div>
+
+        <!-- Hybrid Ratio Panel -->
+        <div id="hybrid-ratio-panel" style="margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:10.5px;color:var(--text-muted);font-weight:500">สัดส่วน EC Base Load:</span>
+            <span id="ec-ratio-value" style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:var(--accent-green)">30%</span>
+          </div>
+          <input type="range" id="ec-ratio-slider" min="10" max="60" value="30" step="5" class="slider-track">
+          <div class="slider-labels"><span>10%</span><span>35%</span><span>60%</span></div>
+        </div>
+
+        <!-- Manual Count Inputs Panel -->
+        <div id="manual-count-panel" style="display:none;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">กำหนดจำนวนพัดลมอุโมงค์เอง (ตัว):</div>
+          <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div id="manual-ec-wrap">
+              <label class="field-label" style="font-size:9.5px">พัดลม EC</label>
+              <input type="number" id="manual-ec-count" value="4" min="1" max="100" style="font-size:12px;padding:4px 6px">
+            </div>
+            <div id="manual-ac-wrap">
+              <label class="field-label" style="font-size:9.5px">พัดลม AC</label>
+              <input type="number" id="manual-ac-count" value="6" min="0" max="100" style="font-size:12px;padding:4px 6px">
+            </div>
+          </div>
+          <div id="manual-count-note" class="note-pill error"></div>
+          <div id="manual-airflow-note" class="note-pill" style="margin-top:4px;"></div>
+        </div>
+
+        <!-- EC Motor Selection for Tunnel -->
+        <div id="ec-motor-section" style="margin-bottom:6px">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">รุ่นพัดลม EC อุโมงค์หลัก:</div>
+          <div class="chip-group">
+            <input type="radio" name="ec-fan-model" id="fan-ec-57" value="AG-57-EC" checked>
+            <label for="fan-ec-57" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> ZP-57-2.2ECS-150 <span class="bess">#23432</span></label>
+            <input type="radio" name="ec-fan-model" id="fan-ec" value="ZP-50-1.5ECS-125">
+            <label for="fan-ec" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> ZP-50-1.5ECS</label>
+            <input type="radio" name="ec-fan-model" id="fan-ec-zmd50" value="ZMD50-2-1.5ECS-125">
+            <label for="fan-ec-zmd50" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> ZMD50 1.5kW <span class="bess">#26238</span></label>
+            <input type="radio" name="ec-fan-model" id="fan-ec-56-vs" value="AG-56-VS-EC">
+            <label for="fan-ec-56-vs" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> 56" Var Speed <span class="bess">#20285</span></label>
+            <input type="radio" name="ec-fan-model" id="fan-ec-50-ln" value="AG-50-LN-EC">
+            <label for="fan-ec-50-ln" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> 50" Low Noise <span class="bess">#25056</span></label>
+          </div>
+        </div>
+
+        <!-- AC Motor Selection for Tunnel -->
+        <div id="ac-motor-section" style="margin-top:6px">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">รุ่นพัดลม AC อุโมงค์หลัก:</div>
+          <div class="chip-group">
+            <input type="radio" name="ac-fan-model" id="fan-ac" value="ZP50" checked>
+            <label for="fan-ac" style="font-size:10px"><span class="motor-tag tag-ac">AC</span> ZP50 50PP <span class="bess">#24579</span></label>
+            <input type="radio" name="ac-fan-model" id="fan-ac-56-cone" value="AG-56-C-AC">
+            <label for="fan-ac-56-cone" style="font-size:10px"><span class="motor-tag tag-ac">AC</span> 56" Cone <span class="bess">#20291</span></label>
+            <input type="radio" name="ac-fan-model" id="fan-ac-54-cone-belt" value="AG-54-C-BELT">
+            <label for="fan-ac-54-cone-belt" style="font-size:10px"><span class="motor-tag tag-belt">BELT</span> 54" Cone <span class="bess">#18404</span></label>
+            <input type="radio" name="ac-fan-model" id="fan-ac-56-bigair-belt" value="AG-56-BA-BELT">
+            <label for="fan-ac-56-bigair-belt" style="font-size:10px"><span class="motor-tag tag-belt">BELT</span> 56" BIG AIR <span class="bess">#22455</span></label>
+          </div>
+        </div>
+
+        <!-- Motor Speed Slider -->
+        <div id="motor-speed-control" style="margin-top:8px;padding:8px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:10.5px;color:var(--text-muted);font-weight:500">ความเร็วมอเตอร์ EC:</span>
+            <span id="motor-speed-value" style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:var(--accent-green)">100%</span>
+          </div>
+          <input type="range" id="motor-speed-slider" min="20" max="100" value="100" class="slider-track">
+          <div class="slider-labels"><span>20%</span><span>60%</span><span>100%</span></div>
         </div>
       </div>
-      <div id="motor-speed-control" style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:11px;color:var(--text-muted);font-weight:500" data-translate="motorSpeedLabel">ความเร็วมอเตอร์:</span>
-          <span id="motor-speed-value" style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--accent-green)">100%</span>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- พัดลมชุดที่ 2: พัดลมข้างระบายอากาศขั้นต่ำ (Minimum / Side Fan) -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <div id="side-fan-configuration-panel" style="margin-bottom:12px;padding:10px;background:#0d1117;border-radius:var(--radius);border:1px solid #30363d;border-left:3px solid #a855f7">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:#a855f7;display:flex;align-items:center;gap:5px">
+            <span>2️⃣ พัดลมข้างระบายอากาศขั้นต่ำ (Minimum / Side Fans)</span>
+          </div>
+          <span class="motor-tag tag-ec" style="font-size:9px;background:#a855f7">Min-Vent</span>
         </div>
-        <input type="range" id="motor-speed-slider" min="20" max="100" value="100" class="slider-track">
-        <div class="slider-labels"><span>20%</span><span>60%</span><span>100%</span></div>
+
+        <!-- Side Fan Calculation Mode (Auto / Manual) -->
+        <div style="margin-bottom:8px">
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">การคำนวณจำนวนพัดลมข้าง:</div>
+          <div class="chip-group">
+            <input type="radio" name="side-fancount-mode" id="side-count-auto" value="auto" checked onchange="onSideFanCountModeChange('auto')">
+            <label for="side-count-auto" style="font-size:10.5px">⚡ Auto (คำนวณอัตโนมัติ)</label>
+            <input type="radio" name="side-fancount-mode" id="side-count-manual" value="manual" onchange="onSideFanCountModeChange('manual')">
+            <label for="side-count-manual" style="font-size:10.5px">✋ Manual (กำหนดเอง)</label>
+          </div>
+        </div>
+
+        <!-- Side Fan Capacity Ratio Slider -->
+        <div id="side-fan-ratio-wrap" style="margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:10.5px;color:var(--text-muted);font-weight:500">สัดส่วนลมขั้นต่ำ (% ของ Tunnel):</span>
+            <span id="side-fan-ratio-val" style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:#a855f7">40%</span>
+          </div>
+          <input type="range" id="side-fan-ratio-slider" min="20" max="60" value="40" step="5" class="slider-track" oninput="onSideRatioSliderChange(this.value)">
+          <div class="slider-labels"><span>20%</span><span>40%</span><span>60%</span></div>
+        </div>
+
+        <!-- Manual Side Fan Count Input -->
+        <div id="side-fan-manual-input-wrap" style="display:none;margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border)">
+          <label class="field-label" style="font-size:9.5px;display:flex;justify-content:space-between">
+            <span>ระบุจำนวนพัดลมข้าง (ตัว - เลขคู่):</span>
+            <span id="side-fan-split-hint" style="color:var(--accent-cyan);font-size:9px">บน 6 / ล่าง 6</span>
+          </label>
+          <input type="number" id="manual-side-fan-count" value="12" min="2" max="50" step="2" oninput="onManualSideFanCountChange(this.value)" style="font-size:12px;padding:4px 6px;width:100%">
+        </div>
+
+        <!-- Side Fan Model Selection -->
+        <div>
+          <div style="font-size:9.5px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">รุ่นพัดลมข้างระบายอากาศขั้นต่ำ:</div>
+          <div class="chip-group">
+            <input type="radio" name="side-fan-model" id="side-fan-zp50-ec" value="ZP-50-1.5ECS-125" checked onchange="onSideFanModelChange()">
+            <label for="side-fan-zp50-ec" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> ZP-50-1.5ECS-125 <span class="bess">#26238</span></label>
+            <input type="radio" name="side-fan-model" id="side-fan-zmd50" value="ZMD50-2-1.5ECS-125" onchange="onSideFanModelChange()">
+            <label for="side-fan-zmd50" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> ZMD50 ECS 1.5kW</label>
+            <input type="radio" name="side-fan-model" id="side-fan-zp36" value="ZP36-2-3ECS-300" onchange="onSideFanModelChange()">
+            <label for="side-fan-zp36" style="font-size:10px"><span class="motor-tag tag-ec">EC</span> ZP36 3.0kW <span class="bess">#23239</span></label>
+            <input type="radio" name="side-fan-model" id="side-fan-zp50-ac" value="ZP50" onchange="onSideFanModelChange()">
+            <label for="side-fan-zp50-ac" style="font-size:10px"><span class="motor-tag tag-ac">AC</span> ZP50 50PP <span class="bess">#24579</span></label>
+          </div>
+        </div>
+
+        <!-- Calculated Side Fan Summary Note -->
+        <div id="side-fan-calc-summary" style="margin-top:8px;padding:6px 8px;background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25);border-radius:4px;font-size:10px;color:#cbd5e1;line-height:1.45">
+          💡 คำนวณได้: <strong id="lbl-side-fan-count" style="color:#a855f7">12 ตัว</strong> (เกลี่ย ผนังบน 6 ตัว / ผนังล่าง 6 ตัว แบบสมมาตร)
+        </div>
       </div>
-      <div id="ac-motor-section"><div style="margin-top:10px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">AC Motor — Direct Drive</div>
-        <div class="chip-group">
-          <input type="radio" name="ac-fan-model" id="fan-ac" value="ZP50" checked>
-          <label for="fan-ac"><span class="motor-tag tag-ac">AC</span> ZP50 50PP <span class="bess">#24579</span></label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-zmd50-1.5" value="ZMD50-2-1.5YSP8-125">
-          <label for="fan-ac-zmd50-1.5"><span class="motor-tag tag-ac">AC</span> ZMD50 YSP8 1.5kW <span class="bess">#26237</span></label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-36" value="18400">
-          <label for="fan-ac-36"><span class="motor-tag tag-ac">AC</span> 36" Cone 0.55kW <span class="bess">#18400</span></label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-36-2.2" value="ZP36-5-3YSP4-275">
-          <label for="fan-ac-36-2.2"><span class="motor-tag tag-ac">AC</span> ZP36 YSP4 2.2kW <span class="bess">#22649</span></label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-56-cone" value="AG-56-C-AC">
-          <label for="fan-ac-56-cone"><span class="motor-tag tag-ac">AC</span> 56" Cone <span class="bess">#20291</span></label>
-          <div style="flex-basis: 100%; height: 4px;"></div>
-          <input type="radio" name="ac-fan-model" id="fan-ac-1.1-lp" value="ZBB50-2-1.1YSP8-75">
-          <label for="fan-ac-1.1-lp"><span class="motor-tag tag-ac">AC</span> ZBB50 1.1kW (LP)</label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-1.5-lp" value="ZBB50-2-1.5YSP8-100">
-          <label for="fan-ac-1.5-lp"><span class="motor-tag tag-ac">AC</span> ZBB50 1.5kW (LP)</label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-1.8-lp" value="ZBB50-2-1.8YSP8-125">
-          <label for="fan-ac-1.8-lp"><span class="motor-tag tag-ac">AC</span> ZBB50 1.8kW (LP)</label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-57" value="AG-57-AC">
-          <label for="fan-ac-57"><span class="motor-tag tag-ac">AC</span> 57" FRP</label>
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">AC Motor — Belt Drive</div>
-        <div class="chip-group">
-          <input type="radio" name="ac-fan-model" id="fan-ac-54-cone-belt" value="AG-54-C-BELT">
-          <label for="fan-ac-54-cone-belt"><span class="motor-tag tag-belt">BELT</span> 54" Cone <span class="bess">#18404</span></label>
-          <input type="radio" name="ac-fan-model" id="fan-ac-56-bigair-belt" value="AG-56-BA-BELT">
-          <label for="fan-ac-56-bigair-belt"><span class="motor-tag tag-belt">BELT</span> 56" BIG AIR <span class="bess">#22455</span></label>
-        </div>
-      </div></div>
     </div>
 
     <!-- ANIMAL TYPE -->
@@ -1614,8 +1694,21 @@ input.invalid { border-color: var(--accent-red) !important; }
           <input type="number" id="building-width" value="15" step="0.1">
         </div>
         <div class="form-group">
-          <label class="field-label"><span data-translate="buildingHeightLabel">สูง</span> <span class="dim-units unit-dist">m</span></label>
+          <label class="field-label"><span data-translate="buildingHeightLabel" title="Sidewall Height">สูงเสาข้าง</span> <span class="dim-units unit-dist">m</span></label>
           <input type="number" id="building-height" value="3" step="0.1">
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:8px">
+        <div class="form-group">
+          <label class="field-label">รูปแบบหลังคา/ฝ้า (Roof Type)</label>
+          <select id="roof-type" style="width:100%;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:3px;padding:6px;font-size:12px;outline:none;font-family:inherit" onchange="const isP = this.value==='pitched'; const a = document.getElementById('apex-height-group'); if(isP){a.style.display='block';a.style.opacity='1';a.style.pointerEvents='auto';}else{a.style.display='none';} if(typeof debouncedCalc === 'function'){debouncedCalc();}else{calculate();}">
+            <option value="flat">ฝ้าเรียบ (Flat Ceiling)</option>
+            <option value="pitched">ฝ้าจั่ว / ไม่มีฝ้า (Pitched / Open Truss)</option>
+          </select>
+        </div>
+        <div class="form-group" id="apex-height-group" style="display:none;opacity:0.4;pointer-events:none">
+          <label class="field-label">ความสูงจั่วกึ่งกลาง <span class="dim-units unit-dist">m</span></label>
+          <input type="number" id="apex-height" value="4.5" step="0.1" oninput="if(typeof debouncedCalc === 'function'){debouncedCalc();}else{calculate();}">
         </div>
       </div>
       <div class="grid-2">
@@ -1990,8 +2083,29 @@ input.invalid { border-color: var(--accent-red) !important; }
 
       <!-- SCHEMATIC (full) -->
       <div class="panel panel-full ph-blue">
-        <div class="panel-header">
-          <h3 data-translate="airflowInfographicTitle">อินโฟกราฟิกการไหลของอากาศ</h3>
+        <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <h3 data-translate="airflowInfographicTitle" style="margin:0">อินโฟกราฟิกและการจัดวางผังระบบ</h3>
+          </div>
+          <!-- Top Tab Switcher Bar in Section 1 View -->
+          <div style="display:flex;gap:6px">
+            <button type="button" id="top-btn-schematic-airflow" onclick="switchTopInfographic('airflow')" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;background:#22d3ee;color:#050a14;border:1px solid #22d3ee;cursor:pointer">
+              💨 อินโฟกราฟิกความเร็วลม
+            </button>
+            <button type="button" id="top-btn-schematic-vent" onclick="switchTopInfographic('vent')" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);cursor:pointer">
+              🌀 ผังการระบายอากาศ (Ventilation Layout)
+            </button>
+            <button type="button" id="top-btn-schematic-inlet" onclick="switchTopInfographic('inlet')" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);cursor:pointer">
+              🌬️ ผังการติดตั้ง Air Inlet
+            </button>
+          </div>
+        </div>
+        <!-- Top SVG Viewports for Ventilation & Inlet directly inside Panel 1 -->
+        <div id="top-view-schematic-vent" style="display:none;background:#050a14;border:1px solid rgba(168,85,247,0.3);border-radius:7px;overflow:hidden;margin:12px">
+          <svg id="top-vent-schematic-svg" width="100%" style="display:block" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div id="top-view-schematic-inlet" style="display:none;background:#050a14;border:1px solid rgba(34,211,238,0.25);border-radius:7px;overflow:hidden;margin:12px">
+          <svg id="top-inlet-schematic-svg" width="100%" style="display:block" viewBox="0 0 960 255" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
         <div class="panel-body">
           <div class="schematic">
@@ -2492,7 +2606,7 @@ input.invalid { border-color: var(--accent-red) !important; }
           <h3>💧 แพดระเหย &amp; ระบบน้ำ</h3>
         </div>
         <div class="panel-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div style="display:grid;grid-template-columns:1fr;gap:24px">
 
             <!-- LEFT: Cooling Pad -->
             <div>
@@ -2511,30 +2625,6 @@ input.invalid { border-color: var(--accent-red) !important; }
                 <span class="val" id="pad-blocks-val">—</span>
               </div>
               <p style="font-size:10px;color:var(--text-dim);margin-top:10px" data-translate="padNote">หมายเหตุ: ความยาวรวมของแพด = ความยาวที่ต้องการสำหรับรางจ่ายน้ำ</p>
-            </div>
-
-            <!-- RIGHT: Water System -->
-            <div>
-              <div class="eit-hdr" style="margin-top:0" data-translate="waterSystemTitle">ระบบน้ำ</div>
-              <div class="pad-row">
-                <span class="label"><span data-translate="pumpFlowRate">อัตราการไหลของปั๊ม</span> <button class="info-btn" data-modal="pump">ⓘ</button></span>
-                <span class="val" id="pump-flow-rate-val">—</span>
-              </div>
-              <div class="pad-row">
-                <span class="label"><span data-translate="waterTankSize">ขนาดถังพักน้ำ</span> <button class="info-btn" data-modal="tank">ⓘ</button></span>
-                <span class="val" id="water-tank-val">—</span>
-              </div>
-              <div class="pad-row">
-                <span class="label"><span data-translate="estimatedHead">Head ที่ประมาณ</span> <button class="info-btn" data-modal="head">ⓘ</button></span>
-                <span class="val" id="estimated-head-val">—</span>
-              </div>
-              <div class="pump-highlight">
-                <div>
-                  <div class="label" data-translate="recPumpModel">รุ่นปั๊มน้ำที่แนะนำ (63mm)</div>
-                  <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--accent-blue);margin-top:2px" id="recommended-pump-model-val">—</div>
-                </div>
-                <button id="view-pump-curve-btn" class="btn" disabled data-translate="viewPumpCurveBtn">ดู Curve ปั๊ม</button>
-              </div>
             </div>
 
           </div>
@@ -2630,23 +2720,43 @@ input.invalid { border-color: var(--accent-red) !important; }
             </div>
 
           </div>
-          <!-- ── AutoCAD-Style Air Inlet Engineering Schematic ── -->
+          <!-- ── AutoCAD-Style Air Inlet & Ventilation Schematic Switcher ── -->
           <div style="margin-top:14px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <div style="display:flex;align-items:center;gap:7px">
-                <div style="width:3px;height:14px;background:#22d3ee;border-radius:2px"></div>
-                <span style="font-size:10.5px;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;letter-spacing:0.6px">PLAN VIEW — AIR INLET INSTALLATION LAYOUT (TOP VIEW)</span>
+            <!-- Tab Switcher Bar -->
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+              <div style="display:flex;gap:6px">
+                <button type="button" id="tab-btn-schematic-inlet" onclick="switchSchematicTab('inlet')" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;background:#22d3ee;color:#050a14;border:1px solid #22d3ee;cursor:pointer">
+                  🌬️ ผังการติดตั้ง Air Inlet (Inlet Plan)
+                </button>
+                <button type="button" id="tab-btn-schematic-vent" onclick="switchSchematicTab('vent')" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);cursor:pointer">
+                  🌀 ผังการระบายอากาศ (Transition &amp; Ventilation Layout)
+                </button>
               </div>
-              <div style="display:flex;gap:10px;align-items:center;font-size:9.5px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">
+              <div id="schematic-inlet-legend" style="display:flex;gap:10px;align-items:center;font-size:9.5px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">
                 <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:16px;height:2px;background:#22d3ee"></span>Inlet</span>
                 <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:rgba(34,211,238,0.12);border:1px dashed rgba(34,211,238,0.5)"></span>Bay</span>
                 <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:10px;height:10px;background:rgba(248,81,73,0.12);border:1px dashed rgba(248,81,73,0.5)"></span>No Inlet</span>
               </div>
+              <div id="schematic-vent-legend" style="display:none;gap:10px;align-items:center;font-size:9.5px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace">
+                <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f0a500"></span>Tunnel Fan</span>
+                <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80"></span>Side Fan (SF)</span>
+                <span style="display:flex;align-items:center;gap:3px"><span style="display:inline-block;width:12px;height:3px;background:#0284c7"></span>Pad</span>
+              </div>
             </div>
-            <div style="background:#050a14;border:1px solid rgba(34,211,238,0.25);border-radius:7px;overflow:hidden">
+
+            <!-- View 1: Air Inlet Plan View -->
+            <div id="view-schematic-inlet" style="background:#050a14;border:1px solid rgba(34,211,238,0.25);border-radius:7px;overflow:hidden">
               <svg id="inlet-schematic-svg" width="100%" style="display:block" viewBox="0 0 960 255" preserveAspectRatio="xMidYMid meet">
                 <!-- dynamically rendered by renderInletSchematic() -->
                 <text x="480" y="110" fill="rgba(255,255,255,0.15)" text-anchor="middle" font-size="13" font-family="IBM Plex Mono,monospace">กำลังคำนวณ...</text>
+              </svg>
+            </div>
+
+            <!-- View 2: Ventilation & Transition Plan View -->
+            <div id="view-schematic-vent" style="display:none;background:#050a14;border:1px solid rgba(168,85,247,0.3);border-radius:7px;overflow:hidden">
+              <svg id="vent-schematic-svg" width="100%" style="display:block" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet">
+                <!-- dynamically rendered by renderVentilationSchematic() -->
+                <text x="480" y="140" fill="rgba(255,255,255,0.15)" text-anchor="middle" font-size="13" font-family="IBM Plex Mono,monospace">กำลังคำนวณผังระบบระบายอากาศ...</text>
               </svg>
             </div>
           </div>
@@ -3618,15 +3728,544 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   // (BOQ table is rendered inside dedicated external tool: boq air.html)
 
   // ── RENDER AutoCAD-STYLE SCHEMATIC ──
-  renderInletSchematic({
+  const sideDetails = (typeof getActiveSideFanDetails === 'function') ? getActiveSideFanDetails() : { tunnelQty: 28, sideQty: 12 };
+  const schematicParams = {
     buildingL, buildingW, baySpanM, totalBays, activeBays,
     numPerSide, numInletsTotal, inletsPerBayCeil, inletsPerBayFloor,
     baysWithCeil: numPerSide > activeBays ? numPerSide % activeBays : 0,
     inletWidthM: inletSpec.widthM, inletHeightM: inletSpec.heightM,
     modelName: inletSpec.name, openingSize: inletSpec.openingSize,
-    firstInletDistM, activeLengthM, isMetric, layoutMode, jetVelocityMS
-  });
+    firstInletDistM, activeLengthM, isMetric, layoutMode, jetVelocityMS,
+    tunnelQtyOverride: sideDetails.tunnelQty,
+    sideQtyOverride: sideDetails.sideQty
+  };
+  renderInletSchematic(schematicParams);
+  renderVentilationSchematic(schematicParams);
 }
+
+
+// ══════════════════════════════════════════════════════════════
+//  switchSchematicTab() & renderVentilationSchematic()
+// ══════════════════════════════════════════════════════════════
+let currentSchematicTab = 'inlet';
+
+let activeVentMode = 'dual';
+
+function onVentModeRadioChange(mode) {
+  activeVentMode = mode;
+  if (typeof updateSideFanCalculations === 'function') updateSideFanCalculations();
+  if (typeof calculate === 'function') calculate();
+  if (typeof updateAirInletCalculations === 'function') updateAirInletCalculations();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  Section 01 Dual-Fan System & Sizing Handlers
+// ══════════════════════════════════════════════════════════════
+let sideFanCountMode = 'auto';
+let sideFanRatio = 40;
+let manualSideFanQty = 12;
+
+function onSideFanCountModeChange(mode) {
+  sideFanCountMode = mode;
+  const wrap = $('side-fan-manual-input-wrap');
+  if (wrap) wrap.style.display = (mode === 'manual') ? 'block' : 'none';
+  if (typeof updateSideFanCalculations === 'function') updateSideFanCalculations();
+}
+
+function onSideRatioSliderChange(val) {
+  sideFanRatio = parseInt(val) || 40;
+  const lbl = $('side-fan-ratio-val');
+  if (lbl) lbl.textContent = sideFanRatio + '%';
+  if (typeof updateSideFanCalculations === 'function') updateSideFanCalculations();
+}
+
+function onManualSideFanCountChange(val) {
+  let qty = parseInt(val) || 2;
+  if (qty % 2 !== 0) qty++;
+  manualSideFanQty = qty;
+  const hint = $('side-fan-split-hint');
+  if (hint) hint.textContent = `บน ${qty/2} / ล่าง ${qty/2}`;
+  if (typeof updateSideFanCalculations === 'function') updateSideFanCalculations();
+}
+
+function onSideFanModelChange() {
+  if (typeof updateSideFanCalculations === 'function') updateSideFanCalculations();
+}
+
+function getSelectedSideFanModel() {
+  const selected = document.querySelector('input[name="side-fan-model"]:checked');
+  return selected ? selected.value : 'ZP-50-1.5ECS-125';
+}
+
+function getActiveSideFanDetails() {
+  let tunnelQty = 28;
+  const reqFansEl = $('req-fans-val');
+  if (reqFansEl && reqFansEl.textContent) {
+    const parsed = parseInt(reqFansEl.textContent);
+    if (!isNaN(parsed) && parsed > 0) tunnelQty = parsed;
+  }
+
+  // Get selected tunnel fan model airflow
+  const tunnelModelRadio = document.querySelector('input[name="ec-fan-model"]:checked');
+  const tunnelVal = tunnelModelRadio ? tunnelModelRadio.value : 'ZP-50-1.5ECS-125';
+  let tunnelFlow = 33700;
+  if (tunnelVal === 'AG-57-EC') tunnelFlow = 41400;
+  else if (tunnelVal === 'AG-56-VS-EC') tunnelFlow = 32500;
+  else if (tunnelVal === 'AG-50-LN-EC') tunnelFlow = 29500;
+  else if (tunnelVal === 'ZP-50-1.5ECS-125' || tunnelVal === 'ZMD50-2-1.5ECS-125') tunnelFlow = 33700;
+
+  // Get selected side fan model airflow
+  const sideModel = getSelectedSideFanModel();
+  let sideFlow = 33700;
+  if (sideModel === 'ZP36-2-3ECS-300' || sideModel === 'ZP36-5-3ECS-325') sideFlow = 21500;
+  else if (sideModel === 'ZP50') sideFlow = 29100;
+  else if (sideModel === 'ZP-50-1.5ECS-125' || sideModel === 'ZMD50-2-1.5ECS-125') sideFlow = 33700;
+
+  let sideQty = 12;
+  let autoSideQty = 12;
+  const reqSideFlow = tunnelQty * tunnelFlow * (sideFanRatio / 100);
+  autoSideQty = Math.ceil(reqSideFlow / sideFlow);
+  if (autoSideQty % 2 !== 0) autoSideQty++;
+
+  if (sideFanCountMode === 'auto') {
+    sideQty = autoSideQty;
+  } else {
+    sideQty = manualSideFanQty;
+    if (sideQty % 2 !== 0) sideQty++;
+  }
+
+  if (activeVentMode === 'tunnel') {
+    sideQty = 0;
+    autoSideQty = 0;
+  }
+
+  return {
+    tunnelQty,
+    tunnelFlow,
+    sideModel,
+    sideFlow,
+    sideQty,
+    sideFanRatio,
+    autoSideQty,
+    halfSide: Math.floor(sideQty / 2)
+  };
+}
+
+function updateSideFanCalculations() {
+  const isDual = activeVentMode === 'dual';
+  const panel = $('side-fan-configuration-panel');
+  if (panel) {
+    if (isDual) {
+      panel.style.opacity = '1';
+      panel.style.pointerEvents = 'auto';
+      panel.style.filter = 'none';
+    } else {
+      panel.style.opacity = '0.4';
+      panel.style.pointerEvents = 'none';
+      panel.style.filter = 'grayscale(100%)';
+    }
+  }
+
+  const details = getActiveSideFanDetails();
+  const { tunnelQty, sideQty, halfSide, autoSideQty } = details;
+
+  const lbl = $('lbl-side-fan-count');
+  if (lbl) {
+    let warnMsg = '';
+    if (sideFanCountMode === 'manual' && isDual) {
+       const diff = sideQty - autoSideQty;
+       if (diff < 0) {
+          warnMsg = ` <span style="color:var(--accent-red);font-weight:bold;">(⚠ น้อยกว่า Auto ${Math.abs(diff)} ตัว ระวัง Under-ventilated)</span>`;
+       } else if (diff > 0) {
+          warnMsg = ` <span style="color:var(--accent-orange);font-weight:bold;">(⚠ มากกว่า Auto ${diff} ตัว ระวังเปลืองพลังงาน)</span>`;
+       }
+    }
+    lbl.innerHTML = `${sideQty} ตัว (เกลี่ย ผนังบน ${halfSide} ตัว / ผนังล่าง ${halfSide} ตัว แบบสมมาตร)${warnMsg}`;
+  }
+
+  // Re-render schematics with updated side fans
+  if (typeof renderVentilationSchematic === 'function') {
+    const bldgLen = parseFloat($('building-length') ? $('building-length').value : 120) || 120;
+    const bldgWid = parseFloat($('building-width') ? $('building-width').value : 14) || 14;
+    const baySpan = parseFloat($('column-bay-span') ? $('column-bay-span').value : 4.0) || 4.0;
+    const bays = Math.ceil(bldgLen / baySpan);
+    const inletsTotal = parseInt($('inlet-total-count') ? $('inlet-total-count').textContent : 108) || 108;
+    const layoutModeRadio = document.querySelector('input[name="layout-mode"]:checked');
+    const layoutMode = layoutModeRadio ? layoutModeRadio.value : 'standard';
+
+    renderVentilationSchematic({
+      buildingL: bldgLen, buildingW: bldgWid, baySpanM: baySpan, totalBays: bays,
+      numPerSide: Math.floor(inletsTotal/2), numInletsTotal: inletsTotal,
+      tunnelQtyOverride: tunnelQty, sideQtyOverride: sideQty,
+      layoutMode: layoutMode
+    });
+  }
+}
+
+
+function switchTopInfographic(view) {
+  const btnAir = $('top-btn-schematic-airflow');
+  const btnVent = $('top-btn-schematic-vent');
+  const btnInlet = $('top-btn-schematic-inlet');
+  const viewAir = document.querySelector('.schematic');
+  const viewVent = $('top-view-schematic-vent');
+  const viewInlet = $('top-view-schematic-inlet');
+
+  const setBtn = (btn, active, color) => {
+    if (!btn) return;
+    btn.style.background = active ? color : 'rgba(255,255,255,0.05)';
+    btn.style.color = active ? '#050a14' : 'var(--text-muted)';
+    btn.style.borderColor = active ? color : 'var(--border)';
+    if (active && color === '#a855f7') btn.style.color = '#ffffff';
+  };
+
+  setBtn(btnAir, view === 'airflow', '#22d3ee');
+  setBtn(btnVent, view === 'vent', '#a855f7');
+  setBtn(btnInlet, view === 'inlet', '#38bdf8');
+
+  if (viewAir) viewAir.style.display = (view === 'airflow') ? 'flex' : 'none';
+  if (viewVent) viewVent.style.display = (view === 'vent') ? 'block' : 'none';
+  if (viewInlet) viewInlet.style.display = (view === 'inlet') ? 'block' : 'none';
+
+  // Sync lower tab view
+  if (view === 'vent' || view === 'inlet') {
+    switchSchematicTab(view);
+  }
+}
+
+function switchSchematicTab(tab) {
+  currentSchematicTab = tab;
+  const btnInlet = $('tab-btn-schematic-inlet');
+  const btnVent = $('tab-btn-schematic-vent');
+  const sideBtnInlet = $('side-btn-schematic-inlet');
+  const sideBtnVent = $('side-btn-schematic-vent');
+  const viewInlet = $('view-schematic-inlet');
+  const viewVent = $('view-schematic-vent');
+  const legInlet = $('schematic-inlet-legend');
+  const legVent = $('schematic-vent-legend');
+
+  const setTabBtn = (btn, active, activeBg, activeCol) => {
+    if (!btn) return;
+    btn.style.background = active ? activeBg : 'rgba(255,255,255,0.05)';
+    btn.style.color = active ? activeCol : 'var(--text-muted)';
+    btn.style.borderColor = active ? activeBg : 'var(--border)';
+  };
+
+  if (tab === 'inlet') {
+    setTabBtn(btnInlet, true, '#22d3ee', '#050a14');
+    setTabBtn(btnVent, false);
+    setTabBtn(sideBtnInlet, true, '#22d3ee', '#050a14');
+    setTabBtn(sideBtnVent, false);
+    if (viewInlet) viewInlet.style.display = 'block';
+    if (viewVent) viewVent.style.display = 'none';
+    if (legInlet) legInlet.style.display = 'flex';
+    if (legVent) legVent.style.display = 'none';
+  } else {
+    setTabBtn(btnInlet, false);
+    setTabBtn(btnVent, true, '#a855f7', '#ffffff');
+    setTabBtn(sideBtnInlet, false);
+    setTabBtn(sideBtnVent, true, '#a855f7', '#ffffff');
+    if (viewInlet) viewInlet.style.display = 'none';
+    if (viewVent) viewVent.style.display = 'block';
+    if (legInlet) legInlet.style.display = 'none';
+    if (legVent) legVent.style.display = 'flex';
+  }
+}
+
+function renderVentilationSchematic(p) {
+  const svg = $('vent-schematic-svg');
+  const topSvg = $('top-vent-schematic-svg');
+  if (!svg && !topSvg) return;
+
+  const {
+    buildingL = 120, buildingW = 14, baySpanM = 3.5, totalBays = 34,
+    numPerSide = 54, numInletsTotal = 108,
+    tunnelQtyOverride, sideQtyOverride,
+    layoutMode: pLayoutMode
+  } = p || {};
+
+  // Determine layout mode (Standard Tunnel vs Split-Tunnel)
+  const layoutModeRadio = document.querySelector('input[name="layout-mode"]:checked');
+  const layoutMode = pLayoutMode || (layoutModeRadio ? layoutModeRadio.value : 'standard');
+  const isSplit = layoutMode === 'split';
+
+  // Retrieve calculated fans from DOM
+  const reqFansEl = $('req-fans-val');
+  let tunnelQty = 28;
+  if (reqFansEl && reqFansEl.textContent) {
+    const parsed = parseInt(reqFansEl.textContent);
+    if (!isNaN(parsed) && parsed > 0) tunnelQty = parsed;
+  }
+  if (typeof tunnelQtyOverride === 'number') tunnelQty = tunnelQtyOverride;
+
+  // Unified Side fans sizing
+  const sideDetails = (typeof getActiveSideFanDetails === 'function') ? getActiveSideFanDetails() : { sideQty: 12, halfSide: 6 };
+  let sideQty = (typeof sideQtyOverride === 'number') ? sideQtyOverride : sideDetails.sideQty;
+  if (sideQty % 2 !== 0) sideQty++;
+  const halfSide = Math.floor(sideQty / 2);
+
+  const W = 960, H = 320;
+  const PAD_L = 50, PAD_R = 90;
+  const drawW = W - PAD_L - PAD_R; // 820px
+  const boxX = PAD_L, boxY = 45;
+  const boxW = drawW, boxH = 180;
+  const midX = boxX + boxW / 2;
+
+  let s = `
+    <rect width="${W}" height="${H}" fill="#050a14"/>
+    
+    <!-- Building Envelope -->
+    <rect x="${boxX}" y="${boxY}" width="${boxW}" height="${boxH}" rx="6" fill="#0b1120" stroke="#1e293b" stroke-width="2"/>
+    
+    <!-- Building Centerline & Dimension Text -->
+    <line x1="${boxX}" y1="${boxY + boxH/2}" x2="${boxX + boxW}" y2="${boxY + boxH/2}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4,4"/>
+    <text x="${boxX + boxW/2}" y="${boxY + boxH/2 + 4}" fill="rgba(255,255,255,0.18)" font-size="11.5" font-weight="700" text-anchor="middle" font-family="'IBM Plex Mono', monospace">
+      ${isSplit ? 'SPLIT-TUNNEL' : 'STANDARD TUNNEL'}: ${buildingL}m × ${buildingW}m (${totalBays} BAYS @${baySpanM}m)
+    </text>
+  `;
+
+  if (isSplit) {
+    // ══════════════════════════════════════════════════════════════
+    //  SPLIT-TUNNEL LAYOUT (Pads at Left & Right ends, Fans in Center)
+    // ══════════════════════════════════════════════════════════════
+    
+    // 1. Left Cooling Pad (0m)
+    s += `
+      <!-- Left Pad (Front Wall + Side Walls) -->
+      <rect x="${boxX - 5}" y="${boxY + 25}" width="8" height="130" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+      <text x="${boxX - 14}" y="${boxY + 90}" fill="#38bdf8" font-size="8" font-weight="700" text-anchor="middle" transform="rotate(-90, ${boxX - 14}, ${boxY + 90})" font-family="'IBM Plex Mono', monospace">PAD (LEFT)</text>
+      <rect x="${boxX + 2}" y="${boxY - 3}" width="100" height="6" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+      <rect x="${boxX + 2}" y="${boxY + boxH - 3}" width="100" height="6" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+    `;
+
+    // 2. Right Cooling Pad (Rear)
+    s += `
+      <!-- Right Pad (Rear Wall + Side Walls) -->
+      <rect x="${boxX + boxW - 3}" y="${boxY + 25}" width="8" height="130" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+      <text x="${boxX + boxW + 14}" y="${boxY + 90}" fill="#38bdf8" font-size="8" font-weight="700" text-anchor="middle" transform="rotate(90, ${boxX + boxW + 14}, ${boxY + 90})" font-family="'IBM Plex Mono', monospace">PAD (RIGHT)</text>
+      <rect x="${boxX + boxW - 102}" y="${boxY - 3}" width="100" height="6" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+      <rect x="${boxX + boxW - 102}" y="${boxY + boxH - 3}" width="100" height="6" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+    `;
+
+    // 3. Center Tunnel Fans (Split equally Top & Bottom walls at midX)
+    const midFanWidth = 90;
+    const tunnelHalf = Math.floor(tunnelQty / 2);
+    
+    // Top wall center fan bank
+    s += `
+      <rect x="${midX - midFanWidth/2}" y="${boxY - 14}" width="${midFanWidth}" height="18" rx="3" fill="#1e293b" stroke="#f0a500" stroke-width="1.2"/>
+    `;
+    const nVisCenter = 6;
+    const stepCentX = (midFanWidth - 16) / (nVisCenter - 1);
+    for (let k = 0; k < nVisCenter; k++) {
+      const fx = (midX - midFanWidth/2 + 8) + (k * stepCentX);
+      s += `
+        <circle cx="${fx}" cy="${boxY - 5}" r="6.5" fill="#0f172a" stroke="#f0a500" stroke-width="1"/>
+        <path d="M ${fx - 4} ${boxY - 9} L ${fx + 4} ${boxY - 1} M ${fx + 4} ${boxY - 9} L ${fx - 4} ${boxY - 1}" stroke="#f0a500" stroke-width="0.8"/>
+      `;
+    }
+    s += `
+      <rect x="${midX - 55}" y="${boxY - 30}" width="110" height="13" rx="2" fill="#0f172a" stroke="#f0a500" stroke-width="0.7"/>
+      <text x="${midX}" y="${boxY - 21}" fill="#f0a500" font-size="7.5" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">TUNNEL FANS: ${tunnelHalf} ตัว (ผนังบน)</text>
+    `;
+
+    // Bottom wall center fan bank
+    s += `
+      <rect x="${midX - midFanWidth/2}" y="${boxY + boxH - 4}" width="${midFanWidth}" height="18" rx="3" fill="#1e293b" stroke="#f0a500" stroke-width="1.2"/>
+    `;
+    for (let k = 0; k < nVisCenter; k++) {
+      const fx = (midX - midFanWidth/2 + 8) + (k * stepCentX);
+      s += `
+        <circle cx="${fx}" cy="${boxY + boxH + 5}" r="6.5" fill="#0f172a" stroke="#f0a500" stroke-width="1"/>
+        <path d="M ${fx - 4} ${boxY + boxH + 1} L ${fx + 4} ${boxY + boxH + 9} M ${fx + 4} ${boxY + boxH + 1} L ${fx - 4} ${boxY + boxH + 9}" stroke="#f0a500" stroke-width="0.8"/>
+      `;
+    }
+    s += `
+      <rect x="${midX - 55}" y="${boxY + boxH + 18}" width="110" height="13" rx="2" fill="#0f172a" stroke="#f0a500" stroke-width="0.7"/>
+      <text x="${midX}" y="${boxY + boxH + 27}" fill="#f0a500" font-size="7.5" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">TUNNEL FANS: ${tunnelHalf} ตัว (ผนังล่าง)</text>
+    `;
+
+    // Center divider / zone line
+    s += `
+      <line x1="${midX}" y1="${boxY}" x2="${midX}" y2="${boxY + boxH}" stroke="rgba(240,165,0,0.3)" stroke-dasharray="3,3"/>
+      <text x="${midX}" y="${boxY + boxH/2 - 14}" fill="#f0a500" font-size="8.5" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">พัดลมกึ่งกลางอาคาร (28 ตัว)</text>
+    `;
+
+    // 4. Air Inlets along Left Wing and Right Wing
+    const inletsPerWingVisual = 7;
+    const leftInletStart = boxX + 110;
+    const leftInletEnd = midX - 60;
+    const leftStep = (leftInletEnd - leftInletStart) / (inletsPerWingVisual - 1);
+    for (let i = 0; i < inletsPerWingVisual; i++) {
+      const ix = leftInletStart + (i * leftStep);
+      s += `<rect x="${ix - 5}" y="${boxY - 2}" width="10" height="4" fill="#22d3ee" rx="1"/>`;
+      s += `<line x1="${ix}" y1="${boxY}" x2="${ix + 4}" y2="${boxY + 7}" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round"/>`;
+      s += `<rect x="${ix - 5}" y="${boxY + boxH - 2}" width="10" height="4" fill="#22d3ee" rx="1"/>`;
+      s += `<line x1="${ix}" y1="${boxY + boxH}" x2="${ix + 4}" y2="${boxY + boxH - 7}" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round"/>`;
+    }
+
+    const rightInletStart = midX + 60;
+    const rightInletEnd = boxX + boxW - 110;
+    const rightStep = (rightInletEnd - rightInletStart) / (inletsPerWingVisual - 1);
+    for (let i = 0; i < inletsPerWingVisual; i++) {
+      const ix = rightInletStart + (i * rightStep);
+      s += `<rect x="${ix - 5}" y="${boxY - 2}" width="10" height="4" fill="#22d3ee" rx="1"/>`;
+      s += `<line x1="${ix}" y1="${boxY}" x2="${ix - 4}" y2="${boxY + 7}" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round"/>`;
+      s += `<rect x="${ix - 5}" y="${boxY + boxH - 2}" width="10" height="4" fill="#22d3ee" rx="1"/>`;
+      s += `<line x1="${ix}" y1="${boxY + boxH}" x2="${ix - 4}" y2="${boxY + boxH - 7}" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round"/>`;
+    }
+
+    // 5. Minimum / Side Fans (50PP EC) Distributed across Left & Right wings (Top & Bottom)
+    const sidePerWingTop = Math.max(1, Math.floor(sideQty / 4));
+    
+    // Left Wing Side Fans
+    const leftSideStart = boxX + 130;
+    const leftSideEnd = midX - 80;
+    const leftSideStep = (sidePerWingTop > 1) ? (leftSideEnd - leftSideStart) / (sidePerWingTop - 1) : 0;
+    for (let i = 0; i < sidePerWingTop; i++) {
+      const sx = (sidePerWingTop > 1) ? leftSideStart + (i * leftSideStep) : (leftSideStart + leftSideEnd)/2;
+      // Top wall
+      s += `
+        <g>
+          <circle cx="${sx}" cy="${boxY}" r="8.5" fill="#090d13" stroke="#4ade80" stroke-width="1.5"/>
+          <path d="M ${sx - 5} ${boxY - 5} L ${sx + 5} ${boxY + 5} M ${sx + 5} ${boxY - 5} L ${sx - 5} ${boxY + 5}" stroke="#4ade80" stroke-width="1"/>
+          <rect x="${sx - 9}" y="${boxY - 18}" width="18" height="8" rx="2" fill="#0f172a" stroke="#4ade80" stroke-width="0.7"/>
+          <text x="${sx}" y="${boxY - 12}" fill="#4ade80" font-size="6" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">SF</text>
+        </g>
+      `;
+      // Bottom wall
+      s += `
+        <g>
+          <circle cx="${sx}" cy="${boxY + boxH}" r="8.5" fill="#090d13" stroke="#4ade80" stroke-width="1.5"/>
+          <path d="M ${sx - 5} ${boxY + boxH - 5} L ${sx + 5} ${boxY + boxH + 5} M ${sx + 5} ${boxY + boxH - 5} L ${sx - 5} ${boxY + boxH + 5}" stroke="#4ade80" stroke-width="1"/>
+          <rect x="${sx - 9}" y="${boxY + boxH + 10}" width="18" height="8" rx="2" fill="#0f172a" stroke="#4ade80" stroke-width="0.7"/>
+          <text x="${sx}" y="${boxY + boxH + 16}" fill="#4ade80" font-size="6" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">SF</text>
+        </g>
+      `;
+    }
+
+    // Right Wing Side Fans
+    const rightSideStart = midX + 80;
+    const rightSideEnd = boxX + boxW - 130;
+    const rightSideStep = (sidePerWingTop > 1) ? (rightSideEnd - rightSideStart) / (sidePerWingTop - 1) : 0;
+    for (let i = 0; i < sidePerWingTop; i++) {
+      const sx = (sidePerWingTop > 1) ? rightSideStart + (i * rightSideStep) : (rightSideStart + rightSideEnd)/2;
+      // Top wall
+      s += `
+        <g>
+          <circle cx="${sx}" cy="${boxY}" r="8.5" fill="#090d13" stroke="#4ade80" stroke-width="1.5"/>
+          <path d="M ${sx - 5} ${boxY - 5} L ${sx + 5} ${boxY + 5} M ${sx + 5} ${boxY - 5} L ${sx - 5} ${boxY + 5}" stroke="#4ade80" stroke-width="1"/>
+          <rect x="${sx - 9}" y="${boxY - 18}" width="18" height="8" rx="2" fill="#0f172a" stroke="#4ade80" stroke-width="0.7"/>
+          <text x="${sx}" y="${boxY - 12}" fill="#4ade80" font-size="6" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">SF</text>
+        </g>
+      `;
+      // Bottom wall
+      s += `
+        <g>
+          <circle cx="${sx}" cy="${boxY + boxH}" r="8.5" fill="#090d13" stroke="#4ade80" stroke-width="1.5"/>
+          <path d="M ${sx - 5} ${boxY + boxH - 5} L ${sx + 5} ${boxY + boxH + 5} M ${sx + 5} ${boxY + boxH - 5} L ${sx - 5} ${boxY + boxH + 5}" stroke="#4ade80" stroke-width="1"/>
+          <rect x="${sx - 9}" y="${boxY + boxH + 10}" width="18" height="8" rx="2" fill="#0f172a" stroke="#4ade80" stroke-width="0.7"/>
+          <text x="${sx}" y="${boxY + boxH + 16}" fill="#4ade80" font-size="6" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">SF</text>
+        </g>
+      `;
+    }
+
+  } else {
+    // ══════════════════════════════════════════════════════════════
+    //  STANDARD TUNNEL LAYOUT (Pad at Left end, Fans at Rear Right)
+    // ══════════════════════════════════════════════════════════════
+
+    // 1. Front Cooling Pad (Left wall)
+    s += `
+      <rect x="${boxX - 5}" y="${boxY + 25}" width="8" height="130" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+      <text x="${boxX - 14}" y="${boxY + 90}" fill="#38bdf8" font-size="8.5" font-weight="700" text-anchor="middle" transform="rotate(-90, ${boxX - 14}, ${boxY + 90})" font-family="'IBM Plex Mono', monospace">COOLING PAD</text>
+      <rect x="${boxX + 2}" y="${boxY - 3}" width="140" height="6" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+      <rect x="${boxX + 2}" y="${boxY + boxH - 3}" width="140" height="6" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+    `;
+
+    // 2. Air Inlets along side walls
+    const numVisualInlets = 14;
+    const startInletX = boxX + 160;
+    const endInletX = boxX + boxW - 40;
+    const stepInletX = (endInletX - startInletX) / (numVisualInlets - 1);
+    for (let i = 0; i < numVisualInlets; i++) {
+      const ix = startInletX + (i * stepInletX);
+      s += `<rect x="${ix - 6}" y="${boxY - 2}" width="12" height="4" fill="#22d3ee" rx="1"/>`;
+      s += `<line x1="${ix}" y1="${boxY}" x2="${ix + 5}" y2="${boxY + 8}" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round"/>`;
+      s += `<rect x="${ix - 6}" y="${boxY + boxH - 2}" width="12" height="4" fill="#22d3ee" rx="1"/>`;
+      s += `<line x1="${ix}" y1="${boxY + boxH}" x2="${ix + 5}" y2="${boxY + boxH - 8}" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round"/>`;
+    }
+
+    // 3. Tunnel Fans at Rear Wall (Right)
+    const numFansVisual = 6;
+    const startFanY = boxY + 18;
+    const endFanY = boxY + boxH - 18;
+    const stepFanY = (endFanY - startFanY) / (numFansVisual - 1);
+    for (let i = 0; i < numFansVisual; i++) {
+      const fy = startFanY + (i * stepFanY);
+      s += `
+        <circle cx="${boxX + boxW}" cy="${fy}" r="9" fill="#1e293b" stroke="#f0a500" stroke-width="1.5"/>
+        <path d="M ${boxX + boxW - 6} ${fy - 6} L ${boxX + boxW + 6} ${fy + 6} M ${boxX + boxW + 6} ${fy - 6} L ${boxX + boxW - 6} ${fy + 6}" stroke="#f0a500" stroke-width="1"/>
+      `;
+    }
+    s += `
+      <rect x="${boxX + boxW + 12}" y="${boxY + boxH/2 - 14}" width="75" height="28" rx="4" fill="#0f172a" stroke="#f0a500" stroke-width="1"/>
+      <text x="${boxX + boxW + 49}" y="${boxY + boxH/2 - 2}" fill="#f0a500" font-size="8.5" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">TUNNEL FANS</text>
+      <text x="${boxX + boxW + 49}" y="${boxY + boxH/2 + 8}" fill="#94a3b8" font-size="7.5" text-anchor="middle" font-family="'IBM Plex Mono', monospace">${tunnelQty} FANS</text>
+    `;
+
+    // 4. Side Fans (SF) along Top and Bottom walls
+    if (halfSide > 0) {
+      const startSideX = boxX + 220;
+      const endSideX = boxX + boxW - 60;
+      const stepSideX = (halfSide > 1) ? (endSideX - startSideX) / (halfSide - 1) : 0;
+      for (let i = 0; i < halfSide; i++) {
+        const sx = (halfSide > 1) ? startSideX + (i * stepSideX) : (startSideX + endSideX) / 2;
+        // Top wall
+        s += `
+          <g>
+            <circle cx="${sx}" cy="${boxY}" r="9" fill="#090d13" stroke="#4ade80" stroke-width="1.5"/>
+            <path d="M ${sx - 6} ${boxY - 6} L ${sx + 6} ${boxY + 6} M ${sx + 6} ${boxY - 6} L ${sx - 6} ${boxY + 6}" stroke="#4ade80" stroke-width="1"/>
+            <rect x="${sx - 10}" y="${boxY - 20}" width="20" height="9" rx="2" fill="#0f172a" stroke="#4ade80" stroke-width="0.7"/>
+            <text x="${sx}" y="${boxY - 13}" fill="#4ade80" font-size="6.5" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">SF</text>
+          </g>
+        `;
+        // Bottom wall
+        s += `
+          <g>
+            <circle cx="${sx}" cy="${boxY + boxH}" r="9" fill="#090d13" stroke="#4ade80" stroke-width="1.5"/>
+            <path d="M ${sx - 6} ${boxY + boxH - 6} L ${sx + 6} ${boxY + boxH + 6} M ${sx + 6} ${boxY + boxH - 6} L ${sx - 6} ${boxY + boxH + 6}" stroke="#4ade80" stroke-width="1"/>
+            <rect x="${sx - 10}" y="${boxY + boxH + 11}" width="20" height="9" rx="2" fill="#0f172a" stroke="#4ade80" stroke-width="0.7"/>
+            <text x="${sx}" y="${boxY + boxH + 18}" fill="#4ade80" font-size="6.5" font-weight="800" text-anchor="middle" font-family="'IBM Plex Mono', monospace">SF</text>
+          </g>
+        `;
+      }
+    }
+  }
+
+  // Footer Engineering Summary & Legend Bar
+  s += `
+    <g transform="translate(${boxX}, ${boxY + boxH + 34})" font-size="8.5" font-family="'IBM Plex Sans Thai', sans-serif">
+      <rect x="0" y="0" width="${boxW}" height="42" rx="5" fill="#0b1120" stroke="#1e293b" stroke-width="1"/>
+      
+      <!-- Metric 1: Transition Side Fans -->
+      <text x="14" y="17" fill="#a855f7" font-weight="700">🌀 พัดลมข้างขั้นต่ำ 50PP EC (${sideQty} ตัว):</text>
+      <text x="14" y="31" fill="#cbd5e1">${isSplit ? `เกลี่ยกระจาย ปีกซ้าย ${halfSide} ตัว (บน ${Math.floor(halfSide/2)} / ล่าง ${Math.ceil(halfSide/2)}) | ปีกขวา ${halfSide} ตัว (บน ${Math.floor(halfSide/2)} / ล่าง ${Math.ceil(halfSide/2)})` : `เกลี่ยกระจาย ผนังบน ${halfSide} ตัว / ผนังล่าง ${halfSide} ตัว แบบสมมาตร`}</text>
+
+      <!-- Metric 2: Tunnel Fans -->
+      <text x="370" y="17" fill="#f0a500" font-weight="700">❄️ พัดลมอุโมงค์หลัก (${tunnelQty} ตัว):</text>
+      <text x="370" y="31" fill="#cbd5e1">${isSplit ? `ติดตั้งกึ่งกลางอาคาร (ผนังบน ${Math.floor(tunnelQty/2)} / ผนังล่าง ${Math.ceil(tunnelQty/2)})` : `${tunnelQty} ตัว ติดตั้งด้านท้ายเรือน`}</text>
+
+      <!-- Metric 3: Air Inlets -->
+      <text x="640" y="17" fill="#22d3ee" font-weight="700">🌬️ ช่องลมแอร์อินเล็ท (${numInletsTotal} บาน):</text>
+      <text x="640" y="31" fill="#cbd5e1">${isSplit ? `ครอบคลุมปีกซ้ายและขวา (ฝั่งละ ${numPerSide} บาน)` : `ติดตั้ง 2 ฝั่ง (ฝั่งละ ${numPerSide} บาน)`}</text>
+    </g>
+  `;
+
+  if (svg) svg.innerHTML = s;
+  if (topSvg) topSvg.innerHTML = s;
+}
+
 
 // ══════════════════════════════════════════════════════════════
 //  renderInletSchematic()  — Engineering Infographic (v2)
@@ -3634,7 +4273,8 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
 // ══════════════════════════════════════════════════════════════
 function renderInletSchematic(p) {
   const svg = $('inlet-schematic-svg');
-  if (!svg) return;
+  const topSvg = $('top-inlet-schematic-svg');
+  if (!svg && !topSvg) return;
 
   const {
     buildingL, buildingW, baySpanM, totalBays, activeBays,
@@ -4044,7 +4684,8 @@ function renderInletSchematic(p) {
     s += `<text x="${ix}" y="${midInfoY + 8}" fill="${C.dimTx}" font-size="8" text-anchor="middle" dominant-baseline="hanging" font-family="IBM Plex Mono,monospace">${st.u}</text>`;
   });
 
-  svg.innerHTML = s;
+  if (svg) svg.innerHTML = s;
+  if (topSvg) topSvg.innerHTML = s;
 }
 
 
@@ -4500,6 +5141,8 @@ function highlightRow(idx, spPa = null, sysMode = null, recalculate = true) {
   if (recalculate) setTimeout(calculate, 50);
 }
 
+
+
 // ── EIT / วสท. 2001-2556 ELECTRICAL HELPERS ───────────────
 // Cable ampacity: THW copper in conduit, 40°C ambient (วสท. Table 5-3 w/ 0.87 correction)
 const EIT_CABLE = [
@@ -4874,7 +5517,15 @@ function calculate() {
     case 'pig':     equipmentPressure = 12.0; break;
   }
 
-  const crossSectionalArea = width * height;
+  const roofType = document.getElementById('roof-type') ? document.getElementById('roof-type').value : 'flat';
+  let crossSectionalArea = width * height;
+  if (roofType === 'pitched') {
+    let apexH = parseFloat(document.getElementById('apex-height').value);
+    if (isNaN(apexH) || apexH < height) apexH = height;
+    if (!isMetric) apexH /= CONVERSIONS.M_TO_FT; // convert input from ft to meters if imperial
+    crossSectionalArea = (width * height) + (0.5 * width * (apexH - height));
+  }
+
   const layoutMode = document.querySelector('input[name="layout-mode"]:checked')?.value || 'standard';
   
   // Split-Tunnel (พัดลมกลาง): อากาศเข้าจาก 2 ด้าน (แพดหัว-ท้าย) วิ่งเข้าหาพัดลมตรงกลาง
@@ -5050,7 +5701,7 @@ function calculate() {
     }
     if (systemMode === 'hybrid') {
       numEC = Math.ceil(fanCount * ecRatio);
-      if (isSplitTunnel && numEC % 2 !== 0 && numEC < fanCount) numEC += 1;
+      if (numEC % 2 !== 0 && numEC < fanCount) numEC += 1;
       numAC = Math.max(0, fanCount - numEC);
     } else if (systemMode === 'all-ec') {
       numEC = fanCount; numAC = 0;
@@ -5081,6 +5732,28 @@ function calculate() {
     fanAirflowCFM_atActual = acAirflowCFM;
   }
   const actualAirflowM3S = actualTotalAirflowM3H / 3600;
+
+  // Manual Airflow Validation Warning
+  const airflowNote = $('manual-airflow-note');
+  if (airflowNote && fanCountMode === 'manual') {
+    const targetAirflow = requiredAirflowM3H_design;
+    if (targetAirflow > 0) {
+      const diff = actualTotalAirflowM3H - targetAirflow;
+      const diffPercent = (diff / targetAirflow) * 100;
+      if (diffPercent < -5) {
+        airflowNote.innerHTML = `⚠ <strong style="color:var(--accent-red)">Under-ventilated:</strong> ปริมาณลมขาดไป ${Math.abs(diffPercent).toFixed(1)}% จากที่ต้องการ`;
+        airflowNote.classList.add('show');
+      } else if (diffPercent > 5) {
+        airflowNote.innerHTML = `⚠ <strong style="color:var(--accent-orange)">Over-ventilated:</strong> ปริมาณลมเกินความต้องการไป ${diffPercent.toFixed(1)}%`;
+        airflowNote.classList.add('show');
+      } else {
+        airflowNote.classList.remove('show');
+      }
+    }
+  } else if (airflowNote) {
+    airflowNote.classList.remove('show');
+  }
+
   // ในระบบ Split-Tunnel ลมรวมแบ่งวิ่ง 2 ปีก -> ลมต่อปีก = actualAirflowM3S / 2
   const actualHouseVelocityMS = crossSectionalArea > 0 
     ? (isSplitTunnel ? (actualAirflowM3S / 2) : actualAirflowM3S) / crossSectionalArea 
@@ -5115,7 +5788,7 @@ function calculate() {
   const requiredPadLengthM_perSide = requiredPadBlocks_perSide * padBlockWidthM;
   const requiredPadAreaM2_perSide = requiredPadLengthM_perSide * padHeightM;
   const gutterLengthM_perSide = requiredPadLengthM_perSide;
-  const buildingVolume = width * height * length;
+  const buildingVolume = crossSectionalArea * length;
   const airChangesPerHour = buildingVolume > 0 ? actualTotalAirflowM3H / buildingVolume : 0;
   const airTransferTimeSeconds = airChangesPerHour > 0 ? 3600 / airChangesPerHour : 0;
 
@@ -6150,23 +6823,14 @@ ${softInfo ? `
     $('pad-blocks-val').textContent = `${requiredPadBlocks}`;
   }
 
-  // Water
-  const flowImp = requiredWaterFlowLPM * (1/3.78541);
-  const tankImp = requiredTankSizeL * (1/3.78541);
-  $('pump-flow-rate-val').textContent = `${fmt(requiredWaterFlowLPM, 1)} LPM / ${fmt(flowImp, 1)} GPM`;
-  $('water-tank-val').textContent = `${fmt(requiredTankSizeL, 1)} L / ${fmt(tankImp, 1)} gal`;
-  $('estimated-head-val').textContent = `${fmt(estimatedHead, 1)} m`;
-  $('recommended-pump-model-val').textContent = recommendedPumpModel;
-
-  const pumpBtn = $('view-pump-curve-btn');
-  const isPumpKnown = recommendedPumpModel !== '-' && recommendedPumpModel !== translations[currentLang].consultExpert;
-  pumpBtn.disabled = !isPumpKnown;
-  pumpBtn.onclick = isPumpKnown ? () => openPumpModal(recommendedPumpModel, requiredWaterFlowLPM, estimatedHead) : null;
-
   // Warnings
   const mismatch = $('pressure-mismatch-warning');
   if (totalPressure > targetPressurePa) {
-    mismatch.innerHTML = translations[currentLang].pressureMismatchWarning;
+    const isTh = currentLang === 'th';
+    const warningText = isTh
+      ? `<strong>⚠ ข้อควรระวัง:</strong> แรงดันสถิตรวมของระบบ (Total System Pressure) สูงถึง ${totalPressure.toFixed(1)} Pa ซึ่งเกินกว่าค่า Target SP (${targetPressurePa.toFixed(1)} Pa) ที่ตั้งไว้ (พัดลมจะทำงานหนักขึ้นและปริมาณลมอาจลดลง)`
+      : `<strong>⚠ Warning:</strong> Total System Pressure (${totalPressure.toFixed(1)} Pa) exceeds Target SP (${targetPressurePa.toFixed(1)} Pa).`;
+    mismatch.innerHTML = warningText;
     mismatch.classList.add('show');
   } else {
     mismatch.classList.remove('show');
@@ -6232,11 +6896,9 @@ function resetOutputs() {
    'harm-b-thd','harm-b-iharm','harm-b-ahf','harm-b-result',
    'schematic-pad-velocity','schematic-house-velocity','schematic-fan-count',
    'total-pad-area','total-pad-area-imp','pad-length-val','pad-blocks-val',
-   'pump-flow-rate-val','water-tank-val','estimated-head-val','recommended-pump-model-val',
    'inlet-total-count','inlet-side-count','inlet-total-flow','inlet-flow-sub','inlet-spacing-val','inlet-jet-velocity'
   ].forEach(id => { const el = $(id); if(el) { el.textContent = '—'; el.className = el.className.replace(/\beit-(ok|warn)\b/g,''); } });
   const cb = $('eit-calc-body'); if(cb) cb.innerHTML = '<span style="color:var(--text-dim)">—</span>';
-  $('view-pump-curve-btn').disabled = true;
 }
 
 // ── UNIT TOGGLE ───────────────────────────────
@@ -6383,6 +7045,9 @@ window.addEventListener('DOMContentLoaded', () => {
     lastBuiltFanModel = null; selectedCurveRowIndex = -1; spSourceIsManual = false; calculate();
   }));
   $qa('input[name="fancount-mode"]').forEach(el => el.addEventListener('change', calculate));
+  $qa('input[name="vent-arch-mode"]').forEach(el => el.addEventListener('change', calculate));
+  const transRatioSlider = $('trans-ratio-slider');
+  if (transRatioSlider) transRatioSlider.addEventListener('input', calculate);
   const ecRatioSlider = $('ec-ratio-slider');
   if (ecRatioSlider) ecRatioSlider.addEventListener('input', calculate);
   const manualECInp = $('manual-ec-count');
