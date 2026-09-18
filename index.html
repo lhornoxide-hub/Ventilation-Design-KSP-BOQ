@@ -959,6 +959,16 @@ select {
   border: 1px solid rgba(88,166,255,0.2);
   color: var(--accent-blue);
 }
+.alert.alert-danger {
+  background: rgba(248,81,73,0.12);
+  border: 1px solid rgba(248,81,73,0.4);
+  color: #ff7b72;
+}
+.alert.alert-caution {
+  background: rgba(210,153,34,0.15);
+  border: 1px solid rgba(210,153,34,0.45);
+  color: #fdb913;
+}
 .alert.show { display: block; }
 
 /* ── MODAL ── */
@@ -2034,12 +2044,15 @@ input.invalid { border-color: var(--accent-red) !important; }
       <div class="form-group">
         <label class="field-label">เกณฑ์ออกแบบปริมาณลมผ่าน Inlet (Design Criteria)</label>
         <select id="inlet-calc-mode">
-          <option value="side_fan_only" selected>พัดลม Minimum / Side Fans ทั้งชุด (ค่าเริ่มต้น)</option>
+          <option value="side_fan_only" selected>⚡ คำนวณตามพัดลมข้าง Side Fan (สำหรับโหมด Split-Tunnel)</option>
+          <option value="percent">🌀 % พัดลมอุโมงค์ลม Transitional (สำหรับโหมด Tunnel ไม่มีพัดลมข้าง)</option>
+          <option value="minvent">🐣 พัดลมอุโมงค์ลมขั้นต่ำ 20% (Minimum Vent — ไม่มีพัดลมข้าง)</option>
+          <option value="custom_flow">✏️ กำหนดปริมาณลมเป้าหมายเอง (Custom Target Flow)</option>
         </select>
       </div>
 
-      <div class="form-group" hidden><label class="field-label" for="inlet-target-flow">ปริมาณลมเป้าหมายเอง (m³/h ใช้ในโหมด Custom Target)</label><input type="number" id="inlet-target-flow" min="0" max="1000000000" step="100" value="30000"></div>
-      <div class="form-group"><label class="field-label" for="wall-excluded-bays">ช่องผนังที่ติดตั้งไม่ได้ (ใช้เหมือนกันทั้งสองฝั่ง)</label><input id="wall-excluded-bays" type="text" placeholder="เช่น 1,2,17,18,34,35 หรือ 0 เมื่อไม่มี" oninput="calculate()"><p>นับช่องจากหัวเล้า เริ่ม 1: ระบุช่องที่มีพัดลม Pad ประตู หรือสิ่งกีดขวาง รวมข้อจำกัดของทั้งสองฝั่ง ไม่ถือว่าพื้นที่เหนือพัดลมว่างอัตโนมัติ</p></div>
+      <div class="form-group" id="inlet-target-flow-wrap" style="display:none"><label class="field-label" for="inlet-target-flow">ปริมาณลมเป้าหมายเอง (m³/h ใช้ในโหมด Custom Target)</label><input type="number" id="inlet-target-flow" min="0" max="1000000000" step="100" value="30000" oninput="calculate()"></div>
+      <div class="form-group"><label class="field-label" for="wall-excluded-bays">ช่องผนังที่ติดตั้งไม่ได้ (ใช้เหมือนกันทั้งสองฝั่ง)</label><input id="wall-excluded-bays" type="text" placeholder="เว้นว่างไว้หากไม่มีสิ่งกีดขวาง หรือใส่ เช่น 1,2,17" oninput="calculate()"><p>นับช่องจากหัวเล้า เริ่ม 1: เว้นว่างไว้หากติดตั้งได้ทุกช่อง หรือระบุช่องที่มีพัดลม Pad ประตู (เช่น 1,2,17 หรือ 0 เมื่อไม่มี)</p></div>
       <div class="form-group"><label class="field-label" for="side-path-pressure">แรงดันสูญเสียเพิ่มเติมทางลม Side Fan (กรง/อุปกรณ์) — Pa</label><input id="side-path-pressure" type="number" min="0" max="500" step="1" placeholder="ยังไม่ทราบ — ใส่ค่าจากแบบหรือผลวัด"><p style="font-size:11px;color:var(--text-muted)">แยกจากแรงดันตกคร่อมบานและจากค่าโหมด Tunnel; ใส่ 0 เฉพาะเมื่อยืนยันว่าไม่มีการสูญเสียเพิ่มเติม</p><div id="side-operating-pressure" role="status"></div></div>
       <div id="inlet-accuracy-note" role="status" style="display:none;padding:10px;border:1px solid var(--accent-yellow);font-size:12px;margin-bottom:10px"></div>
       <!-- Dynamic Warning / Recommendation Note -->
@@ -2052,7 +2065,7 @@ input.invalid { border-color: var(--accent-red) !important; }
       <div class="grid-2" style="gap:8px;margin-bottom:6px">
         <div class="form-group" id="inlet-percent-wrap" style="margin-bottom:0;display:none">
           <label class="field-label" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="สัดส่วนพัดลม (%)">สัดส่วนพัดลม (%)</label>
-          <input type="number" id="inlet-percent-input" value="40" min="5" max="100" step="5">
+          <input type="number" id="inlet-percent-input" value="40" min="5" max="100" step="5" oninput="calculate()">
         </div>
         <div class="form-group" style="margin-bottom:0">
           <label class="field-label" style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
@@ -2677,6 +2690,9 @@ input.invalid { border-color: var(--accent-red) !important; }
         </div>
         <div class="panel-body">
           
+          <!-- Smart Alert Notification Banner for Air Inlet -->
+          <div id="inlet-install-alert" class="alert" style="display:none;margin-bottom:14px;border-radius:8px"></div>
+
           <!-- KPI Summary Strip for Air Inlet -->
           <div class="inlet-kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
             <div class="inlet-kpi-card highlight">
@@ -3405,7 +3421,10 @@ function showInletPlanStatus(message) {
 }
 
 function clearInletOutputs(message = 'กรุณาตรวจสอบข้อมูลนำเข้า') {
-  if ($('inlet-total-count')) $('inlet-total-count').dataset.installable = 'false';
+  if ($('inlet-total-count')) {
+    $('inlet-total-count').dataset.installable = 'false';
+    $('inlet-total-count').style.color = 'var(--text-dim)';
+  }
   document.querySelectorAll('[id^="inlet-"]').forEach(el => {
     if (!el.children.length && !['INPUT','SELECT','OPTION','BUTTON'].includes(el.tagName)
         && (el.id.startsWith('inlet-calc-') || /-(val|count|flow|sub|eval|badge)$/.test(el.id))) el.textContent = '—';
@@ -3416,6 +3435,17 @@ function clearInletOutputs(message = 'กรุณาตรวจสอบข้
   if ($('inlet-accuracy-note')) {
     $('inlet-accuracy-note').textContent = message;
     $('inlet-accuracy-note').style.display = message ? 'block' : 'none';
+  }
+  const alertBox = $('inlet-install-alert');
+  if (alertBox) {
+    if (message) {
+      alertBox.className = 'alert alert-warn show';
+      alertBox.style.display = 'block';
+      alertBox.innerHTML = `<strong>⚠️ ข้อมูลนำเข้าไม่ถูกต้อง:</strong> ${message}`;
+    } else {
+      alertBox.style.display = 'none';
+      alertBox.innerHTML = '';
+    }
   }
   if ($('side-operating-pressure')) $('side-operating-pressure').textContent = '—';
   ['inlet-jet-velocity','inlet-jet-eval','inlet-bay-hood-limit-tag'].forEach(id=>{if ($(id)) $(id).textContent='—';});
@@ -3561,8 +3591,25 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   let baySpanM = Number($('column-bay-span').value) / (isMetric ? 1 : CONVERSIONS.M_TO_FT);
   const totalBays = Math.floor(buildingL / baySpanM + 1e-8);
   const rawExcluded = $('wall-excluded-bays')?.value.trim() ?? '';
-  const excluded = new Set(rawExcluded === '0' ? [] : rawExcluded.split(',').map(v => Number(v.trim()) - 1));
-  const wallConfirmed = rawExcluded !== '' && (rawExcluded === '0' || [...excluded].every(v => Number.isInteger(v) && v >= 0 && v < totalBays));
+  let excluded = new Set();
+  let wallInputValid = true;
+  let wallErrorMsg = '';
+
+  if (rawExcluded !== '' && rawExcluded !== '0') {
+    const parts = rawExcluded.split(',').map(v => v.trim()).filter(v => v !== '');
+    for (const p of parts) {
+      const num = Number(p);
+      if (!Number.isInteger(num) || num < 1 || num > totalBays) {
+        wallInputValid = false;
+        wallErrorMsg = `หมายเลขช่องผนัง "${p}" ไม่ถูกต้อง (อาคารยาว ${buildingL}m ช่วงเสา ${baySpanM.toFixed(1)}m มีทั้งหมด ${totalBays} ช่อง ต้องระบุเลข 1 ถึง ${totalBays})`;
+        break;
+      }
+      excluded.add(num - 1);
+    }
+  }
+
+  const wallConfirmed = wallInputValid;
+  const isWallDataMissing = !wallInputValid;
   const clearSpanM = Math.max(0, baySpanM - 0.20);
   const inletWidthM = inletSpec.widthM || 0.908;
   const maxInletsPerBayPhysical = Math.max(0, Math.floor(clearSpanM / inletWidthM));
@@ -3572,7 +3619,6 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
   const maxPhysicalCapacityPerSide = activeBays * maxInletsPerBayPhysical;
   const physicalTotal = 2 * maxPhysicalCapacityPerSide;
   const isBayCapacityExceeded = wallConfirmed && inletSpec.type === 'wall' && numPerSide > maxPhysicalCapacityPerSide;
-  const isWallDataMissing = !wallConfirmed;
   const bayInlets = Array(totalBays).fill(0);
   if (wallConfirmed && inletSpec.type === 'wall' && activeBays) {
     if (numPerSide <= maxPhysicalCapacityPerSide) {
@@ -3620,10 +3666,10 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
       '<p>ทั้งสองวิธียังเป็นการประมาณ: A×V ใช้ความเร็วอุดมคติจากแรงดัน ไม่มีค่าสัมประสิทธิ์การไหล; วิธีอ้างอิงสมมติว่าลมแปรตามสัดส่วนเปิด ต้องตรวจกราฟผู้ผลิตก่อนเลือกแบบจริง ไม่ปรับจำนวนหรือส่ง BOQ จากคอลัมน์อุดมคติโดยอัตโนมัติ</p>';
   }
 
-  const bayAdviceText = !wallConfirmed ? 'ระบุช่องผนังที่ติดตั้งไม่ได้จากแบบจริงก่อนออกผังและ BOQ' :
+  const bayAdviceText = !wallConfirmed ? (wallErrorMsg || 'ระบุช่องผนังที่ติดตั้งไม่ได้จากแบบจริงก่อนออกผังและ BOQ') :
     `ต้องการตามลม ${numInletsTotal} บาน | ผนังรองรับสูงสุด ${physicalTotal} บาน (${maxPhysicalCapacityPerSide}/ฝั่ง) | รองรับลมประมาณ ${fmtNum(capacityFlow)} m³/h | ลมขาด ${fmtNum(Math.max(0,targetInletFlowM3H-capacityFlow))} m³/h. ` +
     (isBayCapacityExceeded ? '⚠ พื้นที่ไม่เพียงพอ: ผังแสดงบานเต็มพิกัดช่องเสา — ปรับรุ่น/ระยะเปิด หรือจำนวน Side Fan ที่ทำงานพร้อมกัน' : 'ผังหนึ่งแถวต่อผนังสองฝั่ง; หักเสา 0.20 m ต่อช่อง ต้องตรวจระยะติดตั้งจริง');
-  if ($('inlet-total-count')) $('inlet-total-count').dataset.installable = String(!isWallDataMissing && numInletsTotal > 0);
+  if ($('inlet-total-count')) $('inlet-total-count').dataset.installable = String(!isWallDataMissing && numInletsTotal > 0 && !isBayCapacityExceeded);
   if ($('inlet-accuracy-note')) {
     $('inlet-accuracy-note').textContent = '';
     $('inlet-accuracy-note').style.display = 'none';
@@ -3682,13 +3728,53 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     $('inlet-cobb-rec-badge').textContent = `SP ประมาณ: ${cobbReqPa} Pa`;
   }
 
-  if ($('inlet-total-count')) $('inlet-total-count').textContent = `${numInletsTotal} บาน`;
+  // ── UPDATE SMART ALERT BANNER (#inlet-install-alert) ──
+  const alertBox = $('inlet-install-alert');
+  if (alertBox) {
+    if (!wallInputValid) {
+      alertBox.className = 'alert alert-warn show';
+      alertBox.style.display = 'block';
+      alertBox.innerHTML = `<strong>⚠️ ข้อมูลช่องผนังที่ระบุไม่ถูกต้อง:</strong> ${wallErrorMsg} — กรุณากรอกหมายเลขช่องคั่นด้วยจุลภาค เช่น <code>1,2,17</code> หรือเว้นว่างไว้เมื่อไม่มีสิ่งกีดขวาง`;
+    } else if (targetInletFlowM3H === 0) {
+      alertBox.className = 'alert alert-caution show';
+      alertBox.style.display = 'block';
+      alertBox.innerHTML = `<strong>⚠️ ไม่มีพัดลมด้านข้าง (Side Fan = 0) ในโหมดนี้:</strong> ปัจจุบันเลือกวิธีคำนวณแบบ <em>เปิดเฉพาะ Side Fan</em> จึงได้ปริมาณลม 0 m³/h<br><span style="font-size:11.5px;color:var(--text-muted)">💡 <strong>แนวทางแก้ไข:</strong> สำหรับโรงเรือน <strong>Tunnel Mode (ไม่มีพัดลมข้าง)</strong> ให้คำนวณจากพัดลมอุโมงค์ลม (% Tunnel Fans สำหรับ Minimum/Transitional Vent)</span><div style="margin-top:8px"><button type="button" onclick="const s=$('inlet-calc-mode');if(s){s.value='percent';const w=$('inlet-percent-wrap');if(w&&w.style)w.style.display='block';calculate();}" style="background:#38bdf8;color:#050a14;border:none;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">⚡ คลิกที่นี่: สลับเป็นคำนวณจากพัดลมอุโมงค์ลม (Transitional % Tunnel) ทันที</button></div>`;
+    } else if ((typeof activeVentMode !== 'undefined' ? activeVentMode : 'dual') === 'tunnel' && (calcMode === 'percent' || calcMode === 'minvent')) {
+      alertBox.className = 'alert alert-info show';
+      alertBox.style.display = 'block';
+      alertBox.innerHTML = `<strong>🌀 โหมด Standard Tunnel (ไม่มีพัดลมด้านข้าง):</strong> คำนวณบาน Air Inlet สำหรับระบายอากาศขั้นต่ำ/เปลี่ยนผ่าน (Transitional) จากพัดลมอุโมงค์ท้ายเล้าที่ <strong>${(percentVal * 100).toFixed(0)}%</strong> = <strong>${fmtNum(targetInletFlowM3H * flowConv)} ${flowUnitStr}</strong>`;
+    } else if (isBayCapacityExceeded) {
+      const shortageTotal = numInletsTotal - physicalTotal;
+      const shortagePerSide = numPerSide - maxPhysicalCapacityPerSide;
+      alertBox.className = 'alert alert-warn show';
+      alertBox.style.display = 'block';
+      alertBox.innerHTML = `<strong>⛔ ไม่สามารถติดตั้งได้ตามต้องการ (พื้นที่ผนังไม่เพียงพอ):</strong> คำนวณตามลมต้องการ <strong>${numInletsTotal} บาน</strong> (ฝั่งละ ${numPerSide} บาน) แต่ผนังรองรับได้สูงสุดเพียง <strong>${physicalTotal} บาน</strong> (ฝั่งละ ${maxPhysicalCapacityPerSide} บาน) — <span style="color:#ff7b72;font-weight:700">ขาดพื้นที่อีก ${shortageTotal} บาน (ฝั่งละ ${shortagePerSide} บาน | ลมขาดประมาณ ${fmtNum(Math.max(0, targetInletFlowM3H - capacityFlow))} m³/h)</span><br><span style="font-size:11.5px;color:var(--text-muted)">💡 <strong>แนวทางแก้ไข:</strong> 1) เพิ่ม % ระยะเปิดบาน (เช่น 75% หรือ 100%) เพื่อเพิ่มความจุลมต่อบาน · 2) เลือกรุ่น Inlet ที่มี CFM สูงขึ้น · 3) ปรับลดจำนวนพัดลม Side Fan ที่ทำงานพร้อมกัน</span>`;
+    } else {
+      alertBox.style.display = 'none';
+      alertBox.innerHTML = '';
+    }
+  }
+
+  if ($('inlet-total-count')) {
+    $('inlet-total-count').textContent = `${numInletsTotal} บาน`;
+    if (isBayCapacityExceeded) {
+      $('inlet-total-count').style.color = 'var(--accent-red)';
+    } else if (numInletsTotal === 0) {
+      $('inlet-total-count').style.color = 'var(--text-dim)';
+    } else {
+      $('inlet-total-count').style.color = 'var(--accent-blue)';
+    }
+  }
   if ($('inlet-opening-kpi-val')) $('inlet-opening-kpi-val').textContent = `${(openingRatio * 100).toFixed(0)}%`;
   if ($('inlet-opening-kpi-sub')) $('inlet-opening-kpi-sub').textContent = `พื้นที่ประมาณ ${areaAtOpeningFt2.toFixed(2)} ft²; ต้องยืนยันช่องเปิดจริง`;
   if ($('inlet-side-count')) {
-    $('inlet-side-count').textContent = inletSpec.type === 'wall' 
-      ? `ฝั่งซ้าย: ${numPerSide} | ฝั่งขวา: ${numPerSide} บาน`
-      : `แนวกึ่งกลางฝ้า: ${numInletsTotal} ช่อง`;
+    if (isBayCapacityExceeded) {
+      $('inlet-side-count').innerHTML = `<span style="color:var(--accent-red)">⚠ เกินพิกัดผนัง! (รับได้สูงสุดฝั่งละ ${maxPhysicalCapacityPerSide} บาน)</span>`;
+    } else if (inletSpec.type === 'wall') {
+      $('inlet-side-count').textContent = `ฝั่งซ้าย: ${numPerSide} | ฝั่งขวา: ${numPerSide} บาน`;
+    } else {
+      $('inlet-side-count').textContent = `แนวกึ่งกลางฝ้า: ${numInletsTotal} ช่อง`;
+    }
   }
   if ($('inlet-total-flow')) {
     $('inlet-total-flow').textContent = `${fmtNum(targetInletFlowM3H * flowConv)} ${flowUnitStr}`;
@@ -3865,8 +3951,8 @@ function calculateAirInletsAndBOQ(totalHouseAirflowM3H, buildingW, buildingL, bu
     sideQtyOverride: sideDetails.sideQty
   };
   if (isWallDataMissing) {
-    showInletPlanStatus('ระบุช่องผนังที่ติดตั้งไม่ได้ในแถบตั้งค่า Air Inlet');
-    if ($('inlet-actuator-spec-badge')) $('inlet-actuator-spec-badge').textContent='ยังไม่เลือกชุดขับ: ยังไม่มีข้อมูลช่องผนัง';
+    showInletPlanStatus(wallErrorMsg || 'ระบุช่องผนังที่ติดตั้งไม่ได้ในแถบตั้งค่า Air Inlet');
+    if ($('inlet-actuator-spec-badge')) $('inlet-actuator-spec-badge').textContent='ยังไม่เลือกชุดขับ: ข้อมูลช่องผนังไม่ถูกต้อง';
     if ($('inlet-pull-force-val')) $('inlet-pull-force-val').textContent='—';
   } else {
     // Always render schematic when wall data is confirmed — even if over-capacity
@@ -3888,6 +3974,26 @@ function onVentModeRadioChange(mode) {
   const layoutId = mode === 'dual' ? 'layout-split' : 'layout-standard';
   const layoutRadio = $(layoutId);
   if (layoutRadio) layoutRadio.checked = true;
+
+  // Auto-switch Air Inlet calculation mode based on whether Side Fans exist
+  const inletCalcSelect = $('inlet-calc-mode');
+  const pWrap = $('inlet-percent-wrap');
+  if (inletCalcSelect && typeof inletCalcSelect.value === 'string') {
+    if (mode === 'tunnel') {
+      // In Tunnel Mode (no side fans), auto-switch to % Tunnel Fans if on side_fan_only
+      if (inletCalcSelect.value === 'side_fan_only') {
+        inletCalcSelect.value = 'percent';
+        if (pWrap && pWrap.style) pWrap.style.display = 'block';
+      }
+    } else {
+      // In Dual / Split-Tunnel mode with side fans, switch back to side_fan_only if on percent
+      if (inletCalcSelect.value === 'percent') {
+        inletCalcSelect.value = 'side_fan_only';
+        if (pWrap && pWrap.style) pWrap.style.display = 'none';
+      }
+    }
+  }
+
   if (typeof calculate === 'function') calculate();
   // A ventilation-mode selection describes the installed system.  Show the
   // matching plan, rather than leaving the unrelated tunnel-airflow graphic
@@ -3984,7 +4090,7 @@ function getActiveSideFanDetails() {
     if (sideQty % 2 !== 0) sideQty++;
   }
 
-  if (activeVentMode === 'tunnel') {
+  if ((typeof activeVentMode !== 'undefined' ? activeVentMode : 'dual') === 'tunnel') {
     sideQty = 0;
     autoSideQty = 0;
   }
@@ -4593,16 +4699,17 @@ function renderInletSchematic(p) {
       s += `<text x="${cx}" y="${BOT_Y + WALL_H + 11}" fill="${countColor}" font-size="${countFontSize}" text-anchor="middle" dominant-baseline="auto" font-family="IBM Plex Mono,monospace" font-weight="700">${cnt}${isExceeded ? "⚠" : ""}</text>`;
     }
 
-    // ── CENTER OF BAY: Compact Jet Velocity Badge (ขนาดกะทัดรัด ตัวอักษรเล็กลง 50% ไม่เกะกะ) ──
-    if (bayW >= 10) {
-      const bdgW = Math.max(16, Math.min(28, bayW * 0.70));
-      const bdgH = 11;
-      const bdgX = (cx - bdgW / 2).toFixed(1);
-      const bdgY = (TOP_Y + WALL_H + (BODY_H - bdgH) / 2).toFixed(1);
-      const badgeFontSize = Math.max(5.0, Math.min(6.5, bdgW * 0.24));
+    // ── CENTER OF BAY: Vertical Jet Velocity Badge (วางแนวตั้ง ไม่ซ้อนทับกันแม้ช่องเสาแคบ) ──
+    if (bayW >= 7) {
       const vText = isMetric ? `${currentJetV.toFixed(1)}m/s` : `${Math.round(currentJetV * 196.85)}fpm`;
-      s += `<rect x="${bdgX}" y="${bdgY}" width="${bdgW.toFixed(1)}" height="${bdgH}" rx="2" fill="rgba(15,23,42,0.85)" stroke="rgba(56,189,248,0.3)" stroke-width="0.5"/>`;
-      s += `<text x="${cx}" y="${parseFloat(bdgY) + bdgH/2}" fill="var(--accent-cyan,#38bdf8)" font-size="${badgeFontSize}" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono,monospace" font-weight="600">${vText}</text>`;
+      const cy = (TOP_Y + WALL_H + BODY_H / 2).toFixed(1);
+      const bdgW = Math.max(7.5, Math.min(11, bayW - 2));
+      const bdgH = 25;
+      const bdgX = (cx - bdgW / 2).toFixed(1);
+      const bdgY = (parseFloat(cy) - bdgH / 2).toFixed(1);
+      const badgeFontSize = Math.max(5.0, Math.min(6.2, bdgW * 0.58));
+      s += `<rect x="${bdgX}" y="${bdgY}" width="${bdgW.toFixed(1)}" height="${bdgH}" rx="2" fill="rgba(15,23,42,0.90)" stroke="rgba(56,189,248,0.35)" stroke-width="0.5"/>`;
+      s += `<text x="${cx}" y="${cy}" transform="rotate(-90 ${cx} ${cy})" fill="var(--accent-cyan,#38bdf8)" font-size="${badgeFontSize}" text-anchor="middle" dominant-baseline="central" font-family="IBM Plex Mono,monospace" font-weight="600">${vText}</text>`;
     }
   }
   // ── DIMENSION LINES ──
@@ -7259,6 +7366,11 @@ window.addEventListener('DOMContentLoaded', () => {
       const pWrap = $('inlet-percent-wrap');
       if (pWrap) {
         pWrap.style.display = this.value === 'percent' ? 'block' : 'none';
+      }
+      const targetWrap = $('inlet-target-flow-wrap') || $('inlet-target-flow')?.closest('.form-group');
+      if (targetWrap) {
+        targetWrap.style.display = this.value === 'custom_flow' ? 'block' : 'none';
+        targetWrap.hidden = (this.value !== 'custom_flow');
       }
       calculate();
     });
