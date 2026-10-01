@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -535,8 +535,53 @@
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
-    .layout { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
+    .header {
+      height: auto;
+      min-height: 56px;
+      padding: 10px 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .header-logo {
+      min-width: 0;
+      flex: 1 1 100%;
+    }
+    .header-title,
+    .header-subtitle {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+    .layout {
+      display: flex;
+      flex-direction: column;
+      height: auto;
+      min-height: calc(100vh - 56px);
+      overflow: visible;
+    }
+    .sidebar {
+      display: flex;
+      flex: none;
+      max-height: none;
+      overflow: visible;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .main {
+      min-height: 70vh;
+      overflow: visible;
+    }
+    .tab-content.active {
+      height: auto;
+      min-height: 70vh;
+    }
+    .table-container {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
   }
 
   .tab-content { display: none; height: 100%; overflow: hidden; flex-direction: column; }
@@ -579,28 +624,63 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-section">
+      <div class="section-label">ประเภทระบบ (Application Mode)</div>
+      <div class="input-group">
+        <select class="input-field" id="param-mode" onchange="onSystemModeChange()" style="font-weight:600;color:var(--accent);">
+          <option value="farm" selected>🌾 ระบบฟาร์มเกษตร (Farm — ปั๊มด้านละ 1 ตัว)</option>
+          <option value="industrial">🏭 ระบบโรงงานอุตสาหกรรม (Industrial — ปั๊มหลายตัว/สลับทำงาน)</option>
+        </select>
+      </div>
+      <div id="hint-sysmode" style="font-size:11px;color:var(--text-dim);margin-top:-4px;margin-bottom:6px;">
+        🌾 โหมดฟาร์ม: แต่ละด้านใช้ปั๊ม 1 ตัวตามมาตรฐานโรงเรือน
+      </div>
+      <div class="input-group industrial-pump-group" id="grp-ind-operation" style="display:none;margin-top:6px;">
+        <div class="input-label" style="font-size:11px;color:var(--accent);">รูปแบบการทำงานปั๊ม (Pump Operation)</div>
+        <select class="input-field" id="param-ind-op" onchange="recalculate()">
+          <option value="alternate" selected>สลับกันทำงาน 50/50 (Duty / Standby สลับพักปั๊ม)</option>
+          <option value="all_run">ทำงานพร้อมกันแบ่งโซน (Full Running / Multi-Zone)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
       <div class="section-label">ระยะผนังติดตั้ง Evap (m)</div>
       <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px;">ใส่ 0 สำหรับด้านที่ไม่ติดตั้ง</div>
 
       <div class="input-group">
         <div class="input-label"><span>ด้านหน้า (Front Wall)</span> <span id="lbl-front">15 m</span></div>
-        <input type="number" class="input-field" id="param-front" value="15" min="0" max="90" step="3"
+        <input type="number" class="input-field" id="param-front" value="15" min="0" max="90" step="1"
           oninput="recalculate()" onchange="recalculate()" onblur="recalculate()"
           onpaste="setTimeout(recalculate,0)" onkeyup="recalculate()">
+      </div>
+      <div class="input-group industrial-pump-group" id="grp-pump-front" style="display:none;margin-top:-6px;padding-left:8px;border-left:2px solid var(--accent);">
+        <div class="input-label" style="font-size:11px;color:var(--accent);"><span>↳ จำนวนปั๊มด้านหน้า</span> <span id="lbl-pump-front">4 ตัว</span></div>
+        <input type="number" class="input-field" id="param-pump-front" value="4" min="1" max="20"
+          oninput="recalculate()" onchange="recalculate()">
       </div>
 
       <div class="input-group">
         <div class="input-label"><span>ด้านข้างซ้าย (Left Side)</span> <span id="lbl-left">15 m</span></div>
-        <input type="number" class="input-field" id="param-left" value="15" min="0" max="90" step="3"
+        <input type="number" class="input-field" id="param-left" value="15" min="0" max="90" step="1"
           oninput="recalculate()" onchange="recalculate()" onblur="recalculate()"
           onpaste="setTimeout(recalculate,0)" onkeyup="recalculate()">
+      </div>
+      <div class="input-group industrial-pump-group" id="grp-pump-left" style="display:none;margin-top:-6px;padding-left:8px;border-left:2px solid var(--accent);">
+        <div class="input-label" style="font-size:11px;color:var(--accent);"><span>↳ จำนวนปั๊มด้านซ้าย</span> <span id="lbl-pump-left">6 ตัว</span></div>
+        <input type="number" class="input-field" id="param-pump-left" value="6" min="1" max="20"
+          oninput="recalculate()" onchange="recalculate()">
       </div>
 
       <div class="input-group">
         <div class="input-label"><span>ด้านข้างขวา (Right Side)</span> <span id="lbl-right">15 m</span></div>
-        <input type="number" class="input-field" id="param-right" value="15" min="0" max="90" step="3"
+        <input type="number" class="input-field" id="param-right" value="15" min="0" max="90" step="1"
           oninput="recalculate()" onchange="recalculate()" onblur="recalculate()"
           onpaste="setTimeout(recalculate,0)" onkeyup="recalculate()">
+      </div>
+      <div class="input-group industrial-pump-group" id="grp-pump-right" style="display:none;margin-top:-6px;padding-left:8px;border-left:2px solid var(--accent);">
+        <div class="input-label" style="font-size:11px;color:var(--accent);"><span>↳ จำนวนปั๊มด้านขวา</span> <span id="lbl-pump-right">2 ตัว</span></div>
+        <input type="number" class="input-field" id="param-pump-right" value="2" min="1" max="20"
+          oninput="recalculate()" onchange="recalculate()">
       </div>
 
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:12px;font-family:var(--font-mono);font-size:12px;">
@@ -643,18 +723,28 @@
           <span>จำนวน Pump Sets</span> 
           <span id="lbl-pumps">3</span>
         </div>
-        <input type="number" class="input-field" id="param-pumps" value="3" min="1" max="10" oninput="recalculate()" disabled style="opacity:0.6;cursor:not-allowed;">
+        <input type="number" class="input-field" id="param-pumps" value="3" min="0" oninput="recalculate()" disabled style="opacity:0.6;cursor:not-allowed;">
         <div id="hint-pumps" style="font-size:11px;color:var(--text-dim);margin-top:4px;">(ระบบคำนวณจำนวนที่เหมาะสมให้อัตโนมัติ)</div>
       </div>
 
       <div class="input-group">
         <div class="input-label">ความสูง Cooling PAD (m)</div>
         <select class="input-field" id="param-padheight" onchange="recalculate()">
-          <option value="1.8">1.8 m</option>
-          <option value="2.0">2.0 m</option>
-          <option value="2.3">2.3 m (ต้องใช้ Fixing Frame >=2.3m)</option>
-          <option value="2.5" selected>2.5 m (ต้องใช้ Fixing Frame >=2.3m)</option>
+          <option value="1.0">1.0 m (1 ชั้น)</option>
+          <option value="1.2">1.2 m (1 ชั้น)</option>
+          <option value="1.5">1.5 m (1 ชั้น)</option>
+          <option value="1.8" selected>1.8 m (1 ชั้น - มาตรฐาน)</option>
+          <option value="2.0">2.0 m (1 ชั้น)</option>
+          <option value="2.2">2.2 m (ซ้อน 2 ชั้น: 1.1m × 2 แถว)</option>
+          <option value="2.4">2.4 m (ซ้อน 2 ชั้น: 1.2m × 2 แถว)</option>
+          <option value="2.5">2.5 m (ซ้อน 2 ชั้น: 1.25m × 2 แถว)</option>
+          <option value="2.8">2.8 m (ซ้อน 2 ชั้น: 1.4m × 2 แถว)</option>
+          <option value="3.0">3.0 m (ซ้อน 2 ชั้น: 1.5m × 2 แถว)</option>
+          <option value="3.6">3.6 m (ซ้อน 2 ชั้น: 1.8m × 2 แถว)</option>
+          <option value="3.6_single">3.6 m (ชิ้นเดียว 3.6m สั่งทำพิเศษ)</option>
+          <option value="4.0">4.0 m (ซ้อน 2 ชั้น: 2.0m × 2 แถว)</option>
         </select>
+        <div id="pad-stacked-badge" style="display:none;margin-top:4px;font-size:11px;color:#d97706;background:#fffbeb;border:1px solid #fde68a;padding:3px 8px;border-radius:4px;"></div>
       </div>
 
       <div class="input-group" id="group-padangle">
@@ -868,20 +958,58 @@
 // OPTIONS FOR PAD TYPE CHANGE
 // =============================================
 const PAPER_HEIGHT_OPTIONS = [
-  { value: '1.8', label: '1.8 m' },
-  { value: '2.0', label: '2.0 m' },
-  { value: '2.3', label: '2.3 m (ต้องใช้ Fixing Frame >=2.3m)' },
-  { value: '2.5', label: '2.5 m (ต้องใช้ Fixing Frame >=2.3m)', selected: true },
+  { value: '1.0', label: '1.0 m (1 ชั้น)' },
+  { value: '1.2', label: '1.2 m (1 ชั้น)' },
+  { value: '1.5', label: '1.5 m (1 ชั้น)' },
+  { value: '1.8', label: '1.8 m (1 ชั้น - มาตรฐาน)', selected: true },
+  { value: '2.0', label: '2.0 m (1 ชั้น)' },
+  { value: '2.2', label: '2.2 m (ซ้อน 2 ชั้น: 1.1m × 2)' },
+  { value: '2.4', label: '2.4 m (ซ้อน 2 ชั้น: 1.2m × 2)' },
+  { value: '2.5', label: '2.5 m (ซ้อน 2 ชั้น: 1.25m × 2)' },
+  { value: '2.8', label: '2.8 m (ซ้อน 2 ชั้น: 1.4m × 2)' },
+  { value: '3.0', label: '3.0 m (ซ้อน 2 ชั้น: 1.5m × 2)' },
+  { value: '3.6', label: '3.6 m (ซ้อน 2 ชั้น: 1.8m × 2)' },
+  { value: '4.0', label: '4.0 m (ซ้อน 2 ชั้น: 2.0m × 2)' }
 ];
 
 const PP_HEIGHT_OPTIONS = [
-  { value: '1.8', label: '1.8 m' },
-  { value: '2.0', label: '2.0 m' },
-  { value: '2.5', label: '2.5 m (ต้องใช้ Fixing Frame >=2.3m)' },
-  { value: '3.0', label: '3.0 m (ต้องใช้ Fixing Frame >=2.3m)' },
-  { value: '3.6', label: '3.6 m (ต้องใช้ Fixing Frame >=2.3m)' },
-  { value: '4.0', label: '4.0 m (ต้องใช้ Fixing Frame >=2.3m)' }
+  { value: '1.0', label: '1.0 m (1 ชั้น)' },
+  { value: '1.2', label: '1.2 m (1 ชั้น)' },
+  { value: '1.5', label: '1.5 m (1 ชั้น)' },
+  { value: '1.8', label: '1.8 m (1 ชั้น - มาตรฐาน)', selected: true },
+  { value: '2.0', label: '2.0 m (1 ชั้น)' },
+  { value: '2.2', label: '2.2 m (ซ้อน 2 ชั้น: 1.1m × 2)' },
+  { value: '2.4', label: '2.4 m (ซ้อน 2 ชั้น: 1.2m × 2)' },
+  { value: '2.5', label: '2.5 m (ซ้อน 2 ชั้น: 1.25m × 2)' },
+  { value: '2.8', label: '2.8 m (ซ้อน 2 ชั้น: 1.4m × 2)' },
+  { value: '3.0', label: '3.0 m (ซ้อน 2 ชั้น: 1.5m × 2)' },
+  { value: '3.6', label: '3.6 m (ซ้อน 2 ชั้น: 1.8m × 2)' },
+  { value: '3.6_single', label: '3.6 m (ชิ้นเดียว 3.6m สั่งทำพิเศษ)' },
+  { value: '4.0', label: '4.0 m (ซ้อน 2 ชั้น: 2.0m × 2)' }
 ];
+
+function getPadHeightConfig(heightVal) {
+  if (heightVal === '2.2') {
+    return { padHeight: 2.2, padTiers: 2, pieceHeight: 1.1, isStacked: true, tierDesc: '2 ชั้น: 1.1m × 2 แถว' };
+  } else if (heightVal === '2.4') {
+    return { padHeight: 2.4, padTiers: 2, pieceHeight: 1.2, isStacked: true, tierDesc: '2 ชั้น: 1.2m × 2 แถว' };
+  } else if (heightVal === '2.5') {
+    return { padHeight: 2.5, padTiers: 2, pieceHeight: 1.25, isStacked: true, tierDesc: '2 ชั้น: 1.25m × 2 แถว' };
+  } else if (heightVal === '2.8') {
+    return { padHeight: 2.8, padTiers: 2, pieceHeight: 1.4, isStacked: true, tierDesc: '2 ชั้น: 1.4m × 2 แถว' };
+  } else if (heightVal === '3.0') {
+    return { padHeight: 3.0, padTiers: 2, pieceHeight: 1.5, isStacked: true, tierDesc: '2 ชั้น: 1.5m × 2 แถว' };
+  } else if (heightVal === '3.6' || heightVal === '3.6_stack') {
+    return { padHeight: 3.6, padTiers: 2, pieceHeight: 1.8, isStacked: true, tierDesc: '2 ชั้น: 1.8m × 2 แถว' };
+  } else if (heightVal === '3.6_single') {
+    return { padHeight: 3.6, padTiers: 1, pieceHeight: 3.6, isStacked: false, tierDesc: '1 ชั้น (ชิ้นเดียว 3.6m)' };
+  } else if (heightVal === '4.0') {
+    return { padHeight: 4.0, padTiers: 2, pieceHeight: 2.0, isStacked: true, tierDesc: '2 ชั้น: 2.0m × 2 แถว' };
+  } else {
+    const h = parseFloat(heightVal) || 1.8;
+    return { padHeight: h, padTiers: 1, pieceHeight: h, isStacked: false, tierDesc: `1 ชั้น (${h}m)` };
+  }
+}
 
 function onPadWidthChange() {
   onPadTypeChange();
@@ -1118,17 +1246,17 @@ const BASE_ITEMS_TEMPLATE = [
   { no:14, id:'pad_support', name:'Cooling Pad Bottom Support Grid', spec:'L=0.5m High-Density Plastic Grid', unit:'pcs', calcType:'len_div_05', spareSide:1, unitPrice:2.25, note:'ตะแกรงพลาสติกรองรับฐานแผ่นเยื่อกระดาษ (สูตร: ความยาวด้าน / 0.5m, ชิ้นละ 0.5m)' },
   { no:15, id:'gutter_bracket', name:'Bottom Water Gutter Support Bracket', spec:'Nylon Fiberglass Alloy (0.1m End Offset, <=0.8m Interval + Double Refill Mount)', unit:'pcs', calcType:'gutter_bracket', spareRate:0.20, unitPrice:2.70, note:'ขายึดรางน้ำล่างไนลอนผสมไฟเบอร์กลาส (สูตร: ห่างขอบหัว-ท้าย 0.1m (10cm), ช่วงกลางไม่เกิน 0.8m, ยึดเบิ้ล 2 ตัวที่ชุดเติมน้ำ: Math.ceil((ความยาว - 0.2) / 0.8) + 3)' },
   { no:16, id:'gutter_endcover', name:'End Cover for Bottom Water Gutter', spec:'UPVC Gutter End Cap (Pair)', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.25, note:'ฝาปิดหัว-ท้ายรางน้ำล่าง UPVC (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
-  { no:17, id:'tank_conn_gutter', name:'φ63mm Water Tank Bulkhead Fitting', spec:'φ63mm (2") UPVC Bulkhead Fitting', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.82, note:'ข้อต่อข้ามถังน้ำล่าง UPVC 2 นิ้ว (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
-  { no:18, id:'thread_plug', name:'φ63mm Male Thread Drain Plug', spec:'φ63mm (2") UPVC Threaded Plug', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:3.17, note:'ปลั๊กอุดเกลียวนอกสำหรับระบายน้ำทิ้งรางล่าง 2 นิ้ว (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
+  { no:17, id:'tank_conn_gutter', name:'φ63mm Water Tank Bulkhead Fitting', spec:'φ63mm (2") UPVC Bulkhead Fitting', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.82, note:'ข้อต่อข้ามถังน้ำล่าง UPVC 2 นิ้ว (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
+  { no:18, id:'thread_plug', name:'φ63mm Male Thread Drain Plug', spec:'φ63mm (2") UPVC Threaded Plug', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:3.17, note:'ปลั๊กอุดเกลียวนอกสำหรับระบายน้ำทิ้งรางล่าง 2 นิ้ว (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
 
   // PUMP SYSTEM
-  { no:19, id:'water_refill_eq', name:'Automatic Water Refill Kit', spec:'Complete Sump Water Inlet Assembly', unit:'set', calcType:'pump_x1', spareFixed:0, unitPrice:55.78, note:'ชุดถังพักน้ำและระบบเติมน้ำอัตโนมัติ (สูตร: 1 ชุดต่อ 1 ด้านติดตั้ง)' },
-  { no:20, id:'refill_ball_valve', name:'φ63mm Water Refill Float Valve', spec:'φ63mm (2") Brass/UPVC Float Valve', unit:'pcs', calcType:'pump_x1', spareRate:0.10, unitPrice:13.52, note:'วาล์วลูกลอยเติมน้ำอัตโนมัติขนาด 2 นิ้ว (สูตร: 1 ชิ้นต่อ 1 ด้านติดตั้ง)' },
-  { no:21, id:'float_gutter_bracket', name:'Float Valve Support Bracket', spec:'Galvanized Steel Support Bracket', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.70, note:'ขาเหล็กรับชุดถังพักน้ำและลูกลอย (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
-  { no:22, id:'tank_conn_pump', name:'φ63mm Water Tank Connector', spec:'φ63mm (2") UPVC Tank Connector', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.82, note:'ข้อต่อส่งน้ำเข้าถังพักน้ำ UPVC 2 นิ้ว (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
-  { no:23, id:'inner_wire_joint', name:'φ63mm Female Threaded Adapter', spec:'φ63mm (2") UPVC Female Thread', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:0.39, note:'ข้อต่อเกลียวใน UPVC 2 นิ้ว เชื่อมถังพักน้ำ (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
+  { no:19, id:'water_refill_eq', name:'Automatic Water Refill Kit', spec:'Complete Sump Water Inlet Assembly', unit:'set', calcType:'pump_x1', spareFixed:0, unitPrice:55.78, note:'ชุดถังพักน้ำและระบบเติมน้ำอัตโนมัติ (สูตร: 1 ชุดต่อ 1 ชุดปั๊ม)' },
+  { no:20, id:'refill_ball_valve', name:'φ63mm Water Refill Float Valve', spec:'φ63mm (2") Brass/UPVC Float Valve', unit:'pcs', calcType:'pump_x1', spareRate:0.10, unitPrice:13.52, note:'วาล์วลูกลอยเติมน้ำอัตโนมัติขนาด 2 นิ้ว (สูตร: 1 ชิ้นต่อ 1 ชุดปั๊ม)' },
+  { no:21, id:'float_gutter_bracket', name:'Float Valve Support Bracket', spec:'Galvanized Steel Support Bracket', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.70, note:'ขาเหล็กรับชุดถังพักน้ำและลูกลอย (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
+  { no:22, id:'tank_conn_pump', name:'φ63mm Water Tank Connector', spec:'φ63mm (2") UPVC Tank Connector', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:2.82, note:'ข้อต่อส่งน้ำเข้าถังพักน้ำ UPVC 2 นิ้ว (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
+  { no:23, id:'inner_wire_joint', name:'φ63mm Female Threaded Adapter', spec:'φ63mm (2") UPVC Female Thread', unit:'pcs', calcType:'pump_x2', spareFixed:0, unitPrice:0.39, note:'ข้อต่อเกลียวใน UPVC 2 นิ้ว เชื่อมถังพักน้ำ (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
   { no:24, id:'bend_90', name:'φ63mm UPVC 90° Elbow', spec:'φ63mm (2") 90° UPVC Elbow', unit:'pcs', calcType:'pump_x8', spareRate:0.30, unitPrice:0.78, note:'ข้องอ UPVC 90 องศา ขนาด 2 นิ้ว ในระบบท่อปั๊ม (สูตร: 8 ชิ้นต่อ 1 ชุดปั๊ม)' },
-  { no:25, id:'connector_63', name:'φ63mm Straight Pipe Coupling', spec:'φ63mm (2") UPVC Straight Coupling', unit:'pcs', calcType:'item29_val', spareRate:0.30, unitPrice:0.44, note:'ข้อต่อตรง UPVC 2 นิ้ว ในระบบท่อส่งน้ำ (สูตร: 2 ชิ้นต่อ 1 ด้านติดตั้ง)' },
+  { no:25, id:'connector_63', name:'φ63mm Straight Pipe Coupling', spec:'φ63mm (2") UPVC Straight Coupling', unit:'pcs', calcType:'pump_x2', spareRate:0.30, unitPrice:0.44, note:'ข้อต่อตรง UPVC 2 นิ้ว ในระบบท่อส่งน้ำ (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
   { no:26, id:'ball_valve_63', name:'φ63mm UPVC Ball Valve (Flat Port)', spec:'φ63mm (2") UPVC Flat Port Ball Valve', unit:'pcs', calcType:'pump_x4', spareRate:0.20, unitPrice:4.23, note:'บอลวาล์ว UPVC 2 นิ้ว ควบคุมท่อส่งน้ำ (สูตร: 4 ชิ้นต่อ 1 ชุดปั๊ม)' },
   { no:27, id:'ball_valve_32', name:'φ32mm UPVC Ball Valve (Flat Port)', spec:'φ32mm (1") UPVC Flat Port Ball Valve', unit:'pcs', calcType:'pump_x1', spareFixed:1, unitPrice:1.35, note:'บอลวาล์ว UPVC 1 นิ้ว สำหรับท่อล้างระบายตะกรัน (สูตร: 1 ชิ้นต่อ 1 ชุดปั๊ม)' },
   { no:28, id:'double_union_63', name:'φ63mm Double Union Ball Valve', spec:'φ63mm (2") UPVC Double Union', unit:'pcs', calcType:'pump_x2', spareFixed:2, unitPrice:10.14, note:'ยูเนียนบอลวาล์ว UPVC 2 นิ้ว ถอดล้างปั๊มได้ (สูตร: 2 ชิ้นต่อ 1 ชุดปั๊ม)' },
@@ -1149,7 +1277,7 @@ const BASE_ITEMS_TEMPLATE = [
   { no:41, id:'pump_22', name:'Water Pump 2.2kW (STP300)', spec:'2.2 kW / 3.0 HP (Flow ~530 L/min)', unit:'pcs', calcType:'pump_unit_22', spareFixed:0, unitPrice:252.00, note:'ปั๊มน้ำ 2.2kW (STP300 Flow ~530 L/min) (สูตร: 1 ตัวต่อโซนยาว 30m - 36m)' },
 
   // ACCESSORIES
-  { no:42, id:'sealant', name:'Waterproof Silicone Sealant', spec:'Industrial Grade UPVC/PVC Sealant', unit:'set', calcType:'sealant', spareFixed:0, unitPrice:7.90, note:'ซิลิโคนกาวซีลกันรอยรั่วซึม UPVC และขอบราง (สูตร: ความยาวรวม / 4m)' },
+  { no:42, id:'sealant', name:'Waterproof Silicone Sealant', spec:'Industrial Grade UPVC/PVC Sealant', unit:'set', calcType:'sealant', spareFixed:0, unitPrice:7.90, note:'ซิลิโคนกาวซีลกันรอยรั่วซึม UPVC และขอบราง (สูตร: ความยาวแต่ละด้าน / 4m)' },
   { no:43, id:'exp_bolt', name:'Hammer Drive Anchor Stainless (C-870)', spec:'M8 × 70mm (C-870) Stainless Steel', unit:'pcs', calcType:'exp_bolt', spareRate:0.10, unitPrice:0.29, note:'พุกตะปู C-870 M8x70mm สแตนเลส ยึดขารับรางน้ำล่างกับผนังคอนกรีต (สูตร: 4 ตัวต่อ 1 ขารับรางน้ำล่าง Item #15)' },
   { no:44, id:'screw', name:'M8 × 50mm Hex Washer Head Self-Drilling Screw', spec:'M8 × 50mm Hex Self-Drilling Screw', unit:'pcs', calcType:'screw', spareRate:0.30, unitPrice:0.03, note:'น็อตสกรูหัวหกเหลี่ยมผ่าปลาย M8x50mm ยึดขารับรางบน (สูตร: 2 ตัวต่อ 1 ขารับท่อน้ำบน Item #6, ปัดขึ้น)' }
 ];
@@ -1173,16 +1301,40 @@ function getFlowRate(padType, padHeight) {
   // Results: 1.8m=9.2 | 2.0m=9.4 | 2.3m=9.8 | 2.5m=10.1 | 3.0m=10.8 | 3.6m=11.0
 }
 
+// =============================================
+// SYSTEM MODE SWITCH HANDLER (Farm vs Industrial)
+// =============================================
+function onSystemModeChange() {
+  const mode = document.getElementById('param-mode') ? document.getElementById('param-mode').value : 'farm';
+  const indElements = document.querySelectorAll('.industrial-pump-group');
+  const hintSys = document.getElementById('hint-sysmode');
+
+  if (mode === 'industrial') {
+    indElements.forEach(el => el.style.display = 'block');
+    if (hintSys) {
+      hintSys.innerHTML = '🏭 โหมดโรงงานอุตสาหกรรม: กำหนดจำนวนปั๊มแต่ละด้านอิสระ รองรับการสลับทำงาน (Duty/Standby)';
+      hintSys.style.color = 'var(--accent)';
+    }
+  } else {
+    indElements.forEach(el => el.style.display = 'none');
+    if (hintSys) {
+      hintSys.innerHTML = '🌾 โหมดฟาร์มเกษตร: แต่ละด้านใช้ปั๊ม 1 ตัวตามมาตรฐานโรงเรือน';
+      hintSys.style.color = 'var(--text-dim)';
+    }
+  }
+  recalculate();
+}
+
 // GET PUMP SELECTION BY FLOW RATE & STP CURVE (Tropical Climate Adjusted)
 // =============================================
-function getPumpInfo(length, pumpMultiplier = 1, padType = 'paper', padHeight = 1.8) {
-  if (length <= 0) return { no:39, id:'pump_11', cls:'pump-11', label:'—', countPerSet:0, kw:'1.1', flow:0 };
+function getPumpInfo(length, pumpMultiplier = 1, padType = 'paper', padHeight = 1.8, isIndustrial = false, indOp = 'alternate') {
+  if (length <= 0 || pumpMultiplier <= 0) return { no:39, id:'pump_11', cls:'pump-11', label:'—', countPerSet:0, kw:'1.1', flow:0 };
   
   // อัตราการจ่ายน้ำเขตร้อน (Tropical Climate Standard Flow Rate)
   // Paper Pad: 8.5 - 10.0 L/min/m | PP Plastic Pad: 12.0 - 13.0 L/min/m
   // CELdek-spec flow rate: height-dependent for paper pads
   const flowRatePerMeter = getFlowRate(padType, padHeight);
-  const reqFlow = Math.round(length * flowRatePerMeter);
+  const totalReqFlow = Math.round(length * flowRatePerMeter);
 
   const manualModel = document.getElementById('param-pump-model') ? document.getElementById('param-pump-model').value : 'auto';
 
@@ -1192,43 +1344,56 @@ function getPumpInfo(length, pumpMultiplier = 1, padType = 'paper', padHeight = 
     else if (manualModel === 'pump_15') { pId = 'pump_15'; pCls = 'pump-15'; kw = '1.5'; labelBase = '1.5 kW (STP200)'; pNo = 40; }
     else if (manualModel === 'pump_22') { pId = 'pump_22'; pCls = 'pump-22'; kw = '2.2'; labelBase = '2.2 kW (STP300)'; pNo = 41; }
     
-    let numPumps;
-    let label;
-    
-    if (length > 36) {
-      // สำหรับรางยาว > 36m บังคับแบ่ง Sub-zone (Auto-calculate)
-      numPumps = Math.ceil(length / 25);
-      const zoneLen = (length / numPumps).toFixed(1);
-      label = `${kw} kW × ${numPumps} ตัว (โซนละ ${zoneLen}m)`;
+    // Manual mode uses the quantity entered by the user
+    const numPumps = Math.max(1, pumpMultiplier);
+    const label = numPumps > 1 ? `${kw} kW × ${numPumps} ตัว` : labelBase;
+
+    return { no: pNo, id: pId, cls: pCls, label: label, countPerSet: numPumps, kw: kw, flow: totalReqFlow };
+  }
+
+  // INDUSTRIAL MODE AUTO SIZING
+  if (isIndustrial) {
+    const numPumps = Math.max(1, pumpMultiplier);
+    const dutyPumps = indOp === 'alternate' ? Math.max(1, Math.ceil(numPumps / 2)) : numPumps;
+    const flowPerPump = Math.round(totalReqFlow / dutyPumps);
+
+    let pNo = 39, pId = 'pump_11', pCls = 'pump-11', kw = '1.1';
+    if (flowPerPump > 360) {
+      pNo = 41; pId = 'pump_22'; pCls = 'pump-22'; kw = '2.2';
+    } else if (flowPerPump > 250) {
+      pNo = 40; pId = 'pump_15'; pCls = 'pump-15'; kw = '1.5';
     } else {
-      // length <= 36m: ใช้ pumpMultiplier ที่ส่งมาจาก recalculate() (Manual count)
-      numPumps = pumpMultiplier >= 1 ? pumpMultiplier : 1;
-      label = numPumps > 1 ? `${kw} kW × ${numPumps} ตัว` : labelBase;
+      pNo = 39; pId = 'pump_11'; pCls = 'pump-11'; kw = '1.1';
     }
 
-    return { no: pNo, id: pId, cls: pCls, label: label, countPerSet: numPumps, kw: kw, flow: reqFlow };
+    const opText = indOp === 'alternate' ? `สลับ ${dutyPumps}x${numPumps - dutyPumps}` : `ทำงานพร้อมกัน`;
+    const label = `${kw} kW × ${numPumps} ตัว (${opText})`;
+    return { no: pNo, id: pId, cls: pCls, label: label, countPerSet: numPumps, kw: kw, flow: totalReqFlow };
   }
 
-  // AUTO LOGIC
-  if (reqFlow <= 250) {
-    return { no:39, id:'pump_11', cls:'pump-11', label:'1.1 kW (STP150)', countPerSet: 1 * pumpMultiplier, kw:'1.1', flow: reqFlow };
-  }
-  if (reqFlow <= 360) {
-    return { no:40, id:'pump_15', cls:'pump-15', label:'1.5 kW (STP200)', countPerSet: 1 * pumpMultiplier, kw:'1.5', flow: reqFlow };
-  }
-  if (reqFlow <= 480 && length <= 36) {
-    return { no:41, id:'pump_22', cls:'pump-22', label:'2.2 kW (STP300)', countPerSet: 1 * pumpMultiplier, kw:'2.2', flow: reqFlow };
+  // FARM MODE AUTO LOGIC (ด้านละ 1 ตัว หรือแบ่งโซนเมื่อยาวมาก > 36m)
+  if (length > 36) {
+    const numPumps = Math.ceil(length / 25);
+    const zoneLen  = (length / numPumps).toFixed(1);
+    const zoneFlow = Math.round(zoneLen * flowRatePerMeter);
+
+    if (zoneFlow <= 280) {
+      return { no:39, id:'pump_11', cls:'pump-11', label:`1.1 kW × ${numPumps} ตัว (โซนละ ${zoneLen}m)`, countPerSet: numPumps * pumpMultiplier, kw:'1.1', flow: totalReqFlow };
+    }
+    return { no:40, id:'pump_15', cls:'pump-15', label:`1.5 kW × ${numPumps} ตัว (โซนละ ${zoneLen}m)`, countPerSet: numPumps * pumpMultiplier, kw:'1.5', flow: totalReqFlow };
   }
 
-  // สำหรับรางยาว > 36m หรือความต้องการน้ำเกิน 480 L/min แบ่ง Sub-zone ละไม่เกิน 25m
-  const numPumps = Math.ceil(length / 25);
-  const zoneLen  = (length / numPumps).toFixed(1);
-  const zoneFlow = Math.round(zoneLen * flowRatePerMeter);
-
-  if (zoneFlow <= 280) {
-    return { no:39, id:'pump_11', cls:'pump-11', label:`1.1 kW × ${numPumps} ตัว (โซนละ ${zoneLen}m)`, countPerSet: numPumps * pumpMultiplier, kw:'1.1', flow: reqFlow };
+  if (totalReqFlow <= 250) {
+    return { no:39, id:'pump_11', cls:'pump-11', label:'1.1 kW (STP150)', countPerSet: 1 * pumpMultiplier, kw:'1.1', flow: totalReqFlow };
   }
-  return { no:40, id:'pump_15', cls:'pump-15', label:`1.5 kW × ${numPumps} ตัว (โซนละ ${zoneLen}m)`, countPerSet: numPumps * pumpMultiplier, kw:'1.5', flow: reqFlow };
+  if (totalReqFlow <= 360) {
+    return { no:40, id:'pump_15', cls:'pump-15', label:'1.5 kW (STP200)', countPerSet: 1 * pumpMultiplier, kw:'1.5', flow: totalReqFlow };
+  }
+  if (totalReqFlow <= 480 && length <= 36) {
+    return { no:41, id:'pump_22', cls:'pump-22', label:'2.2 kW (STP300)', countPerSet: 1 * pumpMultiplier, kw:'2.2', flow: totalReqFlow };
+  }
+
+  return { no:41, id:'pump_22', cls:'pump-22', label:'2.2 kW (STP300)', countPerSet: 1 * pumpMultiplier, kw:'2.2', flow: totalReqFlow };
 }
 
 // =============================================
@@ -1238,19 +1403,31 @@ function recalculate() {
   const front     = parseFloat(document.getElementById('param-front').value)  || 0;
   const left      = parseFloat(document.getElementById('param-left').value)   || 0;
   const right     = parseFloat(document.getElementById('param-right').value)  || 0;
-  let pumps       = parseInt(document.getElementById('param-pumps').value)    || 1;
+  let pumps       = parseInt(document.getElementById('param-pumps').value)    || 0;
   const padType   = document.getElementById('param-padtype').value;
   const padWidth  = parseFloat(document.getElementById('param-padwidth') ? document.getElementById('param-padwidth').value : '0.6') || 0.6;
-  const padHeight = parseFloat(document.getElementById('param-padheight').value) || 1.8;
+  const padHeightRaw = document.getElementById('param-padheight') ? document.getElementById('param-padheight').value : '1.8';
+  const padCfg    = getPadHeightConfig(padHeightRaw);
+  const padHeight = padCfg.padHeight;
+  const padTiers  = padCfg.padTiers;
+  const pieceHeight = padCfg.pieceHeight;
+  const isStacked = padCfg.isStacked;
+  const tierDesc  = padCfg.tierDesc;
   const padAngle  = document.getElementById('param-padangle').value;
   const padCoating= document.getElementById('param-padcoating').value;
   const waterSrc  = document.getElementById('param-watersrc').value;
   const inclSpare = document.getElementById('param-spare').value === 'yes';
   const totalLen  = front + left + right;
+  const longestSide = Math.max(front, left, right);
+
+  // System Mode (Farm vs Industrial)
+  const sysMode = document.getElementById('param-mode') ? document.getElementById('param-mode').value : 'farm';
+  const isIndustrial = sysMode === 'industrial';
+  const indOp = document.getElementById('param-ind-op') ? document.getElementById('param-ind-op').value : 'alternate';
 
   // Dynamic pricing for fixing frame & pad cover based on pad height
-  const fixingPriceMap = {1.8:5.00,2.0:5.20,2.3:5.70,2.5:5.94,3.0:6.40,3.6:6.80,4.0:7.10};
-  const padCoverPriceMap = {1.8:5.94,2.0:5.94,2.3:5.94,2.5:5.94,3.0:6.20,3.6:6.50,4.0:6.80};
+  const fixingPriceMap = {1.0:3.50, 1.2:3.80, 1.5:4.50, 1.8:5.00, 2.0:5.20, 2.2:5.50, 2.4:5.80, 2.5:5.94, 2.8:6.20, 3.0:6.40, 3.6:6.80, 4.0:7.10};
+  const padCoverPriceMap = {1.0:4.50, 1.2:4.80, 1.5:5.50, 1.8:5.94, 2.0:5.94, 2.2:5.94, 2.4:5.94, 2.5:5.94, 2.8:6.10, 3.0:6.20, 3.6:6.50, 4.0:6.80};
   const fixingPrice = fixingPriceMap[padHeight] || 5.94;
   const padCoverPrice = padCoverPriceMap[padHeight] || 5.94;
   // Apply dynamic prices to BASE_ITEMS_TEMPLATE
@@ -1261,19 +1438,15 @@ function recalculate() {
       if (coverItem) coverItem.unitPrice = padCoverPrice;
   })();
 
-  // =============================================
-  // PER-SIDE PUMP SELECTION (Auto selects best model per side independently)
-  // Pass multiplier=1 first to get auto-ideal counts for auto-mode
-  // =============================================
-  const pF_info_auto = front > 0 ? getPumpInfo(front, 1, padType, padHeight) : null;
-  const pL_info_auto = left  > 0 ? getPumpInfo(left,  1, padType, padHeight) : null;
-  const pR_info_auto = right > 0 ? getPumpInfo(right, 1, padType, padHeight) : null;
-
-  // Count of pumps each side needs (auto ideal)
-  const pumpsF_auto = pF_info_auto ? pF_info_auto.countPerSet : 0;
-  const pumpsL_auto = pL_info_auto ? pL_info_auto.countPerSet : 0;
-  const pumpsR_auto = pR_info_auto ? pR_info_auto.countPerSet : 0;
-  const idealPumpsTotal = pumpsF_auto + pumpsL_auto + pumpsR_auto;
+  const stackedBadge = document.getElementById('pad-stacked-badge');
+  if (stackedBadge) {
+    if (padCfg.isStacked) {
+      stackedBadge.style.display = 'block';
+      stackedBadge.innerHTML = `🥞 <b>โครงสร้างประกอบซ้อน 2 ชั้น:</b> แผ่นสูง ${padCfg.pieceHeight}m × 2 แถวบน-ล่าง (ความสูงรวม ${padCfg.padHeight}m)`;
+    } else {
+      stackedBadge.style.display = 'none';
+    }
+  }
 
   // Capacity helper
   function capacityOf(info) {
@@ -1283,76 +1456,116 @@ function recalculate() {
     return 250; // pump_11
   }
 
-  // Max safe pumps (based on gutter volume per side)
-  const gutterVolumeTotal = Math.round(totalLen * 30);
-  const longestSide = Math.max(front, left, right);
-  const longestPumpInfo = pF_info_auto || pL_info_auto || pR_info_auto;
-  const capacityLongest = longestPumpInfo ? capacityOf(longestPumpInfo) : 250;
-  const maxSafePumps = Math.max(1, Math.floor(gutterVolumeTotal / capacityLongest));
-
-  // ตรวจสอบก่อนว่าผู้ใช้เลือก Manual Pump Model หรือไม่
-  const manualModelActive = (document.getElementById('param-pump-model') ? document.getElementById('param-pump-model').value : 'auto') !== 'auto';
   const pumpsInput = document.getElementById('param-pumps');
   const hintPumps = document.getElementById('hint-pumps');
+  const activeSidesCount = (front > 0 ? 1 : 0) + (left > 0 ? 1 : 0) + (right > 0 ? 1 : 0);
 
-  if (!manualModelActive) {
-      if (document.activeElement && document.activeElement.id !== 'param-pumps') {
-          pumps = Math.min(idealPumpsTotal || 1, maxSafePumps);
-          if (pumpsInput) pumpsInput.value = pumps;
-      }
-      if (pumpsInput) {
-          pumpsInput.disabled = true;
-          pumpsInput.style.opacity = '0.6';
-          pumpsInput.style.cursor = 'not-allowed';
-      }
-      if (hintPumps) {
-          hintPumps.textContent = '(ระบบคำนวณจำนวนที่เหมาะสมให้อัตโนมัติ)';
-          hintPumps.style.color = 'var(--text-dim)';
-      }
-  } else {
-      if (pumpsInput) {
-          pumpsInput.disabled = false;
-          pumpsInput.style.opacity = '1';
-          pumpsInput.style.cursor = 'auto';
-          if (pumps > maxSafePumps) {
-              pumps = maxSafePumps;
-              pumpsInput.value = pumps;
-          }
-      }
-      if (hintPumps) {
-          hintPumps.textContent = '✏️ โหมด Manual: สามารถเลือกระบุจำนวนปั๊มเองได้';
-          hintPumps.style.color = '#38bdf8';
-      }
-  }
-
-  // =============================================
-  // RE-BUILD PER-SIDE INFO with final `pumps` value
-  // For Manual pump model: distribute pumps across active sides
-  // For Auto mode: use auto-calculated per-side counts
-  // =============================================
   let pF_info, pL_info, pR_info;
 
-  if (manualModelActive) {
-    // Distribute the final `pumps` count across active sides proportionally
-    const totalActiveSides = (front > 0 ? 1 : 0) + (left > 0 ? 1 : 0) + (right > 0 ? 1 : 0);
-    if (totalActiveSides > 0) {
-      const basePerSide = Math.floor(pumps / totalActiveSides);
-      let extras = pumps % totalActiveSides;
-      // ใช้ sequential ternary เพื่อป้องกัน bug จากการ skip side
-      const pumpsForF = front > 0 ? basePerSide + (extras > 0 ? (extras--, 1) : 0) : 0;
-      const pumpsForL = left  > 0 ? basePerSide + (extras > 0 ? (extras--, 1) : 0) : 0;
-      const pumpsForR = right > 0 ? basePerSide + (extras > 0 ? (extras--, 1) : 0) : 0;
-      pF_info = front > 0 ? getPumpInfo(front, pumpsForF, padType, padHeight) : null;
-      pL_info = left  > 0 ? getPumpInfo(left,  pumpsForL, padType, padHeight) : null;
-      pR_info = right > 0 ? getPumpInfo(right, pumpsForR, padType, padHeight) : null;
-    } else {
-      pF_info = null; pL_info = null; pR_info = null;
+  if (isIndustrial) {
+    // -------------------------------------------------------------
+    // INDUSTRIAL MODE: Each side has its own pump count & Duty/Standby
+    // -------------------------------------------------------------
+    const pF_count = front > 0 ? (parseInt(document.getElementById('param-pump-front') ? document.getElementById('param-pump-front').value : '4') || 1) : 0;
+    const pL_count = left  > 0 ? (parseInt(document.getElementById('param-pump-left')  ? document.getElementById('param-pump-left').value  : '6') || 1) : 0;
+    const pR_count = right > 0 ? (parseInt(document.getElementById('param-pump-right') ? document.getElementById('param-pump-right').value : '2') || 1) : 0;
+
+    pumps = pF_count + pL_count + pR_count;
+    if (pumpsInput) {
+      pumpsInput.value = pumps;
+      pumpsInput.disabled = true;
+      pumpsInput.style.opacity = '0.85';
+      pumpsInput.style.cursor = 'not-allowed';
     }
+
+    pF_info = front > 0 ? getPumpInfo(front, pF_count, padType, padHeight, true, indOp) : null;
+    pL_info = left  > 0 ? getPumpInfo(left,  pL_count, padType, padHeight, true, indOp) : null;
+    pR_info = right > 0 ? getPumpInfo(right, pR_count, padType, padHeight, true, indOp) : null;
+
+    if (hintPumps) {
+      const opDesc = indOp === 'alternate' ? 'ออกแบบสลับกันทำงาน (Duty/Standby)' : 'ทำงานพร้อมกันแบ่งโซน';
+      hintPumps.innerHTML = `🏭 อุตสาหกรรม: หน้า <b>${pF_count}</b> + ซ้าย <b>${pL_count}</b>${pR_count > 0 ? ' + ขวา <b>'+pR_count+'</b>' : ''} = รวม <b>${pumps} ตัว</b> (${opDesc})`;
+      hintPumps.style.color = '#38bdf8';
+    }
+
+    if (document.getElementById('lbl-pump-front')) document.getElementById('lbl-pump-front').textContent = pF_count + ' ตัว';
+    if (document.getElementById('lbl-pump-left'))  document.getElementById('lbl-pump-left').textContent  = pL_count + ' ตัว';
+    if (document.getElementById('lbl-pump-right')) document.getElementById('lbl-pump-right').textContent = pR_count + ' ตัว';
+
   } else {
-    // Auto mode: use pre-calculated auto info
-    pF_info = pF_info_auto;
-    pL_info = pL_info_auto;
-    pR_info = pR_info_auto;
+    // -------------------------------------------------------------
+    // FARM MODE: Standard agricultural 1 pump per active side
+    // -------------------------------------------------------------
+    const pF_info_auto = front > 0 ? getPumpInfo(front, 1, padType, padHeight, false) : null;
+    const pL_info_auto = left  > 0 ? getPumpInfo(left,  1, padType, padHeight, false) : null;
+    const pR_info_auto = right > 0 ? getPumpInfo(right, 1, padType, padHeight, false) : null;
+
+    const pumpsF_auto = pF_info_auto ? pF_info_auto.countPerSet : 0;
+    const pumpsL_auto = pL_info_auto ? pL_info_auto.countPerSet : 0;
+    const pumpsR_auto = pR_info_auto ? pR_info_auto.countPerSet : 0;
+    const idealPumpsTotal = pumpsF_auto + pumpsL_auto + pumpsR_auto;
+
+    const gutterVolumeTotal = Math.round(totalLen * 30);
+    const longestPumpInfo = pF_info_auto || pL_info_auto || pR_info_auto;
+    const capacityLongest = longestPumpInfo ? capacityOf(longestPumpInfo) : 250;
+    const maxSafePumps = Math.max(1, Math.floor(gutterVolumeTotal / capacityLongest));
+
+    const manualModelActive = (document.getElementById('param-pump-model') ? document.getElementById('param-pump-model').value : 'auto') !== 'auto';
+
+    if (!manualModelActive) {
+      if (document.activeElement && document.activeElement.id !== 'param-pumps') {
+        pumps = Math.min(idealPumpsTotal, maxSafePumps);
+        if (pumpsInput) pumpsInput.value = pumps;
+      }
+      if (pumpsInput) {
+        pumpsInput.disabled = true;
+        pumpsInput.style.opacity = '0.6';
+        pumpsInput.style.cursor = 'not-allowed';
+      }
+      if (hintPumps) {
+        hintPumps.textContent = '(ระบบฟาร์ม: อัตโนมัติ ด้านละ 1 ตัว)';
+        hintPumps.style.color = 'var(--text-dim)';
+      }
+      pF_info = pF_info_auto;
+      pL_info = pL_info_auto;
+      pR_info = pR_info_auto;
+    } else {
+      if (pumpsInput) {
+        pumpsInput.disabled = false;
+        pumpsInput.style.opacity = '1';
+        pumpsInput.style.cursor = 'auto';
+      }
+      pumps = Math.max(0, pumps);
+      if (pumpsInput && document.activeElement !== pumpsInput) {
+        pumpsInput.value = pumps;
+      }
+      if (hintPumps) {
+        hintPumps.textContent = '✏️ โหมด Manual: กำหนดขนาดและจำนวนปั๊มได้อย่างอิสระตามต้องการ';
+        hintPumps.style.color = '#38bdf8';
+      }
+      if (activeSidesCount > 0) {
+        const basePerSide = Math.floor(pumps / activeSidesCount);
+        let extras = pumps % activeSidesCount;
+        const pumpsForF = front > 0 ? basePerSide + (extras > 0 ? (extras--, 1) : 0) : 0;
+        const pumpsForL = left  > 0 ? basePerSide + (extras > 0 ? (extras--, 1) : 0) : 0;
+        const pumpsForR = right > 0 ? basePerSide + (extras > 0 ? (extras--, 1) : 0) : 0;
+        pF_info = front > 0 ? getPumpInfo(front, pumpsForF, padType, padHeight, false) : null;
+        pL_info = left  > 0 ? getPumpInfo(left,  pumpsForL, padType, padHeight, false) : null;
+        pR_info = right > 0 ? getPumpInfo(right, pumpsForR, padType, padHeight, false) : null;
+      } else {
+        pF_info = null; pL_info = null; pR_info = null;
+      }
+    }
+
+    if (manualModelActive) {
+      const effectivePumpTotal = [pF_info, pL_info, pR_info]
+        .filter(Boolean)
+        .reduce((total, info) => total + info.countPerSet, 0);
+      if (effectivePumpTotal !== pumps) {
+        pumps = effectivePumpTotal;
+        if (pumpsInput) pumpsInput.value = pumps;
+      }
+    }
   }
 
   // Update labels
@@ -1361,8 +1574,6 @@ function recalculate() {
   document.getElementById('lbl-right').textContent      = right + ' m';
   document.getElementById('lbl-pumps').textContent      = pumps;
   document.getElementById('lbl-total-len').textContent  = totalLen + ' m';
-
-  const activeSidesCount = (front > 0 ? 1 : 0) + (left > 0 ? 1 : 0) + (right > 0 ? 1 : 0);
 
   // Build per-side breakdown for summary panel
   // CELdek-spec flow rate: height-dependent for paper pads
@@ -1432,7 +1643,21 @@ function recalculate() {
      makeupText += `<span style="color:#94a3b8;">→ ควรเตรียมระบบเติมน้ำลูกลอยให้จ่ายน้ำได้ไม่น้อยกว่า <b>${evapRateLitersPerMin} L/min</b> เพื่อชดเชยน้ำที่ระเหยไป</span>`;
      makeupText += `</div>`;
   }
-  const installedSideDesc = `ติดตั้งแยกอิสระ <b>${activeSidesCount} ด้าน</b> · รวม <b>${pumps} ตัว</b> · แต่ละด้านใช้รุ่นปั๊มเหมาะสมแยกกัน`;
+  let installedSideDesc;
+  if (isIndustrial) {
+    const pF_count = parseInt(document.getElementById('param-pump-front') ? document.getElementById('param-pump-front').value : '1') || 0;
+    const pL_count = parseInt(document.getElementById('param-pump-left')  ? document.getElementById('param-pump-left').value  : '1') || 0;
+    const pR_count = parseInt(document.getElementById('param-pump-right') ? document.getElementById('param-pump-right').value : '1') || 0;
+    const opLabel = indOp === 'alternate' ? 'Duty/Standby สลับ 50/50' : 'Multi-Zone ทำงานพร้อมกัน';
+    const sideBreakdown = [
+      front > 0 ? `หน้า <b>${pF_count}</b> ตัว` : '',
+      left  > 0 ? `ซ้าย <b>${pL_count}</b> ตัว` : '',
+      right > 0 ? `ขวา <b>${pR_count}</b> ตัว` : ''
+    ].filter(Boolean).join(' · ');
+    installedSideDesc = `🏭 Industrial System · <b>${activeSidesCount} ด้าน</b> · ${sideBreakdown} · รวม <b>${pumps} ตัว</b> · โหมด: ${opLabel}`;
+  } else {
+    installedSideDesc = `🌾 Farm System · ติดตั้งแยกอิสระ <b>${activeSidesCount} ด้าน</b> · รวม <b>${pumps} ตัว</b> · แต่ละด้านใช้รุ่นปั๊มเหมาะสมแยกกัน`;
+  }
 
   document.getElementById('pump-recommendation').innerHTML = `
     <span class="pump-badge ${mainPump.cls}">${mainPump.label}</span>
@@ -1468,7 +1693,7 @@ function recalculate() {
       const baseBrackets = Math.ceil((len - 0.2) / 0.8) + 2;
       return baseBrackets + 1; // +1 extra for double mounting at Water refill position
     }
-    if (calcType === 'pad_paper') return Math.round(len / padWidth);
+    if (calcType === 'pad_paper') return Math.round(len / padWidth) * padTiers;
     return 0;
   }
 
@@ -1494,18 +1719,21 @@ function recalculate() {
 
     if (cType === 'pad_paper') {
       const widthMm = Math.round(padWidth * 1000);
+      const pieceHeightMm = Math.round(pieceHeight * 1000);
       if (padType === 'pp') {
         itemName = 'PP Plastic Cooling PAD';
-        itemSpec = `size ${Math.round(padHeight*1000)}x${widthMm}x150mm (UV Resistance)`;
-        itemNote = `แผ่นพลาสติก PP Cooling PAD กว้าง ${padWidth}m สูง ${padHeight}m ทนสารเคมีและตะกรัน (เวลาเปิดปั๊มจนฟิล์มน้ำครอบคลุมเต็มแผ่น: ~${ppSecs} วินาที, อัตราน้ำ 13.0 L/min/m)`;
-        itemPrice = (24.00 * padHeight) * (padWidth / 0.6);
+        itemSpec = isStacked
+          ? `size ${pieceHeightMm}x${widthMm}x150mm (${tierDesc})`
+          : `size ${pieceHeightMm}x${widthMm}x150mm (UV Resistance)`;
+        itemNote = `แผ่นพลาสติก PP Cooling PAD กว้าง ${padWidth}m สูงชิ้นละ ${pieceHeight}m ${isStacked ? `(${tierDesc}, รวมสูง ${padHeight}m) ` : ''}ทนสารเคมีและตะกรัน (เวลาเปิดปั๊มจนฟิล์มน้ำครอบคลุมเต็มแผ่น: ~${ppSecs} วินาที, อัตราน้ำ 13.0 L/min/m)`;
+        itemPrice = (24.00 * pieceHeight) * (padWidth / 0.6);
       } else {
         const qRate = padHeight >= 2.5 ? '10.0' : '8.5';
         itemName = 'Cooling PAD paper';
         const coatText = padCoating === 'black' ? 'Black Coating' : 'Brown';
-        itemSpec = `size ${Math.round(padHeight*1000)}+30x${widthMm}x150mm (${coatText}) ${padAngle}`;
-        itemNote = `แผ่นเยื่อกระดาษทำความเย็น กว้าง ${padWidth}m สูง ${padHeight}m, เคลือบผิว ${coatText}, องศาเฉียง ${padAngle} (เวลาเปิดปั๊มจนอมน้ำซึมเต็มแผ่น: ~${paperMins} นาที, อัตราน้ำ ${qRate} L/min/m)`;
-        itemPrice = parseFloat((((13.24 / 1.8) * padHeight) * (padWidth / 0.6)).toFixed(2));
+        itemSpec = `size ${pieceHeightMm}+30x${widthMm}x150mm (${coatText}) ${padAngle}${isStacked ? ` (${tierDesc})` : ''}`.trim();
+        itemNote = `แผ่นเยื่อกระดาษทำความเย็น กว้าง ${padWidth}m สูงชิ้นละ ${pieceHeight}m ${isStacked ? `(${tierDesc}, รวมสูง ${padHeight}m) ` : ''}เคลือบผิว ${coatText}, องศาเฉียง ${padAngle} (เวลาเปิดปั๊มจนอมน้ำซึมเต็มแผ่น: ~${paperMins} นาที, อัตราน้ำ ${qRate} L/min/m)`;
+        itemPrice = parseFloat((((13.24 / 1.8) * pieceHeight) * (padWidth / 0.6)).toFixed(2));
       }
       qF = calcSideVal(front, 'pad_paper');
       qL = calcSideVal(left, 'pad_paper');
@@ -1524,24 +1752,59 @@ function recalculate() {
       qR = right > 0 ? 2 : 0;
     } else if (cType.startsWith('pump_x')) {
       let factor = parseInt(cType.replace('pump_x', ''));
+      // perSidePumpItems = items that are strictly 1-per-side wall (end caps/profiles NOT scaled by pump count)
+      // Sump water tank, float valve, brackets, and pipe connections now scale with number of pumps
+      const perSidePumpItems = new Set([
+        'endcover_deflector', 'pad_cover_side', 'gutter_endcover'
+      ]);
+      // tee_top: in Farm mode → 2 per side (end+middle); in Industrial → 1 per pump riser set
+      const isTeeTop = item.id === 'tee_top';
+
       if (item.id === 'pipe_pump') {
         if (padHeight <= 2.0) {
           factor = 2; // 2 pipes (4m) per pump set
-        } else {
+        } else if (padHeight <= 2.5) {
           factor = 3; // 3 pipes (6m) per pump set
+        } else {
+          factor = 4; // 4 pipes (8m) per pump set (สำหรับความสูง 3.0m - 4.0m)
         }
         itemName = 'φ63mm UPVC Water Feed & Side Drain Pipe';
         itemSpec = `φ63mm (2") UPVC L=2.0m Pipe`;
         itemNote = `ท่อส่งน้ำขึ้นรางบนและท่อน้ำทิ้งดิ่งข้าง UPVC 2" สูง ${padHeight}m (คำนวณ: ${factor} ท่อนต่อ 1 ชุดปั๊ม)`;
       }
+
+      // Update check_valve note for industrial mode
+      if (item.id === 'check_valve_63' && isIndustrial) {
+        const opText = indOp === 'alternate' ? 'Duty/Standby สลับกัน ป้องกันน้ำไหลกลับข้ามปั๊ม' : 'Multi-Zone ป้องกันน้ำไหลกลับในโซน';
+        itemNote = `เช็ควาล์ว UPVC 2" กั้นน้ำไหลย้อนกลับ (ระบบ Industrial: ${opText}, 1 ตัวต่อ 1 ชุดปั๊ม)`;
+      }
+
       let active = (front > 0 ? 1 : 0) + (left > 0 ? 1 : 0) + (right > 0 ? 1 : 0);
       if (active > 0) {
-          let base = Math.floor(pumps / active);
-          let extra = pumps % active;
-          if (front > 0) { qF = (base + (extra > 0 ? 1 : 0)) * factor; extra--; }
-          if (left > 0)  { qL = (base + (extra > 0 ? 1 : 0)) * factor; extra--; }
-          if (right > 0) { qR = (base + (extra > 0 ? 1 : 0)) * factor; }
+        if (isTeeTop) {
+          // Farm: 2 per side (factor=2 already). Industrial: 1 per pump riser
+          if (isIndustrial) {
+            const pF_count = front > 0 ? (parseInt(document.getElementById('param-pump-front') ? document.getElementById('param-pump-front').value : '1') || 1) : 0;
+            const pL_count = left  > 0 ? (parseInt(document.getElementById('param-pump-left')  ? document.getElementById('param-pump-left').value  : '1') || 1) : 0;
+            const pR_count = right > 0 ? (parseInt(document.getElementById('param-pump-right') ? document.getElementById('param-pump-right').value : '1') || 1) : 0;
+            qF = front > 0 ? pF_count : 0;
+            qL = left  > 0 ? pL_count : 0;
+            qR = right > 0 ? pR_count : 0;
+          } else {
+            qF = front > 0 ? factor : 0;
+            qL = left  > 0 ? factor : 0;
+            qR = right > 0 ? factor : 0;
+          }
+        } else {
+          const frontMultiplier = perSidePumpItems.has(item.id) ? 1 : (pF_info ? pF_info.countPerSet : 0);
+          const leftMultiplier  = perSidePumpItems.has(item.id) ? 1 : (pL_info ? pL_info.countPerSet : 0);
+          const rightMultiplier = perSidePumpItems.has(item.id) ? 1 : (pR_info ? pR_info.countPerSet : 0);
+          qF = front > 0 ? frontMultiplier * factor : 0;
+          qL = left  > 0 ? leftMultiplier  * factor : 0;
+          qR = right > 0 ? rightMultiplier * factor : 0;
+        }
       }
+
     } else if (cType === 'item29_val') {
       // φ63 Connector: 2pcs per active side
       qF = front > 0 ? 2 : 0;
@@ -1550,11 +1813,9 @@ function recalculate() {
     } else if (cType === 'optional_well') {
       let active = (front > 0 ? 1 : 0) + (left > 0 ? 1 : 0) + (right > 0 ? 1 : 0);
       if (active > 0 && waterSrc === 'well') {
-          let base = Math.floor(pumps / active);
-          let extra = pumps % active;
-          if (front > 0) { qF = (base + (extra > 0 ? 1 : 0)); extra--; }
-          if (left > 0)  { qL = (base + (extra > 0 ? 1 : 0)); extra--; }
-          if (right > 0) { qR = (base + (extra > 0 ? 1 : 0)); }
+          qF = front > 0 ? 1 : 0;
+          qL = left > 0 ? 1 : 0;
+          qR = right > 0 ? 1 : 0;
       }
     } else if (cType.startsWith('pump_unit_')) {
       // Per-side: each side independently uses the correct pump model for its length
@@ -1562,9 +1823,9 @@ function recalculate() {
       if (left  > 0 && pL_info && pL_info.id === item.id) qL = pL_info.countPerSet;
       if (right > 0 && pR_info && pR_info.id === item.id) qR = pR_info.countPerSet;
     } else if (cType === 'sealant') {
-      const tot = Math.ceil(totalLen / 4);
-      qF = totalLen > 0 ? tot : 0;
-      qL = 0; qR = 0;
+      qF = front > 0 ? Math.ceil(front / 4) : 0;
+      qL = left  > 0 ? Math.ceil(left / 4)  : 0;
+      qR = right > 0 ? Math.ceil(right / 4) : 0;
     } else if (cType === 'exp_bolt') {
       qF = gutterBracketFront * 4;
       qL = gutterBracketLeft * 4;
@@ -1713,7 +1974,9 @@ function exportExcel() {
   const pumps  = document.getElementById('param-pumps').value;
   const padType = document.getElementById('param-padtype').value;
   const padW   = document.getElementById('param-padwidth') ? document.getElementById('param-padwidth').value : '0.6';
-  const padH   = document.getElementById('param-padheight').value;
+  const padHRaw = document.getElementById('param-padheight').value;
+  const padCfg = getPadHeightConfig(padHRaw);
+  const padH   = padCfg.padHeight;
   const padA   = document.getElementById('param-padangle').value;
   const padC   = document.getElementById('param-padcoating').value;
   const total  = parseFloat(front) + parseFloat(left) + parseFloat(right);
@@ -1723,7 +1986,7 @@ function exportExcel() {
   const headerRows = [
     ['KSP Equipment Co., Ltd.', '', '', '', '', '', '', '', '', '', '', '', ''],
     ['Wusen Cooling Pad System — Evap Full System Standard BOQ', '', '', '', '', '', '', '', '', '', '', '', ''],
-    [`Front: ${front}m | Left: ${left}m | Right: ${right}m | Total: ${total}m | Type: ${padType} | Width: ${padW}m | Height: ${padH}m | Angle: ${padA} | Coating: ${padC}`, '', '', '', '', '', '', '', '', '', '', '', ''],
+    [`Front: ${front}m | Left: ${left}m | Right: ${right}m | Total: ${total}m | Type: ${padType} | Width: ${padW}m | Height: ${padH}m (${padCfg.tierDesc}) | Angle: ${padA} | Coating: ${padC}`, '', '', '', '', '', '', '', '', '', '', '', ''],
     [`Generated: ${new Date().toLocaleDateString('th-TH')}`, '', '', '', '', '', '', '', '', '', '', '', ''],
     [],
     ['No.', 'Product Name', 'Specification', 'Unit', 'Front Qty', 'Left Qty', 'Right Qty', 'QTY', 'Spare', 'Total', 'Unit Price (USD)', 'Amount (USD)', 'Note (ภาษาไทย)'],
@@ -1843,7 +2106,9 @@ function updateDynamicCADDiagram() {
   const left  = parseFloat(document.getElementById('param-left').value) || 0;
   const right = parseFloat(document.getElementById('param-right').value) || 0;
   const padType = document.getElementById('param-padtype').value;
-  const padHeight = parseFloat(document.getElementById('param-padheight').value) || 1.8;
+  const padHeightRaw = document.getElementById('param-padheight') ? document.getElementById('param-padheight').value : '1.8';
+  const padCfg = getPadHeightConfig(padHeightRaw);
+  const padHeight = padCfg.padHeight;
 
   // Auto switch to active side if selected side length is 0
   if (currentCadSide === 'front' && front === 0) {
@@ -1880,7 +2145,27 @@ function updateDynamicCADDiagram() {
     return;
   }
 
-  const pumpInfo = getPumpInfo(activeLen, 1, padType, padHeight);
+  // Read mode for CAD display
+  const cadSysMode   = document.getElementById('param-mode') ? document.getElementById('param-mode').value : 'farm';
+  const cadIsInd     = cadSysMode === 'industrial';
+  const cadIndOp     = document.getElementById('param-ind-op') ? document.getElementById('param-ind-op').value : 'alternate';
+
+  // In industrial mode, read per-side pump count from the active side's input
+  let cadPumpCount = 1;
+  if (cadIsInd) {
+    const elId = currentCadSide === 'front' ? 'param-pump-front' :
+                 currentCadSide === 'left'  ? 'param-pump-left'  : 'param-pump-right';
+    const el = document.getElementById(elId);
+    cadPumpCount = el ? (parseInt(el.value) || 1) : 1;
+  } else {
+    // Farm mode auto-determine pump count from pumpInfo
+    const tempInfo = getPumpInfo(activeLen, 1, padType, padHeight, false);
+    cadPumpCount = tempInfo ? tempInfo.countPerSet : 1;
+  }
+
+  // Get pump spec info (use 1 per duty pump for CAD display)
+  const pumpInfo = getPumpInfo(activeLen, cadPumpCount, padType, padHeight, cadIsInd, cadIndOp);
+
   const totalMm = Math.round(activeLen * 1000);
   const padHeightMm = Math.round(padHeight * 1000);
   const systemHeightMm = padHeightMm + 260; // 260mm gutter & top deflector
@@ -1969,53 +2254,98 @@ function updateDynamicCADDiagram() {
       `;
     }
   } else {
-    // Single Pump Riser Assembly
-    pumpRiserSvg = `
-      <!-- Main Vertical 2" Pipe -->
-      <line x1="${midX}" y1="${padY-22}" x2="${midX}" y2="${padY+padH+40}" stroke="#0284c7" stroke-width="4"/>
-      
-      <!-- Stop Valve 2" Top -->
-      <polygon points="${midX-7},${padY+20} ${midX+7},${padY+14} ${midX+7},${padY+26}" fill="#0f172a"/>
-      <polygon points="${midX+7},${padY+20} ${midX-7},${padY+14} ${midX-7},${padY+26}" fill="#0f172a"/>
-      <text x="${midX+12}" y="${padY+23}" font-size="9" fill="#334155" font-weight="600">Stop Valve 2"</text>
+    if (cadIsInd && cadPumpCount > 1) {
+      // Industrial mode: render N pump risers side-by-side with Duty/Standby (alternate) or Zone labels
+      const spacing = 44; // px between pump centers
+      const groupW  = (cadPumpCount - 1) * spacing;
+      const startX  = midX - groupW / 2;
+      for (let p = 0; p < cadPumpCount; p++) {
+        const px     = startX + p * spacing;
+        const label  = cadIndOp === 'alternate'
+          ? (p % 2 === 0 ? `P${p+1} Duty` : `P${p+1} Stby`)
+          : `P${p+1} Zone`;
+        const pipeClr = cadIndOp === 'alternate'
+          ? (p % 2 === 0 ? '#0284c7' : '#94a3b8')
+          : '#0284c7';
+        pumpRiserSvg += `
+          <!-- Pump ${p+1} Riser -->
+          <line x1="${px}" y1="${padY-22}" x2="${px}" y2="${padY+padH+40}" stroke="${pipeClr}" stroke-width="3"/>
+          <!-- Check Valve ${p+1} -->
+          <polygon points="${px-5},${padY+132} ${px+5},${padY+125} ${px+5},${padY+139}" fill="#d97706"/>
+          <!-- Pump ${p+1} Body -->
+          <rect x="${px-14}" y="${padY+padH+18}" width="28" height="24" fill="#1e293b" rx="3" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="${px}" cy="${padY+padH+30}" r="6" fill="#0284c7"/>
+          <path d="M${px-3},${padY+padH+30} L${px+3},${padY+padH+27} L${px+3},${padY+padH+33} Z" fill="#fff"/>
+          <text x="${px}" y="${padY+padH+56}" font-size="8.5" font-family="sans-serif" fill="#0f172a" text-anchor="middle" font-weight="bold">${label}</text>
+          <text x="${px}" y="${padY+padH+67}" font-size="8" font-family="monospace" fill="#334155" text-anchor="middle">${pumpInfo ? pumpInfo.label : ''}</text>
+        `;
+      }
+      // Shared Stop Valve & Filter on main riser (midX)
+      pumpRiserSvg += `
+        <!-- Stop Valve 2" Top (shared) -->
+        <polygon points="${midX-7},${padY+20} ${midX+7},${padY+14} ${midX+7},${padY+26}" fill="#0f172a"/>
+        <polygon points="${midX+7},${padY+20} ${midX-7},${padY+14} ${midX-7},${padY+26}" fill="#0f172a"/>
+        <text x="${midX+12}" y="${padY+23}" font-size="9" fill="#334155" font-weight="600">Stop Valve 2"</text>
+        <!-- Disc Filter 2" (shared) -->
+        <rect x="${midX-10}" y="${padY+42}" width="20" height="14" fill="#2563eb" rx="2"/>
+        <line x1="${midX-6}" y1="${padY+42}" x2="${midX-6}" y2="${padY+56}" stroke="#93c5fd"/>
+        <line x1="${midX}" y1="${padY+42}" x2="${midX}" y2="${padY+56}" stroke="#93c5fd"/>
+        <line x1="${midX+6}" y1="${padY+42}" x2="${midX+6}" y2="${padY+56}" stroke="#93c5fd"/>
+        <text x="${midX+14}" y="${padY+53}" font-size="9" fill="#2563eb" font-weight="bold">Filter 2"</text>
+        <!-- Water Tank (shared) -->
+        <rect x="${midX+groupW/2+30}" y="${padY+padH+22}" width="40" height="20" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+        <text x="${midX+groupW/2+50}" y="${padY+padH+35}" font-size="8" fill="#334155" text-anchor="middle">Water Tank</text>
+      `;
+    } else {
+      // Single Pump Riser Assembly (Farm mode or Industrial 1 pump)
+      pumpRiserSvg = `
+        <!-- Main Vertical 2" Pipe -->
+        <line x1="${midX}" y1="${padY-22}" x2="${midX}" y2="${padY+padH+40}" stroke="#0284c7" stroke-width="4"/>
+        
+        <!-- Stop Valve 2" Top -->
+        <polygon points="${midX-7},${padY+20} ${midX+7},${padY+14} ${midX+7},${padY+26}" fill="#0f172a"/>
+        <polygon points="${midX+7},${padY+20} ${midX-7},${padY+14} ${midX-7},${padY+26}" fill="#0f172a"/>
+        <text x="${midX+12}" y="${padY+23}" font-size="9" fill="#334155" font-weight="600">Stop Valve 2"</text>
 
-      <!-- Disc Filter 2" -->
-      <rect x="${midX-10}" y="${padY+42}" width="20" height="14" fill="#2563eb" rx="2"/>
-      <line x1="${midX-6}" y1="${padY+42}" x2="${midX-6}" y2="${padY+56}" stroke="#93c5fd"/>
-      <line x1="${midX}" y1="${padY+42}" x2="${midX}" y2="${padY+56}" stroke="#93c5fd"/>
-      <line x1="${midX+6}" y1="${padY+42}" x2="${midX+6}" y2="${padY+56}" stroke="#93c5fd"/>
-      <text x="${midX+14}" y="${padY+53}" font-size="9" fill="#2563eb" font-weight="bold">Filter 2"</text>
+        <!-- Disc Filter 2" -->
+        <rect x="${midX-10}" y="${padY+42}" width="20" height="14" fill="#2563eb" rx="2"/>
+        <line x1="${midX-6}" y1="${padY+42}" x2="${midX-6}" y2="${padY+56}" stroke="#93c5fd"/>
+        <line x1="${midX}" y1="${padY+42}" x2="${midX}" y2="${padY+56}" stroke="#93c5fd"/>
+        <line x1="${midX+6}" y1="${padY+42}" x2="${midX+6}" y2="${padY+56}" stroke="#93c5fd"/>
+        <text x="${midX+14}" y="${padY+53}" font-size="9" fill="#2563eb" font-weight="bold">Filter 2"</text>
 
-      <!-- Stop Valve 2" Lower -->
-      <polygon points="${midX-7},${padY+75} ${midX+7},${padY+69} ${midX+7},${padY+81}" fill="#0f172a"/>
-      <polygon points="${midX+7},${padY+75} ${midX-7},${padY+69} ${midX-7},${padY+81}" fill="#0f172a"/>
-      <text x="${midX+12}" y="${padY+78}" font-size="9" fill="#334155" font-weight="600">Stop Valve 2"</text>
+        <!-- Stop Valve 2" Lower -->
+        <polygon points="${midX-7},${padY+75} ${midX+7},${padY+69} ${midX+7},${padY+81}" fill="#0f172a"/>
+        <polygon points="${midX+7},${padY+75} ${midX-7},${padY+69} ${midX-7},${padY+81}" fill="#0f172a"/>
+        <text x="${midX+12}" y="${padY+78}" font-size="9" fill="#334155" font-weight="600">Stop Valve 2"</text>
 
-      <!-- Pressure Gauge -->
-      <circle cx="${midX-22}" cy="${padY+105}" r="7" fill="#fff" stroke="#dc2626" stroke-width="1.5"/>
-      <line x1="${midX-22}" y1="${padY+105}" x2="${midX-18}" y2="${padY+102}" stroke="#dc2626" stroke-width="1.5"/>
-      <line x1="${midX-15}" y1="${padY+105}" x2="${midX}" y2="${padY+105}" stroke="#dc2626" stroke-dasharray="2,2"/>
-      <text x="${midX-65}" y="${padY+108}" font-size="9" fill="#dc2626" font-weight="bold">Pressure Gauge 2"</text>
+        <!-- Pressure Gauge -->
+        <circle cx="${midX-22}" cy="${padY+105}" r="7" fill="#fff" stroke="#dc2626" stroke-width="1.5"/>
+        <line x1="${midX-22}" y1="${padY+105}" x2="${midX-18}" y2="${padY+102}" stroke="#dc2626" stroke-width="1.5"/>
+        <line x1="${midX-15}" y1="${padY+105}" x2="${midX}" y2="${padY+105}" stroke="#dc2626" stroke-dasharray="2,2"/>
+        <text x="${midX-65}" y="${padY+108}" font-size="9" fill="#dc2626" font-weight="bold">Pressure Gauge 2"</text>
 
-      <!-- Check Valve 2" -->
-      <polygon points="${midX-6},${padY+132} ${midX+6},${padY+125} ${midX+6},${padY+139}" fill="#d97706"/>
-      <text x="${midX+12}" y="${padY+135}" font-size="9" fill="#d97706" font-weight="bold">Check Valve 2"</text>
+        <!-- Check Valve 2" -->
+        <polygon points="${midX-6},${padY+132} ${midX+6},${padY+125} ${midX+6},${padY+139}" fill="#d97706"/>
+        <text x="${midX+12}" y="${padY+135}" font-size="9" fill="#d97706" font-weight="bold">Check Valve 2"</text>
 
-      <!-- Flush Valve 1" -->
-      <line x1="${midX}" y1="${padY+118}" x2="${midX-20}" y2="${padY+118}" stroke="#64748b" stroke-width="2"/>
-      <text x="${midX-70}" y="${padY+122}" font-size="8.5" fill="#475569">Flush Valve 1"</text>
+        <!-- Flush Valve 1" -->
+        <line x1="${midX}" y1="${padY+118}" x2="${midX-20}" y2="${padY+118}" stroke="#64748b" stroke-width="2"/>
+        <text x="${midX-70}" y="${padY+122}" font-size="8.5" fill="#475569">Flush Valve 1"</text>
 
-      <!-- STP Water Pump Assembly -->
-      <rect x="${midX-18}" y="${padY+padH+18}" width="36" height="28" fill="#1e293b" rx="4" stroke="#38bdf8" stroke-width="1.5"/>
-      <circle cx="${midX}" cy="${padY+padH+32}" r="8" fill="#0284c7"/>
-      <path d="M${midX-4},${padY+padH+32} L${midX+4},${padY+padH+28} L${midX+4},${padY+padH+36} Z" fill="#fff"/>
-      <text x="${midX}" y="${padY+padH+60}" font-size="10" font-family="sans-serif" fill="#0f172a" text-anchor="middle" font-weight="bold">Pump ${pumpInfo.label}</text>
+        <!-- STP Water Pump Assembly -->
+        <rect x="${midX-18}" y="${padY+padH+18}" width="36" height="28" fill="#1e293b" rx="4" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="${midX}" cy="${padY+padH+32}" r="8" fill="#0284c7"/>
+        <path d="M${midX-4},${padY+padH+32} L${midX+4},${padY+padH+28} L${midX+4},${padY+padH+36} Z" fill="#fff"/>
+        <text x="${midX}" y="${padY+padH+60}" font-size="10" font-family="sans-serif" fill="#0f172a" text-anchor="middle" font-weight="bold">Pump ${pumpInfo ? pumpInfo.label : ''}</text>
 
-      <!-- Sump Water Tank Connector -->
-      <rect x="${midX+25}" y="${padY+padH+22}" width="40" height="20" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
-      <text x="${midX+45}" y="${padY+padH+35}" font-size="8" fill="#334155" text-anchor="middle">Water Tank</text>
-    `;
+        <!-- Sump Water Tank Connector -->
+        <rect x="${midX+25}" y="${padY+padH+22}" width="40" height="20" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+        <text x="${midX+45}" y="${padY+padH+35}" font-size="8" fill="#334155" text-anchor="middle">Water Tank</text>
+      `;
+    }
   }
+
 
   // Full SVG Inner HTML Rendering
   wrapper.innerHTML = `
@@ -2053,6 +2383,15 @@ function updateDynamicCADDiagram() {
       <!-- EVAPORATIVE COOLING PAD BODY -->
       <rect x="${padX}" y="${padY}" width="${padW}" height="${padH}" fill="#1e293b"/>
       <rect x="${padX}" y="${padY}" width="${padW}" height="${padH}" fill="url(#padMesh)" opacity="0.6"/>
+      ${padCfg.isStacked ? `
+        <!-- Stacked Pad Divider Line & Labels -->
+        <line x1="${padX}" y1="${padY + padH / 2}" x2="${padX + padW}" y2="${padY + padH / 2}" stroke="#f0a500" stroke-width="2" stroke-dasharray="6,4"/>
+        <rect x="${padX + 10}" y="${padY + 8}" width="160" height="18" fill="rgba(15,23,42,0.85)" rx="3" stroke="#f0a500" stroke-width="1"/>
+        <text x="${padX + 16}" y="${padY + 21}" font-size="9.5" fill="#f0a500" font-weight="bold">▲ Top Tier: H = ${padCfg.pieceHeight}m</text>
+        <rect x="${padX + 10}" y="${padY + padH / 2 + 8}" width="180" height="18" fill="rgba(15,23,42,0.85)" rx="3" stroke="#f0a500" stroke-width="1"/>
+        <text x="${padX + 16}" y="${padY + padH / 2 + 21}" font-size="9.5" fill="#f0a500" font-weight="bold">▼ Bottom Tier: H = ${padCfg.pieceHeight}m</text>
+        <text x="${padX + padW - 12}" y="${padY + padH / 2 - 4}" font-size="8.5" fill="#f0a500" font-weight="bold" text-anchor="end">Stacked Joint (รอยต่อซ้อน 2 ชั้น)</text>
+      ` : ''}
 
       <!-- UPVC SIDE FRAMES (LEFT & RIGHT) -->
       <rect x="${padX-10}" y="${padY-10}" width="10" height="${padH+22}" fill="#64748b" stroke="#334155" stroke-width="1"/>
@@ -2088,7 +2427,7 @@ function updateDynamicCADDiagram() {
         <polygon points="${padX+padW+50},${padY-10} ${padX+padW+46},${padY-2} ${padX+padW+54},${padY-2}" fill="#0f172a"/>
         <polygon points="${padX+padW+50},${padY+padH+16} ${padX+padW+46},${padY+padH+8} ${padX+padW+54},${padY+padH+8}" fill="#0f172a"/>
       </g>
-      <text x="${padX+padW+62}" y="${padY+padH/2}" font-size="12" font-family="monospace" fill="#0f172a" text-anchor="start" font-weight="bold" transform="rotate(90, ${padX+padW+62}, ${padY+padH/2})">${systemHeightMm} mm</text>
+      <text x="${padX+padW+62}" y="${padY+padH/2}" font-size="12" font-family="monospace" fill="#0f172a" text-anchor="start" font-weight="bold" transform="rotate(90, ${padX+padW+62}, ${padY+padH/2})">${systemHeightMm} mm ${padCfg.isStacked ? '(' + padCfg.padHeight + 'm 2-Tier)' : '(' + padCfg.padHeight + 'm)'}</text>
     </svg>
   `;
 
@@ -2132,7 +2471,9 @@ function printReport() {
   const left      = parseFloat(document.getElementById('param-left').value)   || 0;
   const right     = parseFloat(document.getElementById('param-right').value)  || 0;
   const padType   = document.getElementById('param-padtype').value;
-  const padH      = document.getElementById('param-padheight').value;
+  const padHRaw   = document.getElementById('param-padheight') ? document.getElementById('param-padheight').value : '1.8';
+  const padCfg    = getPadHeightConfig(padHRaw);
+  const padH      = padCfg.padHeight;
   const padA      = document.getElementById('param-padangle').value;
   const padC      = document.getElementById('param-padcoating').value;
   const inclSpare = document.getElementById('param-spare').value === 'yes';
@@ -2143,7 +2484,7 @@ function printReport() {
   const activeItems=currentBOQ.filter(i=>i.total>0).length;
   const dateStr   = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
   const longestSide= Math.max(front,left,right);
-  const pumpRec   = getPumpInfo(longestSide,1,padType,parseFloat(padH));
+  const pumpRec   = getPumpInfo(longestSide,1,padType,padH);
   const logoImgs = document.querySelectorAll('.header-logo img');
   const docNo     = 'BOQ-WUSEN-'+new Date().toISOString().slice(0,10).replace(/-/g,'');
 
